@@ -1,0 +1,175 @@
+.page-header{
+  align-items:center;
+}
+
+.page-header .btn{
+  width:auto;
+  min-width:190px;
+  padding:12px 18px;
+  font-size:14px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+.eyebrow { color: var(--primary); font-size: 0.8rem; text-transform: uppercase; font-weight: 800; letter-spacing: .04em; }
+.page-header h1 { margin-top: .2rem; font-size: clamp(1.2rem, 2.4vw, 1.8rem); font-family: "Outfit", sans-serif; }
+.subtitle { margin-top: .35rem; color: var(--text-secondary); }
+
+.service-list { margin-top: 1rem; display: grid; gap: 1rem; }
+.service-profile-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 0.85rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.cover-card { position: relative; border-radius: 18px; overflow: hidden; min-height: 360px; }
+.cover-image { width: 100%; height: 360px; object-fit: cover; display: block; }
+.cover-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.72) 10%, rgba(0,0,0,.1) 58%); }
+.circle-btn {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  border: none;
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.56);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+.cover-content { position: absolute; left: 24px; bottom: 22px; z-index: 2; color: #fff; }
+.cover-content h2 { font-size: clamp(1.5rem, 4vw, 2.6rem); font-weight: 800; }
+.cover-content p { margin-top: .2rem; font-size: clamp(.95rem, 2vw, 1.35rem); }
+
+.info-grid { margin-top: .9rem; display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: .8rem; }
+.info-card { background: #eef2f7; text-align:left; border: 1px solid var(--border); border-radius: 16px; padding: 1rem; }
+.panel-wide { grid-column: span 2; }
+.info-card h3 { font-size: 1.15rem; text-align:left; font-weight: 800; margin-bottom: .5rem; }
+.info-card p,.info-card li { color: #1f2937; font-size: .95rem; line-height: 1.5; }
+.info-card ul { list-style: none; padding: 0; margin-top: 0.15rem; display: grid; gap: .32rem; }
+.photos { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: .55rem; margin-top: .25rem; }
+.photos img { width: 100%; height: 120px; object-fit: cover; border-radius: 10px; }
+
+/* BOTONES SERVICIOS */
+.actions-bar{
+  margin-top:1rem;
+  display:flex;
+  gap:14px;
+  justify-content:flex-end;
+}
+
+.actions-bar .btn{
+  all: unset;                  /* 🔥 reset absoluto */
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+
+  height:44px;
+  padding:0 22px;
+
+  border-radius:12px;
+  font-size:14px;
+  font-weight:600;
+  cursor:pointer;
+}
+
+/* EDITAR */
+.actions-bar .btn-primary{
+  background:var(--primary);
+  color:white;
+}
+
+/* ELIMINAR */
+.actions-bar .btn-danger{
+  background:var(--danger);
+  color:white;
+}
+
+/* ICONOS */
+.actions-bar .btn svg{
+  width:18px;
+  height:18px;
+  display:block;
+}
+
+/* boton eliminar rojo */
+.btn-danger{
+  background:#b91c1c;
+  color:white;
+  border:none;
+}
+
+.btn-danger:hover{
+  background:#991b1b;
+  transform: translateY(-2px);
+}
+
+.btn {
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  padding: 0.6rem 0.88rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .3rem;
+  cursor: pointer;
+}
+
+.btn-ghost {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text-main);
+}
+.btn-ghost:hover {
+  background: #eef2f7;
+}
+
+.btn-table {
+  width: 100%;
+  justify-content: center;
+  font-size: 0.85rem;
+}
+
+.icon-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.6rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.icon-btn:hover {
+  background: #eef2f7;
+}
+
+.a {
+  text-decoration: none;
+  color: #fff;
+}
+
+.a:hover {
+  color: #fff;
+}
+
+@media (max-width: 900px) {
+  .navbar-container { flex-direction: column; align-items: flex-start; }
+  .menu { flex-wrap: wrap; gap: .7rem 1rem; }
+  .info-grid { grid-template-columns: 1fr; }
+  .panel-wide { grid-column: auto; }
+}
+@media (max-width: 600px) {
+  .cover-card, .cover-image { min-height: 300px; height: 300px; }
+  .photos { grid-template-columns: 1fr; }
+  .actions-bar .btn, .page-header .btn { min-width: 100%; }
+}

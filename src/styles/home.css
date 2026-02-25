@@ -1,0 +1,274 @@
+.container{
+  max-width:1200px;
+  margin:0 auto;
+  padding:80px 20px;
+  width:100%;
+}
+
+.section-title{
+  font-size:2rem;
+  font-weight:800;
+  text-align:center;
+  margin-bottom:50px;
+  color:var(--primary);
+}
+
+.hero{
+  min-height:92vh;
+  display:flex;
+  align-items:center;
+  background: linear-gradient(120deg, #0f172a 0%, #1e3a8a 100%);
+  color:white;
+}
+
+.hero-content{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:80px;
+}
+
+.hero-text{
+  max-width:520px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;   /* ← centra horizontal */
+  justify-content:center;
+  text-align:center;
+}
+
+.hero-text .btn{
+  margin-top:25px;
+}
+
+.hero-text h1{
+  font-size:3.8rem;
+  font-weight:900;
+  color:white;
+  margin-bottom:10px;
+  letter-spacing: -1px;
+}
+
+.hero-sub{
+  font-size:1.4rem;
+  font-weight:600;
+  margin-bottom:15px;
+  color:#e2e8f0;
+}
+
+.hero-desc{
+  color:#cbd5e1;
+  margin-bottom:35px;
+  line-height:1.7;
+  font-size:1.05rem;
+}
+
+.hero-img{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.hero-img img{
+  width:520px;   
+  max-width:100%;
+  border-radius:20px;
+  box-shadow:0 25px 50px rgba(0,0,0,.15);
+  transition:.4s;
+}
+
+.hero-img img:hover{
+  transform:scale(1.03);
+}
+
+.benefits{
+    background:#f8fafc;
+    color:#0f172a;
+}
+
+.benefits-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:30px;
+}
+
+.benefits-bottom{
+  display:flex;
+  justify-content:center;
+  gap:30px;
+  margin-top:30px;
+}
+
+.benefit-card{
+  background:white;
+  padding:30px;
+  border-radius:18px;
+  box-shadow:0 15px 30px rgba(0,0,0,.06);
+  text-align:center;
+  transition:.4s;
+}
+
+.benefit-card:hover{
+  transform:translateY(-5px);
+  box-shadow:0 20px 40px rgba(0,0,0,.12);
+}
+
+.benefit-card h3{
+  color:#0f172a;
+}
+
+.benefit-card p{
+  color:#64748b;
+}
+
+.icon{
+  font-size:42px;
+  color:var(--primary);
+  margin-bottom:15px;
+}
+
+.plans{
+  background:#f8fafc;
+}
+
+.plans-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:40px;
+  margin-top:40px;
+}
+
+.plan-card{
+  background:white;
+  padding:40px 30px;
+  border-radius:20px;
+  box-shadow:0 20px 40px rgba(0,0,0,.08);
+  text-align:center;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  min-height:420px;
+  transition:.4s;
+}
+
+.plan-card ul{
+  list-style:none;
+  padding:0;
+  margin:25px 0;
+  text-align:left;
+}
+
+.plan-card li{
+  margin-bottom:10px;
+  color:#475569;
+}
+
+.plan-card:hover{
+  transform:translateY(-5px);
+  box-shadow:0 20px 40px rgba(0,0,0,.12);
+}
+
+.price{
+  font-size:2.5rem;
+  font-weight:800;
+  margin:15px 0;
+  color:var(--primary);
+}
+
+.demo{
+  background:#f1f5f9;
+  padding-bottom:80px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  gap:40px;
+}
+
+.demo-img{
+  width:100%;
+  max-width:700px;
+  margin:auto;
+  display:block;
+  border-radius:18px;
+  box-shadow:0 20px 40px rgba(0,0,0,.12);
+}
+
+.hero .btn-primary{
+  margin: 0 auto;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.hero .btn-primary:hover{
+  background:var(--primary-hover);
+  color:white;
+  transform:translateY(-2px);
+}
+
+.plan-card .btn-primary{
+  margin-top:auto;
+}
+
+.demo-btn{
+  margin-top:30px;
+}
+
+.demo-btn:hover{
+  background:var(--primary-hover);
+  color:white;
+  transform:translateY(-2px);
+}
+
+.demo .container{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
+
+/* ANIMACIONES */
+.fade-up{
+  opacity:0;
+  transform:translateY(40px);
+  animation:fadeUp .9s ease forwards;
+}
+
+.fade-delay{
+  animation-delay:.3s;
+}
+
+.fade-delay2{
+  animation-delay:.6s;
+}
+
+@keyframes fadeUp{
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+@media(max-width:900px){
+  .hero-content{
+    flex-direction:column;
+    text-align:center;
+  }
+
+  .hero-img img{
+    width:100%;
+    max-width:400px;
+  }
+
+  .benefits-grid,
+  .plans-grid{
+    grid-template-columns:1fr;
+  }
+
+  .benefits-bottom{
+    flex-direction:column;
+    align-items:center;
+  }
+}
