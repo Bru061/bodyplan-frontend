@@ -252,31 +252,87 @@
   text-align: center;
 }
 
-@media (max-width: 768px) {
-  .login-card {
-    flex-direction: column; 
+/* ============================= */
+/* RESPONSIVE LOGIN BODYPLAN */
+/* ============================= */
+
+@media (max-width: 768px){
+
+  .login-container{
+    flex-direction: column;
+    min-height:100vh;
   }
 
-  .login-side {
-    width: 100%;
-    height: 30vh; 
-    position: relative; 
-    padding: 20px;
+  /* PANEL AZUL */
+  .login-side{
+    width:100%;
+    min-height:auto;
+    height:160px; /* altura tipo navbar */
+    padding:20px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
   }
 
-  .login-form {
+  .login-side-content{
+    flex-direction:row;
+    gap:15px;
+    text-align:left;
+  }
+
+  .login-side h2{
+    font-size:1.4rem;
+    margin:0;
+  }
+
+  .login-side p{
+    display:none; /* opcional: oculta texto largo en móvil */
+  }
+
+  .login-avatar{
+    width:60px;
+    height:60px;
+    margin:0;
+  }
+
+  /* FORMULARIO */
+  .login-form{
     width: 100%;
-    min-height: 70vh; 
-    padding: 30px 20px;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    padding:40px 15px;
   }
-  
-  .login-avatar {
-    width: 80px;
-    height: 80px;
-    margin-bottom: 10px;
+
+  .login-form-inner{
+    width:100%;
+    max-width:340px;
+    margin:0 auto;
   }
-  
-  .login-avatar .material-icons {
-    font-size: 40px;
+
+  .login-fields{
+    gap:14px;
   }
+
+  .login-fields input{
+    padding:12px 14px;
+    font-size:0.95rem;
+  }
+
+  .btn-primary{
+    padding:12px;
+    font-size:0.95rem;
+  }
+
+  .google-btn{
+    padding:11px;
+    font-size:0.9rem;
+  }
+
+  .login-links{
+    flex-direction:column;
+    gap:10px;
+    text-align:center;
+  }
+
 }
