@@ -19,6 +19,8 @@ function ForgotPassword() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const PLATFORM = "web";
+
   // PASO 1 → pedir código
   const handleRequestCode = async (e) => {
     e.preventDefault();
@@ -27,7 +29,7 @@ function ForgotPassword() {
     setLoading(true);
 
     try {
-      await api.post("/password/request", { correo });
+      await api.post("/password/request", { correo, plataforma: PLATFORM });
       setMsg("Código enviado al correo.");
       setStep(2);
     } catch (err) {
@@ -45,7 +47,7 @@ function ForgotPassword() {
     setLoading(true);
 
     try {
-      await api.post("/password/verify", { correo, codigo });
+      await api.post("/password/verify", { correo, codigo, plataforma: PLATFORM });
       setMsg("Código válido.");
       setStep(3);
     } catch (err) {
@@ -74,7 +76,7 @@ function ForgotPassword() {
     setLoading(true);
 
     try {
-      await api.post("/password/change", { correo, password });
+      await api.post("/password/change", { correo, password, plataforma: PLATFORM });
       setMsg("Contraseña actualizada correctamente");
 
       setTimeout(() => navigate("/login"), 1500);

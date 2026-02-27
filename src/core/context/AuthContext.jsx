@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { loginAuth, registerAuth } from "../../services/authService";
 import { useNavigate } from "react-router-dom";
+import { googleAuth } from "../../services/authService";
 
 const AuthContext = createContext(null);
 
@@ -10,10 +11,18 @@ const STORAGE_KEYS = {
   gymId: "gymId",
 };
 
+function mapRole(idRol){
+  if(idRol === 1) return "admin";
+  if(idRol === 2) return "user";
+  if(idRol === 3) return "proveedor";
+  return "user";
+}
+
 function getDashboardByRole(role) {
-  if (role === "superadmin") return "/superadmin/dashboard";
-  if (role === "gym") return "/dashboard";
-  return "/"; // user normal
+  if (role === "admin") return "/superadmin/dashboard";
+  if (role === "proveedor") return "/dashboard";
+  if (role === "user") return "/solo-app";
+  return "/";
 }
 
 export function AuthProvider({ children }) {
@@ -54,12 +63,13 @@ export function AuthProvider({ children }) {
 
   const signIn = async ({ correo, password }) => {
     const data = await loginAuth({ correo, password });
+    const role = mapRole(data.usuario.id_rol);
 
     const adapted = {
       token: data.token,
       user: {
         ...data.usuario,
-        role: data.usuario.id_rol === 1 ? "superadmin" : "gym",
+        role
       },
       gymId: null,
     };
@@ -68,18 +78,19 @@ export function AuthProvider({ children }) {
 
     return {
       ...adapted,
-      redirectTo: "/dashboard",
+      redirectTo: getDashboardByRole(role),
     };
   };
 
-  const signUp = async ({ nombre,apellido_paterno,apellido_materno, correo, password, role = "gym" }) => {
+  const signUp = async ({ nombre,apellido_paterno,apellido_materno, correo, password, role = "proveedor" }) => {
     const data = await registerAuth({ nombre, apellido_paterno, apellido_materno, correo, password, role });
+    const roleMapped = mapRole(data.usuario.id_rol)
 
     const adapted = {
       token: data.token,
       user: {
         ...data.usuario,
-        role: role,
+        role: roleMapped,
       },
       gymId: null,
     };
@@ -88,7 +99,7 @@ export function AuthProvider({ children }) {
 
     return {
       ...adapted,
-      redirectTo: "/dashboard",
+      redirectTo: getDashboardByRole(role),
     };
   };
 
@@ -104,6 +115,28 @@ export function AuthProvider({ children }) {
     navigate("/");
   };
 
+  const signInWithGoogle = async (idToken) => {
+    const data = await googleAuth(idToken);
+
+    const role = mapRole(data.usuario.id_rol);
+
+    const adapted = {
+      token: data.token,
+      user: {
+        ...data.usuario,
+        role
+      },
+      gymId: null
+    };
+
+    persistSession(adapted);
+
+    return {
+      ...adapted,
+      redirectTo: getDashboardByRole(role)
+    };
+  };
+
   const value = useMemo(
     () => ({
       token,
@@ -114,6 +147,7 @@ export function AuthProvider({ children }) {
       signIn,
       signUp,
       signOut,
+      signInWithGoogle,
     }),
     [token, user, gymId, loading, isAuthenticated]
   );

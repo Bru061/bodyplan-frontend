@@ -18,13 +18,15 @@ function ResetPassword(){
   const [msg, setMsg] = useState("");
   const [error, setError] = useState("");
 
+  const PLATFORM = "web";
+
   const handleSubmit = async(e)=>{
     e.preventDefault();
     setError("");
     setMsg("");
 
-    if(password.length < 6){
-      setError("Mínimo 6 caracteres");
+    if(password.length < 8){
+      setError("Mínimo 8 caracteres");
       return;
     }
 
@@ -35,7 +37,8 @@ function ResetPassword(){
 
     try{
       await api.post(`/password/reset/${token}`, {
-        password
+        password,
+        plataforma: PLATFORM
       });
 
       setMsg("Contraseña actualizada");

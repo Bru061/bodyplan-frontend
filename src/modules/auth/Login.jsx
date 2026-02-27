@@ -21,6 +21,7 @@ function Login() {
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const { signInWithGoogle } = useAuth();
 
   const handleChange = (e) => {
     setError("");
@@ -30,68 +31,47 @@ function Login() {
     }));
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError("");
-  setLoading(true);
-
-  try {
-    const result = await signIn({
-      correo: form.correo,
-      password: form.password,
-    });
-
-    navigate(result.redirectTo);
-
-  } catch (err) {
-    const msg =
-      err?.response?.data?.error ||
-      err?.response?.data?.message ||
-      "Error al iniciar sesión";
-
-    setError(msg);
-  } finally {
-    setLoading(false);
-  }
-};
-
-const handleGoogleLogin = async () => {
-  try {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setError("");
+    setLoading(true);
 
-    // popup google
-    const result = await signInWithPopup(auth, provider);
+    try {
+      const result = await signIn({
+        correo: form.correo,
+        password: form.password,
+      });
 
-    // token firebase
-    const idToken = await result.user.getIdToken();
+      navigate(result.redirectTo);
 
-    // enviar backend
-    const res = await api.post("/auth/google", { idToken });
+    } catch (err) {
+      const msg =
+        err?.response?.data?.error ||
+        err?.response?.data?.message ||
+        "Error al iniciar sesión";
 
-    // 👇 ADAPTAMOS respuesta a formato AuthContext
-    const adapted = {
-      token: res.data.token,
-      user: {
-        ...res.data.usuario,
-        role: res.data.usuario.id_rol === 1 ? "superadmin" : "gym"
-      },
-      gymId: null
-    };
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    // guardar en contexto global
-    localStorage.setItem("token", adapted.token);
-    localStorage.setItem("user", JSON.stringify(adapted.user));
+  const handleGoogleLogin = async () => {
+    try {
+      setError("");
 
-    // 🔥 FORZAR recarga de contexto
-    window.location.href = adapted.user.role === "superadmin"
-      ? "/admin"
-      : "/dashboard";
+      const result = await signInWithPopup(auth, provider);
+      const idToken = await result.user.getIdToken();
 
-  } catch (error) {
-    console.error(error);
-    setError("Error al iniciar sesión con Google");
-  }
-};
+      const response = await signInWithGoogle(idToken);
+
+      navigate(response.redirectTo);
+
+    } catch (error) {
+      console.error(error);
+      setError("Error al iniciar sesión con Google");
+    }
+  };
 
   return (
     <AuthLayout>
@@ -116,7 +96,12 @@ const handleGoogleLogin = async () => {
 
             {error && <p style={{ color: "red", textAlign: "center" }}>{error}</p>}
 
-            <form className="login-fields" onSubmit={handleSubmit}>
+            <form
+              className="login-fields"
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSubmit(e);
+              }}>
               <input
                 type="email"
                 name="correo"
@@ -131,12 +116,12 @@ const handleGoogleLogin = async () => {
                   name="password"
                   placeholder="Contraseña"
                   value={form.password}
-                onChange={handleChange}
-                required
-              />
-              <button type="button" className="eye-btn" onClick={() => setShowPassword(!showPassword)}>
-                {showPassword ? <FiEyeOff /> : <FiEye />}
-              </button>
+                  onChange={handleChange}
+                  required
+                />
+                <button type="button" className="eye-btn" onClick={() => setShowPassword(!showPassword)}>
+                  {showPassword ? <FiEyeOff /> : <FiEye />}
+                </button>
               </div>
 
               <button type="submit" className="btn btn-primary" disabled={loading}>

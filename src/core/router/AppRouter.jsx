@@ -11,9 +11,11 @@ import Rutinas from "../../modules/rutinas/rutinas";
 import Planes from "../../modules/planes/planes";
 import Notificaciones from "../../modules/notificaciones/Notificaciones";
 import Perfil from "../../modules/perfil/perfil";
-import AdminDashboard from "../../modules/superadmin/AdminDashboard";
+import AdminDashboard from "../../modules/admin/AdminDashboard";
 import PublicRoute from "../guards/PublicRoute";
 import PrivateRoute from "../guards/PrivateRoute";
+import RoleRoute from "../guards/RoleRoute";
+import AppOnly from "../../modules/public/AppOnly"
 
 function AppRouter(){
   return(
@@ -30,14 +32,24 @@ function AppRouter(){
 
       {/* PRIVADAS */}
       <Route element={<PrivateRoute />}>
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/clientes" element={<Clientes />} />
-        <Route path="/servicios" element={<Servicios />} />
-        <Route path="/rutinas" element={<Rutinas />} />
-        <Route path="/planes" element={<Planes />} />
-        <Route path="/notificaciones" element={<Notificaciones />} />
-        <Route path="/perfil" element={<Perfil />} />
-        <Route path="/admin" element={<AdminDashboard />} />
+        <Route element={<RoleRoute allowedRoles={["proveedor"]} />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/clientes" element={<Clientes />} />
+          <Route path="/servicios" element={<Servicios />} />
+          <Route path="/rutinas" element={<Rutinas />} />
+          <Route path="/planes" element={<Planes />} />
+          <Route path="/notificaciones" element={<Notificaciones />} />
+          <Route path="/perfil" element={<Perfil />} />
+        </Route>
+
+        <Route element={<RoleRoute allowedRoles={["admin"]} />}>
+          <Route path="/admin" element={<AdminDashboard />} />
+        </Route>
+
+        <Route element={<RoleRoute allowedRoles={["user"]} />}>
+          <Route path="/solo-app" element={<AppOnly />} />
+        </Route>
+
       </Route>
 
     </Routes>

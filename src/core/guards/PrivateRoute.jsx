@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 export default function PrivateRoute() {
   const { isAuthenticated, loading } = useAuth();
 
-  if (loading) return <p>Cargando...</p>;
+  if (loading) return null;
 
   if (!isAuthenticated) {
     return <Navigate to="/" replace />;

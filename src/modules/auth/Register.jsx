@@ -14,23 +14,41 @@ function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-const [form, setForm] = useState({
-  nombre: "",
-  apellido_paterno: "",
-  apellido_materno: "",
-  correo: "",
-  password: "",
-  confirmPassword: "",
-});
+  const [form, setForm] = useState({
+    nombre: "",
+    apellido_paterno: "",
+    apellido_materno: "",
+    correo: "",
+    password: "",
+    confirmPassword: "",
+  });
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const { signInWithGoogle } = useAuth();
 
   const handleChange = (e) => {
+    let { name, value } = e.target;
+
     setError("");
+    // NOMBRE → solo letras y espacios
+    if (name === "nombre") {
+      value = value.replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g, "");
+    }
+
+    // APELLIDOS → solo letras sin espacios
+    if (name === "apellido_paterno" || name === "apellido_materno") {
+      value = value.replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ]/g, "");
+    }
+
+    // PASSWORD → sin espacios
+    if (name === "password" || name === "confirmPassword") {
+      value = value.replace(/\s/g, "");
+    }
+
     setForm((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value,
+      [name]: value,
     }));
   };
 
@@ -38,13 +56,18 @@ const [form, setForm] = useState({
     e.preventDefault();
     setError("");
 
-    if (form.password.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres");
+    if (form.password.length < 8) {
+      setError("La contraseña debe tener al menos 8 caracteres");
       return;
     }
 
     if (form.password !== form.confirmPassword) {
-      setError("Las contraseñas no coinciden");
+      setError("Las contraseñas deben ser iguales");
+      return;
+    }
+
+    if (/\s/.test(form.password)) {
+      setError("La contraseña no debe contener espacios");
       return;
     }
 
@@ -68,48 +91,28 @@ const [form, setForm] = useState({
         "Error al registrar usuario";
 
       setError(msg);
+      console.log(msg);
     } finally {
       setLoading(false);
     }
   };
 
   const handleGoogleLogin = async () => {
-  try {
-    setError("");
+    try {
+      setError("");
 
-    // popup google
-    const result = await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      const idToken = await result.user.getIdToken();
 
-    // token firebase
-    const idToken = await result.user.getIdToken();
+      const response = await signInWithGoogle(idToken);
 
-    // enviar backend
-    const res = await api.post("/auth/google", { idToken });
+      navigate(response.redirectTo);
 
-    // 👇 ADAPTAMOS respuesta a formato AuthContext
-    const adapted = {
-      token: res.data.token,
-      user: {
-        ...res.data.usuario,
-        role: res.data.usuario.id_rol === 1 ? "superadmin" : "gym"
-      },
-      gymId: null
-    };
-
-    // guardar en contexto global
-    localStorage.setItem("token", adapted.token);
-    localStorage.setItem("user", JSON.stringify(adapted.user));
-
-    // 🔥 FORZAR recarga de contexto
-    window.location.href = adapted.user.role === "superadmin"
-      ? "/admin"
-      : "/dashboard";
-
-  } catch (error) {
-    console.error(error);
-    setError("Error al iniciar sesión con Google");
-  }
-};
+    } catch (error) {
+      console.error(error);
+      setError("Error al iniciar sesión con Google");
+    }
+  };
 
   return (
     <AuthLayout>
@@ -173,34 +176,45 @@ const [form, setForm] = useState({
                 required
               />
               <div className="password-field">
-              <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                className="full-width"
-                placeholder="Contraseña"
-                value={form.password}
-                onChange={handleChange}
-                required
-              />
-              <button type="button" className="eye-btn" onClick={() => setShowPassword(!showPassword)}>
-                {showPassword ? <FiEyeOff /> : <FiEye />}
-              </button>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  className="full-width"
+                  placeholder="Contraseña"
+                  value={form.password}
+                  onChange={handleChange}
+                  required
+                />
+                <button type="button" className="eye-btn" onClick={() => setShowPassword(!showPassword)}>
+                  {showPassword ? <FiEyeOff /> : <FiEye />}
+                </button>
               </div>
 
               <div className="password-field">
-              <input
-                type={showConfirmPassword ? "text" : "password"}
-                name="confirmPassword"
-                className="full-width"
-                placeholder="Confirmar contraseña"
-                value={form.confirmPassword}
-                onChange={handleChange}
-                required
-              />
-              <button type="button" className="eye-btn" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
-                {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
-              </button>
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  name="confirmPassword"
+                  className="full-width"
+                  placeholder="Confirmar contraseña"
+                  value={form.confirmPassword}
+                  onChange={handleChange}
+                  required
+                />
+                <button type="button" className="eye-btn" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+                  {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
+                </button>
               </div>
+
+              {form.confirmPassword && form.password !== form.confirmPassword && (
+                <p style={{
+                  color: "red",
+                  fontSize: "0.85rem",
+                  marginTop: "5px",
+                  marginBottom: "5px"
+                }}>
+                  Las contraseñas deben coincidar
+                </p>
+              )}
 
               <button type="submit" className="btn btn-primary" disabled={loading}>
                 {loading ? "Registrando..." : "Registrarse"}
@@ -218,7 +232,7 @@ const [form, setForm] = useState({
 
             <div className="login-links">
               <span>
-              ¿Ya tienes cuenta? <Link to="/login">Inicia sesión</Link>
+                ¿Ya tienes cuenta? <Link to="/login">Inicia sesión</Link>
               </span>
             </div>
           </div>

@@ -1,15 +1,21 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-export default function PublicRoute() {
-  const { isAuthenticated, loading } = useAuth();
+function getRedirectByRole(role){
+  if(role === "admin") return "/admin";
+  if(role === "proveedor") return "/dashboard";
+  if(role === "user") return "/solo-app";
+  return "/";
+}
 
-  if (loading) return <p>Cargando...</p>;
+export default function PublicRoute() {
+  const { isAuthenticated, user, loading } = useAuth();
+
+  if (loading) return null;
 
   if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to={getRedirectByRole(user?.role)} replace />;
   }
 
   return <Outlet />;
 }
-
