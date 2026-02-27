@@ -1,13 +1,9 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://bodyplan-api.giize.com:4000/api",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  //withCredentials: true
+  baseURL: "/api",
+  withCredentials:false
 });
-
 
 // INTERCEPTOR → agrega token automáticamente
 api.interceptors.request.use((config) => {
