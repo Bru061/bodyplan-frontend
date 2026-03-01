@@ -2,9 +2,34 @@ import DashboardLayout from "../../layout/DashboardLayout";
 import '../../styles/dashboard.css'
 import { Link } from "react-router-dom";
 import { useDashboardData } from "./hooks/useDashboardData"
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { getMyGym } from "../../services/gymService";
+import { useAuth } from "../../core/context/AuthContext";
 
 function Dashboard() {
   const { dashboard, loading } = useDashboardData();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkGym = async () => {
+      if(user?.role !== "proveedor") return;
+
+      try {
+        const gym = await getMyGym();
+
+        if(!gym){
+          navigate("/crear-gimnasio");
+        }
+      } catch(err){
+        console.error(err);
+      }
+    };
+
+    checkGym();
+  }, [user]);
+  
     return (
         <DashboardLayout>
           <div className="dashboard-container">
@@ -16,7 +41,6 @@ function Dashboard() {
               </div>
               <div className="quick-actions">
                 <Link className="btn btn-primary" to="/rutinas">Crear rutina</Link>
-                <Link className="btn btn-primary" to="/servicios">Agregar servicio</Link>
                 <Link className="btn btn-primary" to="/reseñas">Ver reseñas</Link>
               </div>
             </section>

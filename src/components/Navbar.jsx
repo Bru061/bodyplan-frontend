@@ -15,9 +15,8 @@ function Navbar() {
             <ul className="menu">
                 <li><Link to="/dashboard" aria-label="Dashboard">Dashboard</Link></li>
                 <li><Link to="/clientes" aria-label="Clientes">Clientes</Link></li>
-                <li><Link to="/servicios" aria-label="Mis Servicios">Mis Servicios</Link></li>
                 <li><Link to="/rutinas" aria-label="Rutinas">Rutinas</Link></li>
-                <li><Link to="/planes" aria-label="Planes">Planes</Link></li>
+                <li><Link to="/gimnasio" aria-label="Mi Gimnasio">Mi Gimnasio</Link></li>
                 <li><Link to="/notificaciones" aria-label="Notificaciones size={24}"><MdNotifications /></Link></li>
                 <li><Link to="/perfil" aria-label="Perfil"><MdPerson size={24} /></Link></li>
             </ul>

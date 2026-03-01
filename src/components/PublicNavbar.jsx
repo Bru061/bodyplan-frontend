@@ -5,7 +5,7 @@ function PublicNavbar(){
   return(
         <header className="navbar" aria-label="Navegación principal">
         <div className="navbar-container">
-            <a className="brand" href="dashboard.html" aria-label="Inicio BodyPlan">
+            <a className="brand" aria-label="Inicio BodyPlan">
             <img src={logo} alt="Logo de BodyPlan" className="brand-logo" />
             <span className="brand-name">BodyPlan</span>
             </a>

@@ -66,7 +66,17 @@ function ResetPassword(){
         <section className="login-form">
           <div className="login-form-inner">
 
-            <h1>Nueva contraseña</h1>
+            <h1 style={{
+            fontSize: "1.8rem",
+            fontWeight: "800",
+            letterSpacing: "1px",
+            marginBottom: "10px",
+            marginTop: "10px",
+            textAlign: "center",
+            color: "#071950"
+            }}>
+            Ingresa tu nueva contraseña
+            </h1>
 
             {msg && <p style={{color:"green"}}>{msg}</p>}
             {error && <p style={{color:"red"}}>{error}</p>}

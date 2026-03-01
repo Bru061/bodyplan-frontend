@@ -6,11 +6,11 @@ import ForgotPassword from "../../modules/auth/ForgotPassword";
 import ResetPassword from "../../modules/auth/ResetPassword";
 import Dashboard from "../../modules/dashboard/Dashboard";
 import Clientes from "../../modules/clientes/Clientes";
-import Servicios from "../../modules/servicios/servicios";
+import MiGimnasio from "../../modules/gym/MiGimnasio";
 import Rutinas from "../../modules/rutinas/rutinas";
-import Planes from "../../modules/planes/planes";
 import Notificaciones from "../../modules/notificaciones/Notificaciones";
 import Perfil from "../../modules/perfil/perfil";
+import CreateGym from "../../modules/gym/CreateGym"
 import AdminDashboard from "../../modules/admin/AdminDashboard";
 import PublicRoute from "../guards/PublicRoute";
 import PrivateRoute from "../guards/PrivateRoute";
@@ -33,11 +33,11 @@ function AppRouter(){
       {/* PRIVADAS */}
       <Route element={<PrivateRoute />}>
         <Route element={<RoleRoute allowedRoles={["proveedor"]} />}>
+          <Route path="/crear-gimnasio" element={<CreateGym />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/clientes" element={<Clientes />} />
-          <Route path="/servicios" element={<Servicios />} />
+          <Route path="/gimnasio" element={<MiGimnasio />} />
           <Route path="/rutinas" element={<Rutinas />} />
-          <Route path="/planes" element={<Planes />} />
           <Route path="/notificaciones" element={<Notificaciones />} />
           <Route path="/perfil" element={<Perfil />} />
         </Route>
