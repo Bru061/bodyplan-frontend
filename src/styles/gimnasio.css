@@ -445,6 +445,23 @@
   background:#dc2626;
 }
 
+.btn-success{
+  background:#0b771d;
+  color:white;
+  border:none;
+  padding:8px 14px;
+  border-radius:10px;
+  font-size:.85rem;
+  font-weight:600;
+  cursor:pointer;
+  transition:.2s;
+  height:fit-content;
+}
+
+.btn-success:hover{
+  background:var(--success);
+}
+
 .modal-actions{
   margin-top:25px;
   display:flex;
@@ -695,13 +712,14 @@
 }
 
 .badge-activo{
-  color:#16a34a;
+  color:white;
   font-weight:600;
   font-size:.9rem;
+
 }
 
 .badge-off{
-  color:#ef4444;
+  color:white;
   font-weight:600;
   font-size:.9rem;
 }
