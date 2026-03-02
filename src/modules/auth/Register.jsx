@@ -212,7 +212,7 @@ function Register() {
                   marginTop: "5px",
                   marginBottom: "5px"
                 }}>
-                  Las contraseñas deben coincidar
+                  Las contraseñas deben coincidir
                 </p>
               )}
 

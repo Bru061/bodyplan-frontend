@@ -5,187 +5,136 @@ function EditFotosModal({ gym, onClose, onUpdated }) {
 
   const [loading, setLoading] = useState(false);
   const [newFotos, setNewFotos] = useState([]);
-  const [imagenesBlob, setImagenesBlob] = useState
-  const fileRef = useRef();
-
+  const fileRef = useRef(null);
 
   // =============================
   // ELIMINAR FOTO
   // =============================
   const deleteFoto = async (id) => {
-    const confirm = window.confirm("Eliminar foto?");
-    if (!confirm) return;
+
+    if (!window.confirm("¿Eliminar foto?")) return;
 
     try {
+      setLoading(true);
+
       await api.delete(`/gym/fotos/${id}`);
-      onUpdated();
+
+      // refresca gym padre
+      await onUpdated();
+
     } catch (err) {
       console.error(err);
       alert("Error eliminando foto");
-    }
-  };
-
-  const makePrincipal = async (fotoSeleccionada) => {
-    try {
-
-      const confirm = window.confirm("¿Poner esta foto como portada?");
-      if(!confirm) return;
-
-      setLoading(true);
-
-      // descargar todas las fotos como blob
-      const fotosBlob = [];
-
-      for (const f of gym.fotos) {
-        const res = await fetch(
-          `/uploads/gimnasios/${f.url_foto}`
-        );
-
-        const blob = await res.blob();
-
-        fotosBlob.push({
-          blob,
-          nombre: f.url_foto
-        });
-      }
-
-      // eliminar todas
-      for (const f of gym.fotos) {
-        await api.delete(`/gym/fotos/${f.id_foto}`);
-      }
-
-      // ordenar → seleccionada primero
-      const ordenadas = [
-        fotosBlob.find(f => f.nombre === fotoSeleccionada.url_foto),
-        ...fotosBlob.filter(f => f.nombre !== fotoSeleccionada.url_foto)
-      ];
-
-      // subir de nuevo
-      const formData = new FormData();
-
-      ordenadas.forEach(f => {
-        formData.append("fotos", new File([f.blob], f.nombre));
-      });
-
-      await api.post(`/gym/${gym.id_gimnasio}/fotos`, formData);
-
-      onUpdated();
-      alert("Foto principal actualizada");
-
-    } catch (err) {
-      console.error(err);
-      alert("Error cambiando portada");
     } finally {
       setLoading(false);
     }
   };
 
+  // =============================
+  // SUBIR FOTOS
+  // =============================
   const handleUpload = async () => {
-  console.log("NEWFOTOS:", newFotos);
 
-  if (!newFotos || newFotos.length === 0) {
-    alert("Selecciona al menos una foto");
-    return;
-  }
+    if (!newFotos.length) {
+      alert("Selecciona al menos una foto");
+      return;
+    }
 
-  try {
-    const formData = new FormData();
+    try {
+      setLoading(true);
 
-    newFotos.forEach(f => {
-      formData.append("fotos", f);
-    });
+      const formData = new FormData();
+      newFotos.forEach(f => formData.append("fotos", f));
 
-    await api.post(`/gym/${gym.id_gimnasio}/fotos`, formData, {
-      headers: { "Content-Type": "multipart/form-data" }
-    });
+      await api.post(`/gym/${gym.id_gimnasio}/fotos`, formData);
 
-    alert("Fotos subidas");
-    setNewFotos([]);
-    onUpdated();
+      alert("Fotos subidas correctamente");
+      setNewFotos([]);
+      onUpdated();
 
-  } catch (err) {
-    console.error(err);
-    alert("Error subiendo fotos");
-  }
-};
+    } catch (err) {
+      console.error(err);
+      alert("Error subiendo fotos");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // =============================
-  // UI
-  // =============================
   return (
     <div className="modal-overlay">
       <div className="modal-card modal-lg">
 
         <h2 className="modal-title">Fotos del gimnasio</h2>
 
+        {/* ================= SUBIDA ================= */}
         <div className="upload-box">
 
-        {/* input oculto real */}
-        <input
+          {/* input oculto */}
+          <input
             ref={fileRef}
             type="file"
             multiple
             accept="image/*"
             style={{ display: "none" }}
-            onChange={(e)=>{
-            const files = Array.from(e.target.files);
-            console.log("FILES SELECCIONADOS:", files);
-            setNewFotos(files);
+            onChange={(e) => {
+              const files = Array.from(e.target.files);
+              setNewFotos(files);
             }}
-        />
+          />
 
-        {/* botón seleccionar */}
-        <button
+          <button
             type="button"
             className="btn-select"
             onClick={() => fileRef.current.click()}
-        >
+          >
             Seleccionar imágenes
-        </button>
+          </button>
 
-        {/* botón subir */}
-        <button
+          <button
             type="button"
             className="btn-primary"
             onClick={handleUpload}
-        >
-            Subir fotos
-        </button>
+            disabled={loading}
+          >
+            {loading ? "Subiendo..." : "Subir fotos"}
+          </button>
 
         </div>
 
-        {/* GALERIA */}
+        {/* ================= NOMBRES ARCHIVOS ================= */}
+        {newFotos.length > 0 && (
+          <div className="selected-files">
+            <p className="selected-title">Imágenes seleccionadas:</p>
+
+            <ul>
+              {newFotos.map((f, i) => (
+                <li key={i}>{f.name}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* ================= GALERIA ================= */}
         <div className="fotos-grid">
 
-          {gym.fotos?.map((f,i)=>(
-            <div key={i} className="foto-card">
+          {gym.fotos?.map((f) => (
+            <div key={f.id_foto} className="foto-card">
 
               <img
                 src={`/uploads/gimnasios/${f.url_foto}`}
                 alt="foto"
               />
 
-              {i === 0 && (
-                <span className="badge-principal">PORTADA</span>
-              )}
-
               <div className="foto-actions">
-
-                <button
-                  className="btn-primary"
-                  onClick={()=>makePrincipal(f)}
-                >
-                  ⭐ Principal
-                </button>
-
                 <button
                   className="btn btn-danger"
-                  onClick={()=>deleteFoto(f.id_foto)}
+                  onClick={() => deleteFoto(f.id_foto)}
+                  disabled={loading}
                 >
                   Eliminar
                 </button>
-
               </div>
+
             </div>
           ))}
 

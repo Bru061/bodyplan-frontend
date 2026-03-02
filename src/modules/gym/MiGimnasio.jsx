@@ -47,7 +47,7 @@ function MiGimnasio() {
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [gym]);
+  }, [gym?.fotos]);
 
   useEffect(() => {
     if (!gym?.fotos) return;
@@ -55,7 +55,7 @@ function MiGimnasio() {
     if (imgIndex >= gym.fotos.length) {
       setImgIndex(0);
     }
-  }, [gym]);
+  }, [gym, imgIndex]);
 
 
   // 🔽 DESPUÉS DE TODOS LOS HOOKS
@@ -128,7 +128,7 @@ function MiGimnasio() {
           {/* PORTADA */}
         <section className="cover-card">
 
-          {gym.fotos?.length > 0 && (
+          {gym.fotos?.length > 0 && gym.fotos[imgIndex] && (
             <>
               <img
                 src={`uploads/gimnasios/${gym.fotos[imgIndex].url_foto}`}
