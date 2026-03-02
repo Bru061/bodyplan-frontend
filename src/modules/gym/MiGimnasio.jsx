@@ -11,14 +11,13 @@ import { FiEdit, FiTrash2, FiStar } from "react-icons/fi";
 function MiGimnasio() {
 
   const [gym, setGym] = useState(null);
-  const [imagenes, setImagenes] = useState([]);
+  const [imgIndex, setImgIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [openEdit, setOpenEdit] = useState(false);
   const [openHorarios, setOpenHorarios] = useState(false);
   const [openMembresias, setOpenMembresias] = useState(false);
   const [openFotos, setOpenFotos] = useState(false);
-  const [fotoActual, setFotoActual] = useState(0);
+
 
   const fetchGym = async () => {
     try {
@@ -26,22 +25,6 @@ function MiGimnasio() {
       const g = res.data.gimnasios?.[0] || null;
 
       setGym(g);
-
-      if (g?.fotos?.length > 0) {
-        const blobs = await Promise.all(
-          g.fotos.map(async (f) => {
-            const response = await fetch(
-              `http://bodyplan-api.giize.com:4000/uploads/gimnasios/${f.url_foto}?t=${Date.now()}`
-            );
-            const blob = await response.blob();
-            return URL.createObjectURL(blob);
-          })
-        );
-
-        setImagenes(blobs);
-      } else {
-        setImagenes([]);
-      }
 
     } catch (err) {
       console.error("Error cargando gym", err);
@@ -54,19 +37,25 @@ function MiGimnasio() {
     fetchGym();
   }, []);
 
-
-  // 🔥 SLIDER AUTO (DEBE IR AQUÍ ARRIBA)
   useEffect(() => {
-    if (!imagenes || imagenes.length <= 1) return;
+    if (!gym?.fotos || gym.fotos.length <= 1) return;
 
     const interval = setInterval(() => {
-      setFotoActual(prev =>
-        prev === imagenes.length - 1 ? 0 : prev + 1
+      setImgIndex(prev =>
+        prev === gym.fotos.length - 1 ? 0 : prev + 1
       );
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [imagenes]);
+  }, [gym]);
+
+  useEffect(() => {
+    if (!gym?.fotos) return;
+
+    if (imgIndex >= gym.fotos.length) {
+      setImgIndex(0);
+    }
+  }, [gym]);
 
 
   // 🔽 DESPUÉS DE TODOS LOS HOOKS
@@ -139,59 +128,58 @@ function MiGimnasio() {
           {/* PORTADA */}
         <section className="cover-card">
 
-          {/* IMAGEN ACTUAL */}
-          {imagenes && imagenes.length > 0 && (
-            <img
-              src={imagenes[fotoActual]}
-              alt="Portada gimnasio"
-              className="cover-image"
-            />
-          )}
-
-          {/* FLECHAS */}
-          {imagenes && imagenes.length > 1 && (
+          {gym.fotos?.length > 0 && (
             <>
-              <button
-                className="slider-btn left"
-                onClick={() =>
-                  setFotoActual(prev =>
-                    prev === 0 ? imagenes.length - 1 : prev - 1
-                  )
-                }
-              >
-                ‹
-              </button>
+              <img
+                src={`uploads/gimnasios/${gym.fotos[imgIndex].url_foto}`}
+                className="cover-image"
+              />
 
-              <button
-                className="slider-btn right"
-                onClick={() =>
-                  setFotoActual(prev =>
-                    prev === imagenes.length - 1 ? 0 : prev + 1
-                  )
-                }
-              >
-                ›
-              </button>
+              {/* flechas */}
+              {gym.fotos.length > 1 && (
+                <>
+                  <button
+                    className="slider-btn left"
+                    onClick={() =>
+                      setImgIndex(i =>
+                        i === 0 ? gym.fotos.length - 1 : i - 1
+                      )
+                    }
+                  >
+                    ‹
+                  </button>
+
+                  <button
+                    className="slider-btn right"
+                    onClick={() =>
+                      setImgIndex(i =>
+                        i === gym.fotos.length - 1 ? 0 : i + 1
+                      )
+                    }
+                  >
+                    ›
+                  </button>
+                </>
+              )}
+
+              {/* dots */}
+              <div className="slider-dots">
+                {gym.fotos.map((_, i) => (
+                  <span
+                    key={i}
+                    className={`dot ${i === imgIndex ? "active" : ""}`}
+                    onClick={() => setImgIndex(i)}
+                  />
+                ))}
+              </div>
             </>
-          )}
-
-          {/* DOTS */}
-          {imagenes && imagenes.length > 1 && (
-            <div className="slider-dots">
-              {imagenes.map((_, i) => (
-                <span
-                  key={i}
-                  className={`dot ${i === fotoActual ? "active" : ""}`}
-                  onClick={() => setFotoActual(i)}
-                />
-              ))}
-            </div>
           )}
 
           <div className="cover-overlay"></div>
 
           <div className="cover-content">
             <h2>{gym.nombre}</h2>
+            <p>{gym.Ubicacion?.municipio}, {gym.Ubicacion?.estado}</p>
           </div>
 
         </section>

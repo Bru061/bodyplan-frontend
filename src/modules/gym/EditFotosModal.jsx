@@ -8,6 +8,7 @@ function EditFotosModal({ gym, onClose, onUpdated }) {
   const [imagenesBlob, setImagenesBlob] = useState
   const fileRef = useRef();
 
+
   // =============================
   // ELIMINAR FOTO
   // =============================
@@ -37,7 +38,7 @@ function EditFotosModal({ gym, onClose, onUpdated }) {
 
       for (const f of gym.fotos) {
         const res = await fetch(
-          `http://bodyplan-api.giize.com:4000/uploads/gimnasios/${f.url_foto}`
+          `/uploads/gimnasios/${f.url_foto}`
         );
 
         const blob = await res.blob();
@@ -160,7 +161,7 @@ function EditFotosModal({ gym, onClose, onUpdated }) {
             <div key={i} className="foto-card">
 
               <img
-                src={`http://bodyplan-api.giize.com:4000/uploads/gimnasios/${f.url_foto}`}
+                src={`/uploads/gimnasios/${f.url_foto}`}
                 alt="foto"
               />
 

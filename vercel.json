@@ -3,6 +3,10 @@
     {
       "source": "/api/:path*",
       "destination": "http://bodyplan-api.giize.com:4000/api/:path*"
+    },
+    {
+      "source": "/uploads/:path*",
+      "destination": "http://bodyplan-api.giize.com:4000/uploads/:path*"
     }
   ]
 }
