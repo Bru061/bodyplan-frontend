@@ -10,7 +10,7 @@ function Rutinas() {
         <div>
           <p className="eyebrow">Gestión de rutinas</p>
           <h1>Rutinas de gimnasio</h1>
-          <p className="subtitle">Crea, organiza y asigna rutinas a clientes desde la web.</p>
+          <p className="subtitle">Crea, organiza y asigna rutinas a clientes.</p>
         </div>
       </section>
 

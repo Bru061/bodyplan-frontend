@@ -145,11 +145,7 @@
   text-decoration: none;
 }
 
-.logout-section {
-  margin-top: 0.9rem;
-  display: flex;
-  justify-content: flex-end;
-}
+
 
 .btn {
   border: 1px solid transparent;
@@ -168,6 +164,10 @@
 .btn-logout {
   color: #fff;
   background: var(--danger);
+}
+
+.btn-logout:hover {
+  background: #ba1616;
 }
 
 @media (max-width: 980px) {

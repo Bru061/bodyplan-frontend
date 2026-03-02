@@ -7,6 +7,7 @@ import ResetPassword from "../../modules/auth/ResetPassword";
 import Dashboard from "../../modules/dashboard/Dashboard";
 import Clientes from "../../modules/clientes/Clientes";
 import MiGimnasio from "../../modules/gym/MiGimnasio";
+import MisGimnasios from "../../modules/gym/MisGimnasios";
 import Rutinas from "../../modules/rutinas/rutinas";
 import Notificaciones from "../../modules/notificaciones/Notificaciones";
 import Perfil from "../../modules/perfil/perfil";
@@ -36,7 +37,8 @@ function AppRouter(){
           <Route path="/crear-gimnasio" element={<CreateGym />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/clientes" element={<Clientes />} />
-          <Route path="/gimnasio" element={<MiGimnasio />} />
+          <Route path="/mis-gimnasios" element={<MisGimnasios />} />
+          <Route path="/gimnasio/:id" element={<MiGimnasio />} />
           <Route path="/rutinas" element={<Rutinas />} />
           <Route path="/notificaciones" element={<Notificaciones />} />
           <Route path="/perfil" element={<Perfil />} />

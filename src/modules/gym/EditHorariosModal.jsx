@@ -59,9 +59,14 @@ const handleChange = (index, field, value) => {
       }
     }
 
-    const copia = horarios.filter((_, i) => i !== index);
-    setHorarios(copia);
-  };
+    if(horarios.length === 1){
+      alert("Debe existir al menos un horario");
+      return;
+    }  
+
+      const copia = horarios.filter((_, i) => i !== index);
+      setHorarios(copia);
+    };
 
 const handleSave = async () => {
   try {
@@ -69,25 +74,36 @@ const handleSave = async () => {
 
     for (const h of horarios) {
 
+      // 🔴 VALIDAR VACÍOS
+      if(!h.dia || !h.apertura || !h.cierre){
+        alert("Todos los horarios deben estar completos");
+        setLoading(false);
+        return;
+      }
+
       const apertura = h.apertura.length === 5 ? h.apertura + ":00" : h.apertura;
       const cierre = h.cierre.length === 5 ? h.cierre + ":00" : h.cierre;
 
-      // NUEVO
-      if (h.id_horario === null) {
+      // 🟢 NUEVO
+      if (!h.id_horario) {
+
         await api.post(`/gym/${gym.id_gimnasio}/horarios`, {
           dia_semana: h.dia,
           hora_apertura: apertura,
           hora_cierre: cierre
         });
-      }
 
-      // EDITAR
+      } 
+      
+      // 🔵 EDITAR
       else {
+
         await api.put(`/gym/${gym.id_gimnasio}/horarios/${h.id_horario}`, {
           dia_semana: h.dia,
           hora_apertura: apertura,
           hora_cierre: cierre
         });
+
       }
     }
 

@@ -6,7 +6,8 @@ import EditFotosModal from "./EditFotosModal"
 import DashboardLayout from "../../layout/DashboardLayout";
 import "../../styles/gimnasio.css";
 import api from "../../services/axios";
-import { FiEdit, FiTrash2, FiStar } from "react-icons/fi";
+import { FiEdit, FiStar } from "react-icons/fi";
+import { useParams } from "react-router-dom";
 
 function MiGimnasio() {
 
@@ -18,12 +19,19 @@ function MiGimnasio() {
   const [openMembresias, setOpenMembresias] = useState(false);
   const [openFotos, setOpenFotos] = useState(false);
 
+  const {id} = useParams();
+  console.log("ID PARAM:", id)
+
 
   const fetchGym = async () => {
     try {
-      const res = await api.get("/gym");
-      const g = res.data.gimnasios?.[0] || null;
+      if (!id) return;
 
+      const res = await api.get(`/gym/${id}`);
+      console.log("RESPUESTA BACK:", res.data);
+
+      const g = res.data.gimnasio;
+      console.log("GYM SET:", g)
       setGym(g);
 
     } catch (err) {
@@ -35,7 +43,7 @@ function MiGimnasio() {
 
   useEffect(() => {
     fetchGym();
-  }, []);
+  }, [id]);
 
   useEffect(() => {
     if (!gym?.fotos || gym.fotos.length <= 1) return;
@@ -58,13 +66,13 @@ function MiGimnasio() {
   }, [gym, imgIndex]);
 
 
-  // 🔽 DESPUÉS DE TODOS LOS HOOKS
-  if (loading) return <DashboardLayout><p>Cargando...</p></DashboardLayout>;
+  if (loading) return <DashboardLayout><h1>Cargando...</h1></DashboardLayout>;
 
+  console.log("GYM STATUS:", gym);
   if (!gym) {
     return (
       <DashboardLayout>
-        <p>No tienes gimnasio aún</p>
+        <h1>No tienes gimnasio aún</h1>
       </DashboardLayout>
     );
   }
@@ -131,7 +139,7 @@ function MiGimnasio() {
           {gym.fotos?.length > 0 && gym.fotos[imgIndex] && (
             <>
               <img
-                src={`uploads/gimnasios/${gym.fotos[imgIndex].url_foto}`}
+                src={`/uploads/gimnasios/${gym.fotos[imgIndex].url_foto}`}
                 className="cover-image"
               />
 
@@ -179,7 +187,6 @@ function MiGimnasio() {
 
           <div className="cover-content">
             <h2>{gym.nombre}</h2>
-            <p>{gym.Ubicacion?.municipio}, {gym.Ubicacion?.estado}</p>
           </div>
 
         </section>
@@ -252,9 +259,6 @@ function MiGimnasio() {
               <FiStar size={18} /> Destacar
             </button>
 
-            <button className="btn btn-danger" type="button">
-              <FiTrash2 size={18} /> Desactivar gimnasio
-            </button>
           </section>
 
         </article>

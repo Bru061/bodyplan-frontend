@@ -27,9 +27,25 @@ function CreateGym() {
   const [membresias, setMembresias] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [errors, setErrors] = useState({});
+
+  const soloLetras = (texto) => {
+    return /^[a-zA-ZÁÉÍÓÚáéíóúÑñ ]+$/.test(texto);
+  };
+
+  const urlValida = (url) => {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  };
 
   // ===== CREAR GIMNASIO =====
   const handleCreateGym = async () => {
+
+
     setError("");
 
     if (!form.nombre || !form.descripcion) {
@@ -39,6 +55,16 @@ function CreateGym() {
 
     if (fotos.length === 0) {
       setError("Debes subir al menos una foto");
+      return;
+    }
+
+    if (!urlValida(form.url_map)) {
+      setError("URL de Google Maps inválida");
+      return;
+    }
+
+    if (!form.direccion || !form.municipio || !form.estado || !form.codigo_postal) {
+      setError("Debes agregar la dirección, municipio, estado y código postal");
       return;
     }
 
@@ -64,12 +90,30 @@ function CreateGym() {
       }
     }
 
-    for (let m of membresias) {
+        // ===== MEMBRESÍAS =====
+    for (const m of membresias) {
+
       if (!m.nombre || !m.precio || !m.duracion) {
-        setError("Todas las membresías deben tener nombre, precio y duración");
+        setError("Completa todas las membresías");
+        return;
+      }
+
+      if (!soloLetras(m.nombre)) {
+        setError("Nombre de membresía inválido");
+        return;
+      }
+
+      if (Number(m.precio) < 1) {
+        setError("El precio debe ser mayor a 1");
+        return;
+      }
+
+      if (Number(m.duracion) < 1) {
+        setError("La duración debe ser mayor a 1 día");
         return;
       }
     }
+
 
     try {
       setLoading(true);
@@ -109,7 +153,7 @@ function CreateGym() {
         headers: { "Content-Type": "multipart/form-data" }
       });
 
-      navigate("/gimnasio");
+      navigate("/mis-gimnasios");
 
     } catch (err) {
       console.log("ERROR COMPLETO:");
@@ -123,7 +167,67 @@ function CreateGym() {
     }
   };
 
+  // ===== VALIDACIONES =====
+const handleChange = (e) => {
+  let { name, value } = e.target;
 
+  // ===== TELEFONO → solo números =====
+  if (name === "telefono") {
+    value = value.replace(/[^0-9]/g, "");
+  }
+
+  // ===== DIRECCIÓN → letras, números y espacios (sin símbolos raros) =====
+  if (name === "direccion") {
+    value = value.replace(/[^A-Za-z0-9ÁÉÍÓÚáéíóúÑñ\s#.,]/g, "");
+  }
+
+  // ===== MUNICIPIO / ESTADO / LOCALIDAD → solo letras y espacios =====
+  if (name === "municipio" || name === "estado" || name === "localidad") {
+    value = value.replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g, "");
+  }
+
+  // ===== CÓDIGO POSTAL → solo números =====
+  if (name === "codigo_postal") {
+    value = value.replace(/[^0-9]/g, "");
+  }
+
+  // ===== URL MAPA → formato url básico =====
+  if (name === "url_map") {
+    value = value.replace(/\s/g, "");
+  }
+
+  // ===== NOMBRE GIMNASIO → solo letras y números =====
+  if (name === "nombre") {
+    value = value.replace(/[^A-Za-z0-9ÁÉÍÓÚáéíóúÑñ\s]/g, "");
+  }
+
+  setForm(prev => ({
+    ...prev,
+    [name]: value
+  }));
+};
+
+const handleMembresiaChange = (i, field, value) => {
+
+  // nombre membresía → solo letras y números
+  if(field === "nombre"){
+    value = value.replace(/[^A-Za-z0-9ÁÉÍÓÚáéíóúÑñ\s]/g, "");
+  }
+
+  // precio → solo números y > 0
+  if(field === "precio"){
+    value = value.replace(/[^0-9]/g, "");
+  }
+
+  // duración → solo números
+  if(field === "duracion"){
+    value = value.replace(/[^0-9]/g, "");
+  }
+
+  const copy = [...membresias];
+  copy[i][field] = value;
+  setMembresias(copy);
+};
 
   return (
     <OnboardingLayout>
@@ -158,20 +262,26 @@ function CreateGym() {
 
               <input
                 className="w-full bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+                name="nombre"
+                value={form.nombre}
+                onChange={handleChange}
                 placeholder="Nombre del gimnasio"
-                onChange={e => setForm({ ...form, nombre: e.target.value })}
               />
 
               <textarea
                 className="w-full bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Descripción"
-                onChange={e => setForm({ ...form, descripcion: e.target.value })}
+                value={form.descripcion}
+                onChange={handleChange}
+                name="descripcion"
               />
 
               <input
-                className="w-full bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+                className={`w-full bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 ${errors.telefono ? "border-red-500" : ""}`}
+                name="telefono"
+                value={form.telefono}
+                onChange={handleChange}
                 placeholder="Teléfono"
-                onChange={e => setForm({ ...form, telefono: e.target.value })}
               />
 
             </div>
@@ -187,38 +297,52 @@ function CreateGym() {
 
               <input
                 className="bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+                name="direccion"
+                value={form.direccion}
+                onChange={handleChange}
                 placeholder="Dirección"
-                onChange={e => setForm({ ...form, direccion: e.target.value })}
               />
 
               <input
-                className="bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+                className={`bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 ${errors.municipio ? "border-red-500" : ""}`}
+                name="municipio"
+                value={form.municipio}
+                onChange={handleChange}
                 placeholder="Municipio"
-                onChange={e => setForm({ ...form, municipio: e.target.value })}
               />
 
               <input
-                className="bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+                className={`bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 ${errors.estado ? "border-red-500" : ""}`}
+                name="estado"
+                value={form.estado}
+                onChange={handleChange}
                 placeholder="Estado"
-                onChange={e => setForm({ ...form, estado: e.target.value })}
               />
 
+
               <input
-                className="bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+                className={`bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 ${errors.codigo_postal ? "border-red-500" : ""}`}
                 placeholder="Código postal"
-                onChange={e => setForm({ ...form, codigo_postal: e.target.value })}
+                value={form.codigo_postal}
+                onChange={handleChange}
+                name="codigo_postal"
               />
 
+
               <input
-                className="bg-slate-100 rounded-xl px-4 py-3"
+                className={`bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 ${errors.localidad ? "border-red-500" : ""}`}
+                name="localidad"
+                value={form.localidad}
+                onChange={handleChange}
                 placeholder="Localidad / colonia"
-                onChange={e => setForm({ ...form, localidad: e.target.value })}
               />
 
               <input
-                className="bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+                className={`bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 ${errors.url_map ? "border-red-500" : ""}`}
+                name="url_map"
+                value={form.url_map}
+                onChange={handleChange}
                 placeholder="URL de Google Maps"
-                onChange={e => setForm({ ...form, url_map: e.target.value })}
               />
 
             </div>

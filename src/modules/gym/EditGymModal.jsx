@@ -21,11 +21,23 @@ function EditGymModal({ gym, onClose, onUpdated }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const onlyNumbers = (value) => value.replace(/[^0-9]/g, "");
+  const onlyLetters = (value) => value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "");
+  const lettersNumbers = (value) => value.repace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]/g, "");
+
+  const camposVacios = Object.values(form).some(v => v.trim() === "");
+
+
   // ================= GUARDAR =================
   const handleSave = async () => {
     try {
       setLoading(true);
       setError("");
+
+      if(camposVacios){
+        alert("Todos los campos son obligatorios");
+        return;
+      }
 
       console.log("EDITANDO GYM:", gym.id_gimnasio);
 
@@ -79,7 +91,10 @@ return (
         <label>Nombre del gimnasio</label>
         <input
           value={form.nombre}
-          onChange={e=>setForm({...form,nombre:e.target.value})}
+          onChange={e=>{
+            const v = e.target.value;
+            setForm({...form,nombre:v});
+          }}
         />
 
         <label>Descripción</label>
@@ -91,7 +106,10 @@ return (
         <label>Teléfono</label>
         <input
           value={form.telefono}
-          onChange={e=>setForm({...form,telefono:e.target.value})}
+          onChange={e=>{
+            const limpio = onlyNumbers(e.target.value);
+            setForm({...form,telefono:limpio});
+          }}
         />
 
         <h3 className="section-title">Ubicación</h3>
@@ -101,7 +119,10 @@ return (
             <label>Dirección</label>
             <input
               value={form.direccion}
-              onChange={e=>setForm({...form,direccion:e.target.value})}
+              onChange={e=>{
+                const limpio = lettersNumbers(e.target.value)
+                setForm({...form,direccion:limpio});
+              }}
             />
           </div>
 
@@ -109,15 +130,20 @@ return (
             <label>Municipio</label>
             <input
               value={form.municipio}
-              onChange={e=>setForm({...form,municipio:e.target.value})}
+              onChange={e=>{
+              const limpio = onlyLetters(e.target.value);
+              setForm({...form,municipio:limpio});
+            }}
             />
           </div>
 
           <div>
-            <label>Estado</label>
             <input
               value={form.estado}
-              onChange={e=>setForm({...form,estado:e.target.value})}
+              onChange={e=>{
+              const limpio = onlyLetters(e.target.value);
+              setForm({...form,estado:limpio});
+            }}
             />
           </div>
 
@@ -125,7 +151,10 @@ return (
             <label>Código postal</label>
             <input
               value={form.codigo_postal}
-              onChange={e=>setForm({...form,codigo_postal:e.target.value})}
+              onChange={e=>{
+                const limpio = onlyNumbers(e.target.value);
+                setForm({...form,codigo_postal:limpio});
+              }}
             />
           </div>
         </div>

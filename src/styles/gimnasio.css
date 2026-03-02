@@ -492,6 +492,10 @@
   }
 }
 
+.subtitle{
+  text-align:left;
+}
+
 /* ===== GRID FOTOS ===== */
 .fotos-grid{
   display:grid;
@@ -688,6 +692,18 @@
   margin-top:6px;
   font-size:.85rem;
   color:#64748b;
+}
+
+.badge-activo{
+  color:#16a34a;
+  font-weight:600;
+  font-size:.9rem;
+}
+
+.badge-off{
+  color:#ef4444;
+  font-weight:600;
+  font-size:.9rem;
 }
 
 /* ===== RESPONSIVE ===== */

@@ -6,6 +6,8 @@ function EditMembresiasModal({ gym, onClose, onUpdated }) {
   const [membresias, setMembresias] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  const noSpecial = (value) => value.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]/g, "");
+
   // ================= CARGAR EXISTENTES =================
   useEffect(() => {
     if (!gym) return;
@@ -55,6 +57,12 @@ function EditMembresiasModal({ gym, onClose, onUpdated }) {
       }
     }
 
+    if(membresias.length === 1){
+      alert("Debe existir al menos una membresía");
+      return;
+    }
+  
+
     const copia = membresias.filter((_, i) => i !== index);
     setMembresias(copia);
   };
@@ -84,6 +92,13 @@ function EditMembresiasModal({ gym, onClose, onUpdated }) {
             duracion_dias: Number(m.duracion),
             descripcion: m.descripcion
           });
+        }
+      }
+
+      for(let m of membresias){
+        if(m.nombre.trim() === ""){
+          alert("Las membresías deben tener nombre");
+          return;
         }
       }
 
@@ -117,7 +132,10 @@ function EditMembresiasModal({ gym, onClose, onUpdated }) {
               <input
                 placeholder="Nombre"
                 value={m.nombre}
-                onChange={(e)=>handleChange(i,"nombre",e.target.value)}
+                onChange={(e)=>{
+                  const limpio = noSpecial(e.target.value);
+                  handleChange(i,"nombre",limpio);
+                }}
               />
             </div>
 
@@ -127,7 +145,11 @@ function EditMembresiasModal({ gym, onClose, onUpdated }) {
                 type="number"
                 placeholder="Precio"
                 value={m.precio}
-                onChange={(e)=>handleChange(i,"precio",e.target.value)}
+                onChange={(e)=>{
+                  let v = onlyNumbers(e.target.value);
+                  if(v !== "" && parseInt(v) < 1) v = 1;
+                  handleChange(i,"precio",v);
+                }}
               />
             </div>
 
@@ -137,7 +159,11 @@ function EditMembresiasModal({ gym, onClose, onUpdated }) {
                 type="number"
                 placeholder="Duración días"
                 value={m.duracion}
-                onChange={(e)=>handleChange(i,"duracion",e.target.value)}
+                onChange={(e)=>{
+                  let v = onlyNumbers(e.target.value);
+                  if(v !== "" && parseInt(v) < 1) v = 1;
+                  handleChange(i,"duracion",v);
+                }}
               />
             </div>
 
