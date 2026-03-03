@@ -7,6 +7,7 @@ function EditMembresiasModal({ gym, onClose, onUpdated }) {
   const [loading, setLoading] = useState(false);
 
   const noSpecial = (value) => value.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]/g, "");
+  const onlyNumbers = (value) => value.replace(/[^0-9]/g, "");
 
   // ================= CARGAR EXISTENTES =================
   useEffect(() => {
@@ -68,50 +69,66 @@ function EditMembresiasModal({ gym, onClose, onUpdated }) {
   };
 
   // ================= GUARDAR =================
-  const handleSave = async () => {
-    try {
-      setLoading(true);
+const handleSave = async () => {
 
-      for (const m of membresias) {
+  let nombres = new Set();
 
-        // NUEVA
-        if (!m.id) {
-          await api.post(`/gym/${gym.id_gimnasio}/membresias`, {
-            nombre: m.nombre,
-            precio: Number(m.precio),
-            duracion_dias: Number(m.duracion),
-            descripcion: m.descripcion
-          });
-        }
+  for (const m of membresias) {
 
-        // EDITAR
-        else {
-          await api.put(`/gym/membresias/${m.id}`, {
-            nombre: m.nombre,
-            precio: Number(m.precio),
-            duracion_dias: Number(m.duracion),
-            descripcion: m.descripcion
-          });
-        }
-      }
-
-      for(let m of membresias){
-        if(m.nombre.trim() === ""){
-          alert("Las membresías deben tener nombre");
-          return;
-        }
-      }
-
-      onUpdated();
-      onClose();
-
-    } catch (err) {
-      console.error("Error guardando membresías", err.response?.data || err);
-      alert("Error al guardar membresías");
-    } finally {
-      setLoading(false);
+    if (!m.nombre.trim()) {
+      alert("Las membresías deben tener nombre");
+      return;
     }
-  };
+
+    if (Number(m.precio) < 1) {
+      alert("El precio debe ser mayor a 0");
+      return;
+    }
+
+    if (Number(m.duracion) < 1) {
+      alert("La duración debe ser mayor a 0");
+      return;
+    }
+
+    if (nombres.has(m.nombre.toLowerCase())) {
+      alert("No puedes repetir nombres de membresía");
+      return;
+    }
+
+    nombres.add(m.nombre.toLowerCase());
+  }
+
+  try {
+    setLoading(true);
+
+    for (const m of membresias) {
+
+      if (!m.id) {
+        await api.post(`/gym/${gym.id_gimnasio}/membresias`, {
+          nombre: m.nombre,
+          precio: Number(m.precio),
+          duracion_dias: Number(m.duracion),
+          descripcion: m.descripcion
+        });
+      } else {
+        await api.put(`/gym/membresias/${m.id}`, {
+          nombre: m.nombre,
+          precio: Number(m.precio),
+          duracion_dias: Number(m.duracion),
+          descripcion: m.descripcion
+        });
+      }
+    }
+
+    onUpdated();
+    onClose();
+
+  } catch (err) {
+    alert("Error al guardar membresías");
+  } finally {
+    setLoading(false);
+  }
+};
 
   // ================= UI =================
   return (

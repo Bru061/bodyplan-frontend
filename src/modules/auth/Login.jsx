@@ -37,12 +37,20 @@ function Login() {
     setLoading(true);
 
     try {
-      const result = await signIn({
+      await signIn({
         correo: form.correo,
         password: form.password,
       });
 
-      navigate(result.redirectTo);
+      // 🔥 Aquí decides
+      const resGyms = await api.get("/gym");
+      const gimnasios = resGyms.data.gimnasios || [];
+
+      if (gimnasios.length === 0) {
+        navigate("/mis-gimnasios");
+      } else {
+        navigate("/dashboard");
+      }
 
     } catch (err) {
       const msg =
@@ -102,19 +110,22 @@ function Login() {
                 e.preventDefault();
                 handleSubmit(e);
               }}>
+              <div>
+              <label htmlFor="correo">Correo electrónico</label>
               <input
                 type="email"
                 name="correo"
-                placeholder="Correo electrónico"
                 value={form.correo}
                 onChange={handleChange}
                 required
               />
+              </div>
+              
               <div className="password-field">
+                <label htmlFor="password">Contraseña</label>
                 <input
                   type={showPassword ? "text" : "password"}
                   name="password"
-                  placeholder="Contraseña"
                   value={form.password}
                   onChange={handleChange}
                   required

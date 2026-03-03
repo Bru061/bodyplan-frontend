@@ -105,11 +105,13 @@
   margin: 5px 0 10px 0;
 }
 
-.subtitle {
-  color: var(--text-muted);
+.login-form-inner .subtitle {
+  color: var(--text-secondary);
   font-size: 0.95rem;
   margin-bottom: 40px;
   margin-top: 10px;
+  text-align: center;
+  font-weight: 500;
 }
 
 .google-btn {
@@ -251,6 +253,11 @@
 .login-side h2, p {
   color: white;
   text-align: center;
+}
+
+.label{
+  font-size: 0.9rem;
+  color: var(--text-secondary);
 }
 
 

@@ -74,12 +74,28 @@ const handleSave = async () => {
 
     for (const h of horarios) {
 
+      let diasUsados = new Set();
+
       // 🔴 VALIDAR VACÍOS
       if(!h.dia || !h.apertura || !h.cierre){
         alert("Todos los horarios deben estar completos");
         setLoading(false);
         return;
       }
+
+      if (!horaEsValida(h.apertura, h.cierre)) {
+        alert("La hora de cierre debe ser mayor que la apertura");
+        setLoading(false);
+        return;
+      }
+
+      if (diasUsados.has(h.dia)) {
+        alert("No puedes repetir el mismo día");
+        setLoading(false);
+        return;
+      }
+
+      diasUsados.add(h.dia);
 
       const apertura = h.apertura.length === 5 ? h.apertura + ":00" : h.apertura;
       const cierre = h.cierre.length === 5 ? h.cierre + ":00" : h.cierre;
@@ -116,6 +132,12 @@ const handleSave = async () => {
   } finally {
     setLoading(false);
   }
+};
+
+const horaEsValida = (apertura, cierre) => {
+  const [h1, m1] = apertura.split(":").map(Number);
+  const [h2, m2] = cierre.split(":").map(Number);
+  return (h2 * 60 + m2) > (h1 * 60 + m1);
 };
 
   return (

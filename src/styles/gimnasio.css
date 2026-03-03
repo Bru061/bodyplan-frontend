@@ -292,6 +292,7 @@
   border-radius:10px;
   font-size:.85rem;
   margin-top:15px;
+  
 }
 
 .modal-actions{
@@ -401,9 +402,18 @@
 .field-group input:focus,
 .field-group select:focus{
   background:white;
-  border-color:#2563eb;
-  box-shadow:0 0 0 2px rgba(37,99,235,.15);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
 }
+
+.textarea-group{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  flex:1;
+  min-width:150px;
+}
+
 .delete-row{
   display:flex;
   justify-content:flex-end;

@@ -14,7 +14,7 @@ export default function PublicRoute() {
   if (loading) return null;
 
   if (isAuthenticated) {
-    return <Navigate to={getRedirectByRole(user?.role)} replace />;
+    return <Navigate to="/mis-gimnasios" replace />;
   }
 
   return <Outlet />;

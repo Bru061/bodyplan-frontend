@@ -82,7 +82,7 @@ function Register() {
         password: form.password,
       });
 
-      navigate(result.redirectTo);
+      navigate("/mis-gimnasios");
 
     } catch (err) {
       const msg =
@@ -106,7 +106,7 @@ function Register() {
 
       const response = await signInWithGoogle(idToken);
 
-      navigate(response.redirectTo);
+      navigate("/mis-gimnasios");
 
     } catch (error) {
       console.error(error);
@@ -136,51 +136,62 @@ function Register() {
             {error && <p style={{ color: "red", textAlign: "center" }}>{error}</p>}
 
             <form className="login-fields" onSubmit={handleSubmit}>
+              
+              <div>
+                <label htmlFor="nombre">Nombre</label>
               <input
                 type="text"
                 name="nombre"
                 className="full-width"
-                placeholder="Nombre"
                 value={form.nombre}
                 onChange={handleChange}
                 required
               />
+              </div>
 
+              <div>
+              <label htmlFor="apellido_paterno">Apellido paterno</label>
               <input
                 type="text"
                 name="apellido_paterno"
                 className="full-width"
-                placeholder="Apellido paterno"
                 value={form.apellido_paterno}
                 onChange={handleChange}
                 required
               />
+              </div>
 
+              <div>
+              <label htmlFor="apellido_materno">Apellido materno</label>
               <input
                 type="text"
                 name="apellido_materno"
                 className="full-width"
-                placeholder="Apellido materno"
                 value={form.apellido_materno}
                 onChange={handleChange}
                 required
               />
+              </div>
 
+              <div>
+              <label htmlFor="correo">Correo electrónico</label>
               <input
                 type="email"
                 name="correo"
                 className="full-width"
-                placeholder="Correo electrónico"
                 value={form.correo}
                 onChange={handleChange}
                 required
               />
+              </div>
+
+              <div>
+              <label htmlFor="password">Contraseña</label>
               <div className="password-field">
                 <input
                   type={showPassword ? "text" : "password"}
                   name="password"
                   className="full-width"
-                  placeholder="Contraseña"
                   value={form.password}
                   onChange={handleChange}
                   required
@@ -189,13 +200,15 @@ function Register() {
                   {showPassword ? <FiEyeOff /> : <FiEye />}
                 </button>
               </div>
+              </div>
 
+              <div>
+              <label htmlFor="confirmPassword">Confirmar contraseña</label>
               <div className="password-field">
                 <input
                   type={showConfirmPassword ? "text" : "password"}
                   name="confirmPassword"
                   className="full-width"
-                  placeholder="Confirmar contraseña"
                   value={form.confirmPassword}
                   onChange={handleChange}
                   required
@@ -203,6 +216,7 @@ function Register() {
                 <button type="button" className="eye-btn" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
                   {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
                 </button>
+              </div>
               </div>
 
               {form.confirmPassword && form.password !== form.confirmPassword && (

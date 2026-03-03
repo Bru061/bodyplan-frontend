@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import api from "../../services/axios";
 
 function EditGymModal({ gym, onClose, onUpdated }) {
@@ -20,55 +20,64 @@ function EditGymModal({ gym, onClose, onUpdated }) {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [errors,setErrors] = useState({});
 
   const onlyNumbers = (value) => value.replace(/[^0-9]/g, "");
   const onlyLetters = (value) => value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "");
-  const lettersNumbers = (value) => value.repace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]/g, "");
+  const lettersNumbers = (value) => value.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]/g, "");
 
-  const camposVacios = Object.values(form).some(v => v.trim() === "");
+const handleSave = async () => {
 
+  let newErrors = {};
+  setError("");
 
-  // ================= GUARDAR =================
-  const handleSave = async () => {
-    try {
-      setLoading(true);
-      setError("");
+  // Obligatorios
+  if (!form.nombre.trim()) newErrors.nombre = true;
+  if (!form.descripcion.trim()) newErrors.descripcion = true;
+  if (!form.telefono.trim()) newErrors.telefono = true;
+  if (!form.direccion.trim()) newErrors.direccion = true;
+  if (!form.municipio.trim()) newErrors.municipio = true;
+  if (!form.estado.trim()) newErrors.estado = true;
+  if (!form.codigo_postal.trim()) newErrors.codigo_postal = true;
 
-      if(camposVacios){
-        alert("Todos los campos son obligatorios");
-        return;
-      }
+  // Teléfono 10 dígitos
+  if (form.telefono.length !== 10) newErrors.telefono = true;
 
-      console.log("EDITANDO GYM:", gym.id_gimnasio);
+  // Código postal 5 dígitos
+  if (form.codigo_postal.length !== 5) newErrors.codigo_postal = true;
 
-      // 1️⃣ actualizar info básica
-      await api.put(`/gym/${gym.id_gimnasio}`, {
-        nombre: form.nombre,
-        descripcion: form.descripcion,
-        telefono: form.telefono
-      });
+  if (Object.keys(newErrors).length > 0) {
+    setErrors(newErrors);
+    setError("Verifica los campos marcados en rojo");
+    return;
+  }
 
-      // 2️⃣ actualizar ubicación
-      await api.put(`/gym/${gym.id_gimnasio}/ubicacion`, {
-        direccion: form.direccion,
-        municipio: form.municipio,
-        estado: form.estado,
-        pais: form.pais,
-        codigo_postal: form.codigo_postal
-      });
+  try {
+    setLoading(true);
 
-      console.log("GYM ACTUALIZADO");
+    await api.put(`/gym/${gym.id_gimnasio}`, {
+      nombre: form.nombre,
+      descripcion: form.descripcion,
+      telefono: form.telefono
+    });
 
-      onUpdated(); // recargar gym
-      onClose();   // cerrar modal
+    await api.put(`/gym/${gym.id_gimnasio}/ubicacion`, {
+      direccion: form.direccion,
+      municipio: form.municipio,
+      estado: form.estado,
+      pais: form.pais,
+      codigo_postal: form.codigo_postal
+    });
 
-    } catch (err) {
-      console.error(err);
-      setError(err?.response?.data?.error || "Error al actualizar gimnasio");
-    } finally {
-      setLoading(false);
-    }
-  };
+    onUpdated();
+    onClose();
+
+  } catch (err) {
+    setError(err?.response?.data?.error || "Error al actualizar gimnasio");
+  } finally {
+    setLoading(false);
+  }
+};
 
 return (
   <div className="modal-overlay">
@@ -95,12 +104,24 @@ return (
             const v = e.target.value;
             setForm({...form,nombre:v});
           }}
+            style={{
+              border: errors.nombre ? "2px solid red" : "1px solid #ccc",
+              borderRadius: "8px",
+              padding: "8px 10px"
+            }}
         />
 
         <label>Descripción</label>
         <textarea
           value={form.descripcion}
           onChange={e=>setForm({...form,descripcion:e.target.value})}
+          style={{
+            width: "100%",
+            border: errors.descripcion ? "2px solid #dc2626" : "1px solid #d1d5db",
+            borderRadius: "8px",
+            padding: "8px 10px",
+            backgroundColor: errors.descripcion ? "#fef2f2" : "white"
+          }}
         />
 
         <label>Teléfono</label>
@@ -109,6 +130,11 @@ return (
           onChange={e=>{
             const limpio = onlyNumbers(e.target.value);
             setForm({...form,telefono:limpio});
+          }}
+            style={{
+            border: errors.telefono ? "2px solid red" : "1px solid #ccc",
+            borderRadius: "8px",
+            padding: "8px 10px"
           }}
         />
 
@@ -123,6 +149,11 @@ return (
                 const limpio = lettersNumbers(e.target.value)
                 setForm({...form,direccion:limpio});
               }}
+                style={{
+                border: errors.direccion ? "2px solid red" : "1px solid #ccc",
+                borderRadius: "8px",
+                padding: "8px 10px"
+              }}
             />
           </div>
 
@@ -134,6 +165,11 @@ return (
               const limpio = onlyLetters(e.target.value);
               setForm({...form,municipio:limpio});
             }}
+              style={{
+              border: errors.municipio ? "2px solid red" : "1px solid #ccc",
+              borderRadius: "8px",
+              padding: "8px 10px"
+            }}
             />
           </div>
 
@@ -143,6 +179,11 @@ return (
               onChange={e=>{
               const limpio = onlyLetters(e.target.value);
               setForm({...form,estado:limpio});
+            }}
+              style={{
+              border: errors.estado ? "2px solid red" : "1px solid #ccc",
+              borderRadius: "8px",
+              padding: "8px 10px"
             }}
             />
           </div>
@@ -154,6 +195,11 @@ return (
               onChange={e=>{
                 const limpio = onlyNumbers(e.target.value);
                 setForm({...form,codigo_postal:limpio});
+              }}
+              style={{
+                border: errors.codigo_postal ? "2px solid red" : "1px solid #ccc",
+                borderRadius: "8px",
+                padding: "8px 10px"
               }}
             />
           </div>

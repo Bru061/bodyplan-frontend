@@ -29,10 +29,6 @@ function CreateGym() {
   const [error, setError] = useState("");
   const [errors, setErrors] = useState({});
 
-  const soloLetras = (texto) => {
-    return /^[a-zA-ZÁÉÍÓÚáéíóúÑñ ]+$/.test(texto);
-  };
-
   const urlValida = (url) => {
     try {
       new URL(url);
@@ -45,16 +41,104 @@ function CreateGym() {
   // ===== CREAR GIMNASIO =====
   const handleCreateGym = async () => {
 
-
+    let newErrors = {};
     setError("");
 
-    if (!form.nombre || !form.descripcion) {
-      setError("Nombre y descripción obligatorios");
+      // ===== INFO BÁSICA =====
+  if (!form.nombre.trim()) newErrors.nombre = true;
+  if (!form.descripcion.trim()) newErrors.descripcion = true;
+  if (!form.telefono.trim()) newErrors.telefono = true;
+  if (!form.telefono || form.telefono.length !== 10) {
+    newErrors.telefono = true;
+  }
+
+  // ===== UBICACIÓN =====
+  if (!form.direccion.trim()) newErrors.direccion = true;
+  if (!form.municipio.trim()) newErrors.municipio = true;
+  if (!form.estado.trim()) newErrors.estado = true;
+  if (!form.codigo_postal.trim()) newErrors.codigo_postal = true;
+  if (!form.codigo_postal || form.codigo_postal.length !== 5) {
+    newErrors.codigo_postal = true;
+  }
+  if (!form.url_map.trim()) newErrors.url_map = true;
+
+  // ===== FOTOS =====
+  if (fotos.length === 0) {
+    setError("Debes subir al menos una foto");
+    scrollToFirstError();
+    return;
+  }
+
+  // ===== HORARIOS =====
+  if (horarios.length === 0) {
+    setError("Agrega al menos un horario");
+    scrollToFirstError();
+    return;
+  }
+
+  for (let h of horarios) {
+    if (!h.dia || !h.apertura || !h.cierre) {
+      setError("Todos los horarios deben estar completos");
+      scrollToFirstError();
       return;
     }
 
-    if (fotos.length === 0) {
-      setError("Debes subir al menos una foto");
+    if (!horaEsValida(h.apertura, h.cierre)) {
+      setError("La hora de cierre debe ser mayor que la de apertura");
+      scrollToFirstError();
+      return;
+    }
+  }
+
+  // ===== MEMBRESÍAS =====
+  if (membresias.length === 0) {
+    setError("Agrega al menos una membresía");
+    scrollToFirstError();
+    return;
+  }
+
+  for (const m of membresias) {
+    if (!m.nombre || !m.precio || !m.duracion) {
+      setError("Completa todas las membresías");
+      scrollToFirstError();
+      return;
+    }
+
+    if (Number(m.precio) < 1) {
+      setError("El precio debe ser mayor a 0");
+      scrollToFirstError();
+      return;
+    }
+
+    if (Number(m.duracion) < 1) {
+      setError("La duración debe ser mayor a 0");
+      scrollToFirstError();
+      return;
+    }
+  }
+
+  // ===== SI HAY ERRORES DE CAMPOS =====
+  if (Object.keys(newErrors).length > 0) {
+
+    if (newErrors.telefono) {
+      setError("El teléfono debe tener exactamente 10 dígitos");
+    } 
+    else if (newErrors.codigo_postal) {
+      setError("El código postal debe tener exactamente 5 dígitos");
+    }
+    else {
+      setError("Por favor completa los campos obligatorios correctamente");
+    }
+
+    setErrors(newErrors);
+    setTimeout(scrollToFirstError, 100);
+    return;
+  }
+
+  setErrors({});
+
+    if (!form.nombre || !form.descripcion) {
+      setError("Nombre y descripción obligatorios");
       return;
     }
 
@@ -72,48 +156,6 @@ function CreateGym() {
       setError("Debes agregar el enlace de Google Maps");
       return;
     }
-
-    if (horarios.length === 0) {
-      setError("Agrega al menos un horario");
-      return;
-    }
-
-    if (membresias.length === 0) {
-      setError("Agrega al menos una membresía");
-      return;
-    }
-
-    for (let h of horarios) {
-      if (!h.dia || !h.apertura || !h.cierre) {
-        setError("Todos los horarios deben estar completos");
-        return;
-      }
-    }
-
-        // ===== MEMBRESÍAS =====
-    for (const m of membresias) {
-
-      if (!m.nombre || !m.precio || !m.duracion) {
-        setError("Completa todas las membresías");
-        return;
-      }
-
-      if (!soloLetras(m.nombre)) {
-        setError("Nombre de membresía inválido");
-        return;
-      }
-
-      if (Number(m.precio) < 1) {
-        setError("El precio debe ser mayor a 1");
-        return;
-      }
-
-      if (Number(m.duracion) < 1) {
-        setError("La duración debe ser mayor a 1 día");
-        return;
-      }
-    }
-
 
     try {
       setLoading(true);
@@ -205,28 +247,61 @@ const handleChange = (e) => {
     ...prev,
     [name]: value
   }));
+
+  if (errors[name]) {
+    setErrors(prev => ({
+      ...prev,
+      [name]: false
+    }));
+  }
 };
 
-const handleMembresiaChange = (i, field, value) => {
+const handleCancel = () => {
 
-  // nombre membresía → solo letras y números
-  if(field === "nombre"){
-    value = value.replace(/[^A-Za-z0-9ÁÉÍÓÚáéíóúÑñ\s]/g, "");
+  const hayCambios =
+    form.nombre ||
+    form.descripcion ||
+    form.telefono ||
+    fotos.length > 0 ||
+    horarios.length > 0 ||
+    membresias.length > 0;
+
+  if (!hayCambios) {
+    navigate("/mis-gimnasios");
+    return;
   }
 
-  // precio → solo números y > 0
-  if(field === "precio"){
-    value = value.replace(/[^0-9]/g, "");
-  }
+  const confirm = window.confirm(
+    "Tienes cambios sin guardar. ¿Seguro que deseas salir?"
+  );
 
-  // duración → solo números
-  if(field === "duracion"){
-    value = value.replace(/[^0-9]/g, "");
+  if (confirm) {
+    navigate("/mis-gimnasios");
   }
+};
 
-  const copy = [...membresias];
-  copy[i][field] = value;
-  setMembresias(copy);
+const scrollToFirstError = () => {
+  const firstErrorField = document.querySelector(".input-error");
+  if (firstErrorField) {
+    firstErrorField.scrollIntoView({
+      behavior: "smooth",
+      block: "center"
+    });
+  } else {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+};
+
+const horaEsValida = (apertura, cierre) => {
+  if (!apertura || !cierre) return false;
+
+  const [h1, m1] = apertura.split(":").map(Number);
+  const [h2, m2] = cierre.split(":").map(Number);
+
+  const minutosApertura = h1 * 60 + m1;
+  const minutosCierre = h2 * 60 + m2;
+
+  return minutosCierre > minutosApertura;
 };
 
   return (
@@ -260,29 +335,38 @@ const handleMembresiaChange = (i, field, value) => {
 
             <div className="space-y-4">
 
+              <div>
+              <label htmlFor="nombre">Nombre del gimnasio *</label>
               <input
-                className="w-full bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+                className={`w-full bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500
+                            ${errors.nombre ? "border-2 border-red-500 input-error" : ""}`}
                 name="nombre"
                 value={form.nombre}
                 onChange={handleChange}
-                placeholder="Nombre del gimnasio"
               />
+              </div>
 
+              <div>
+              <label htmlFor="descripcion">Descripción *</label>
               <textarea
-                className="w-full bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Descripción"
+                className={`w-full bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500
+                            ${errors.descripcion ? "border-2 border-red-500 input-error" : ""}`}
                 value={form.descripcion}
                 onChange={handleChange}
                 name="descripcion"
               />
+              </div>
 
+              <div>
+              <label htmlFor="telefono">Teléfono *</label>
               <input
-                className={`w-full bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 ${errors.telefono ? "border-red-500" : ""}`}
+                className={`w-full bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500
+                            ${errors.telefono ? "border-2 border-red-500 input-error" : ""}`}
                 name="telefono"
                 value={form.telefono}
                 onChange={handleChange}
-                placeholder="Teléfono"
               />
+              </div>
 
             </div>
           </div>
@@ -295,55 +379,70 @@ const handleMembresiaChange = (i, field, value) => {
 
             <div className="grid md:grid-cols-2 gap-4">
 
+              <div>
+              <label htmlFor="direccion">Dirección *</label>
               <input
-                className="bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+                className={`bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500
+                            ${errors.direccion ? "border-2 border-red-500 input-error" : ""}`}
                 name="direccion"
                 value={form.direccion}
                 onChange={handleChange}
-                placeholder="Dirección"
               />
+              </div>
 
+              <div>
+              <label htmlFor="municipio">Municipio *</label>
               <input
-                className={`bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 ${errors.municipio ? "border-red-500" : ""}`}
+                className={`bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500
+                            ${errors.municipio ? "border-2 border-red-500 input-error" : ""}`}
                 name="municipio"
                 value={form.municipio}
                 onChange={handleChange}
-                placeholder="Municipio"
               />
+              </div>
 
+              <div>
+              <label htmlFor="estado">Estado *</label>
               <input
-                className={`bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 ${errors.estado ? "border-red-500" : ""}`}
+                className={`bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500
+                            ${errors.estado ? "border-2 border-red-500 input-error" : ""}`}
                 name="estado"
                 value={form.estado}
                 onChange={handleChange}
-                placeholder="Estado"
               />
+              </div>
 
-
+              <div>
+              <label htmlFor="codigo_postal">Código postal *</label>
               <input
-                className={`bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 ${errors.codigo_postal ? "border-red-500" : ""}`}
-                placeholder="Código postal"
+                className={`bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500
+                            ${errors.codigo_postal ? "border-2 border-red-500 input-error" : ""}`}
                 value={form.codigo_postal}
                 onChange={handleChange}
                 name="codigo_postal"
               />
+              </div>
 
-
+              <div>
+              <label htmlFor="localidad">Localidad / colonia (opcional)</label>
               <input
                 className={`bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 ${errors.localidad ? "border-red-500" : ""}`}
                 name="localidad"
                 value={form.localidad}
                 onChange={handleChange}
-                placeholder="Localidad / colonia"
               />
+              </div>
 
+              <div>
+              <label htmlFor="url_map">URL de Google Maps *</label>
               <input
-                className={`bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 ${errors.url_map ? "border-red-500" : ""}`}
+                className={`bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500
+                            ${errors.url_map ? "border-2 border-red-500 input-error" : ""}`}
                 name="url_map"
                 value={form.url_map}
                 onChange={handleChange}
-                placeholder="URL de Google Maps"
               />
+              </div>
 
             </div>
           </div>
@@ -422,6 +521,8 @@ const handleMembresiaChange = (i, field, value) => {
               {horarios.map((h, i) => (
                 <div key={i} className="grid md:grid-cols-3 gap-3">
 
+                  <div>
+                  <label htmlFor="dia">Día *</label>
                   <select
                     className="bg-slate-100 rounded-xl px-3 py-2"
                     value={h.dia}
@@ -440,7 +541,10 @@ const handleMembresiaChange = (i, field, value) => {
                     <option>Sabado</option>
                     <option>Domingo</option>
                   </select>
+                  </div>
 
+                  <div>
+                  <label htmlFor="apertura">Apertura *</label>
                   <input
                     type="time"
                     className="bg-slate-100 rounded-xl px-3 py-2"
@@ -450,7 +554,10 @@ const handleMembresiaChange = (i, field, value) => {
                       setHorarios(copy);
                     }}
                   />
+                  </div>
 
+                  <div>
+                  <label htmlFor="cierre">Cierre *</label>
                   <input
                     type="time"
                     className="bg-slate-100 rounded-xl px-3 py-2"
@@ -460,6 +567,7 @@ const handleMembresiaChange = (i, field, value) => {
                       setHorarios(copy);
                     }}
                   />
+                  </div>
 
                 </div>
               ))}
@@ -495,8 +603,9 @@ const handleMembresiaChange = (i, field, value) => {
 
                     <div className="grid md:grid-cols-3 gap-3">
 
+                      <div>
+                      <label htmlFor="nombre">Nombre *</label>
                       <input
-                        placeholder="Nombre"
                         className="bg-slate-100 rounded-xl px-3 py-2"
                         onChange={e => {
                           const copy = [...membresias];
@@ -504,9 +613,11 @@ const handleMembresiaChange = (i, field, value) => {
                           setMembresias(copy);
                         }}
                       />
+                      </div>
 
+                      <div>
+                      <label htmlFor="precio">Precio *</label>
                       <input
-                        placeholder="Precio"
                         type="number"
                         className="bg-slate-100 rounded-xl px-3 py-2"
                         onChange={e => {
@@ -515,9 +626,11 @@ const handleMembresiaChange = (i, field, value) => {
                           setMembresias(copy);
                         }}
                       />
+                      </div>
 
+                      <div>
+                      <label htmlFor="duracion">Duración días *</label>
                       <input
-                        placeholder="Duración días"
                         type="number"
                         className="bg-slate-100 rounded-xl px-3 py-2"
                         onChange={e => {
@@ -526,12 +639,14 @@ const handleMembresiaChange = (i, field, value) => {
                           setMembresias(copy);
                         }}
                       />
+                      </div>
 
                     </div>
 
                     {/* DESCRIPCIÓN OPCIONAL */}
+                    <div>
+                    <label htmlFor="descripcion">Descripción (opcional)</label>
                     <textarea
-                      placeholder="Descripción (opcional)"
                       className="bg-white rounded-xl px-3 py-2 w-full"
                       onChange={e => {
                         const copy = [...membresias];
@@ -539,6 +654,7 @@ const handleMembresiaChange = (i, field, value) => {
                         setMembresias(copy);
                       }}
                     />
+                    </div>
 
                   </div>
                 ))}
@@ -546,11 +662,19 @@ const handleMembresiaChange = (i, field, value) => {
           </div>
 
           {/* ================= BOTON ================= */}
-          <div className="flex justify-center">
+          <div className="flex justify-center gap-6">
+
+            <button
+              onClick={handleCancel}
+              className="bg-gray-600 hover:bg-gray-900 text-white px-6 py-2.5 rounded-xl font-semibold shadow-md transition-all"
+            >
+              Cancelar
+            </button>
+
             <button
               onClick={handleCreateGym}
               disabled={loading}
-              className="bg-blue-800 hover:bg-blue-900 text-white px-10 py-4 rounded-xl font-semibold shadow-md transition-all"
+              className="bg-blue-800 hover:bg-blue-900 text-white px-6 py-2.5 rounded-xl font-semibold shadow-md transition-all"
             >
               {loading ? "Creando gimnasio..." : "Crear gimnasio"}
             </button>

@@ -76,10 +76,7 @@ export function AuthProvider({ children }) {
 
     persistSession(adapted);
 
-    return {
-      ...adapted,
-      redirectTo: getDashboardByRole(role),
-    };
+    return adapted;
   };
 
   const signUp = async ({ nombre,apellido_paterno,apellido_materno, correo, password, role = "proveedor" }) => {
@@ -97,10 +94,7 @@ export function AuthProvider({ children }) {
 
     persistSession(adapted);
 
-    return {
-      ...adapted,
-      redirectTo: getDashboardByRole(role),
-    };
+    return adapted;
   };
 
   const signOut = () => {
@@ -131,10 +125,7 @@ export function AuthProvider({ children }) {
 
     persistSession(adapted);
 
-    return {
-      ...adapted,
-      redirectTo: getDashboardByRole(role)
-    };
+    return adapted;
   };
 
   const value = useMemo(
