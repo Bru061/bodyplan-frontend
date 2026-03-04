@@ -152,11 +152,12 @@ const horaEsValida = (apertura, cierre) => {
             <div key={index} className="field-row">
 
             <div className="field-group">
-              <label>Día</label>
+              <label>Día *</label>
               <select
                 value={h.dia}
                 onChange={e => handleChange(index, "dia", e.target.value)}
               >
+                <option value="">Seleccionar día</option>
                 <option>Lunes</option>
                 <option>Martes</option>
                 <option>Miercoles</option>
@@ -168,7 +169,7 @@ const horaEsValida = (apertura, cierre) => {
             </div>
 
             <div className="field-group">
-              <label>Apertura</label>
+              <label>Apertura *</label>
               <input
                 type="time"
                 value={h.apertura}
@@ -177,7 +178,7 @@ const horaEsValida = (apertura, cierre) => {
             </div>
 
             <div className="field-group">
-              <label>Cierre</label>
+              <label>Cierre *</label>
               <input
                 type="time"
                 value={h.cierre}

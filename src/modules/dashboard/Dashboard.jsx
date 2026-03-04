@@ -18,10 +18,6 @@ function Dashboard() {
 
       try {
         const gym = await getMyGym();
-
-        if(!gym){
-          navigate("/crear-gimnasio");
-        }
       } catch(err){
         console.error(err);
       }

@@ -7,10 +7,13 @@ function EditFotosModal({ gym, onClose, onUpdated }) {
   const [newFotos, setNewFotos] = useState([]);
   const fileRef = useRef(null);
 
-  // =============================
   // ELIMINAR FOTO
-  // =============================
   const deleteFoto = async (id) => {
+
+    if ((gym.fotos?.length || 0) <= 1) {
+      alert("El gimnasio debe tener al menos una foto");
+      return;
+    }
 
     if (!window.confirm("¿Eliminar foto?")) return;
 
@@ -30,9 +33,7 @@ function EditFotosModal({ gym, onClose, onUpdated }) {
     }
   };
 
-  // =============================
   // SUBIR FOTOS
-  // =============================
   const handleUpload = async () => {
 
     if (!newFotos.length) {
@@ -66,7 +67,7 @@ function EditFotosModal({ gym, onClose, onUpdated }) {
 
         <h2 className="modal-title">Fotos del gimnasio</h2>
 
-        {/* ================= SUBIDA ================= */}
+
         <div className="upload-box">
 
           {/* input oculto */}

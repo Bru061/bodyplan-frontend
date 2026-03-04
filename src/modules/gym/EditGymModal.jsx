@@ -97,7 +97,7 @@ return (
       {/* FORM */}
       <div className="modal-form">
 
-        <label>Nombre del gimnasio</label>
+        <label>Nombre del gimnasio *</label>
         <input
           value={form.nombre}
           onChange={e=>{
@@ -111,7 +111,7 @@ return (
             }}
         />
 
-        <label>Descripción</label>
+        <label>Descripción *</label>
         <textarea
           value={form.descripcion}
           onChange={e=>setForm({...form,descripcion:e.target.value})}
@@ -124,7 +124,7 @@ return (
           }}
         />
 
-        <label>Teléfono</label>
+        <label>Teléfono *</label>
         <input
           value={form.telefono}
           onChange={e=>{
@@ -142,7 +142,7 @@ return (
 
         <div className="grid-2">
           <div>
-            <label>Dirección</label>
+            <label>Dirección *</label>
             <input
               value={form.direccion}
               onChange={e=>{
@@ -158,7 +158,7 @@ return (
           </div>
 
           <div>
-            <label>Municipio</label>
+            <label>Municipio *</label>
             <input
               value={form.municipio}
               onChange={e=>{
@@ -174,6 +174,7 @@ return (
           </div>
 
           <div>
+            <label>Estado *</label>
             <input
               value={form.estado}
               onChange={e=>{
@@ -189,7 +190,7 @@ return (
           </div>
 
           <div>
-            <label>Código postal</label>
+            <label>Código postal *</label>
             <input
               value={form.codigo_postal}
               onChange={e=>{

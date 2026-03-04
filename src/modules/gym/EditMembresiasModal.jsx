@@ -145,7 +145,7 @@ const handleSave = async () => {
             <div key={i} className="field-row">
 
             <div className="field-group">
-              <label>Nombre</label>
+              <label>Nombre *</label>
               <input
                 placeholder="Nombre"
                 value={m.nombre}
@@ -157,7 +157,7 @@ const handleSave = async () => {
             </div>
 
             <div className="field-group">
-              <label>Precio</label>
+              <label>Precio *</label>
               <input
                 type="number"
                 placeholder="Precio"
@@ -171,7 +171,7 @@ const handleSave = async () => {
             </div>
 
             <div className="field-group">
-              <label>Duración días</label>
+              <label>Duración días *</label>
               <input
                 type="number"
                 placeholder="Duración días"
@@ -185,7 +185,7 @@ const handleSave = async () => {
             </div>
 
             <div className="field-group">
-              <label>Descripción</label>
+              <label>Descripción (opcional)</label>
               <input
                 className="desc-input"
                 placeholder="Descripción (opcional)"

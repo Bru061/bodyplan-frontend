@@ -138,7 +138,7 @@ function Register() {
             <form className="login-fields" onSubmit={handleSubmit}>
               
               <div>
-                <label htmlFor="nombre">Nombre</label>
+                <label htmlFor="nombre">Nombre *</label>
               <input
                 type="text"
                 name="nombre"
@@ -150,7 +150,7 @@ function Register() {
               </div>
 
               <div>
-              <label htmlFor="apellido_paterno">Apellido paterno</label>
+              <label htmlFor="apellido_paterno">Apellido paterno *</label>
               <input
                 type="text"
                 name="apellido_paterno"
@@ -162,7 +162,7 @@ function Register() {
               </div>
 
               <div>
-              <label htmlFor="apellido_materno">Apellido materno</label>
+              <label htmlFor="apellido_materno">Apellido materno *</label>
               <input
                 type="text"
                 name="apellido_materno"
@@ -174,7 +174,7 @@ function Register() {
               </div>
 
               <div>
-              <label htmlFor="correo">Correo electrónico</label>
+              <label htmlFor="correo">Correo electrónico *</label>
               <input
                 type="email"
                 name="correo"
@@ -186,7 +186,7 @@ function Register() {
               </div>
 
               <div>
-              <label htmlFor="password">Contraseña</label>
+              <label htmlFor="password">Contraseña *</label>
               <div className="password-field">
                 <input
                   type={showPassword ? "text" : "password"}
@@ -203,7 +203,7 @@ function Register() {
               </div>
 
               <div>
-              <label htmlFor="confirmPassword">Confirmar contraseña</label>
+              <label htmlFor="confirmPassword">Confirmar contraseña *</label>
               <div className="password-field">
                 <input
                   type={showConfirmPassword ? "text" : "password"}
