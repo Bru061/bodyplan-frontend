@@ -60,7 +60,9 @@ function CreateGym() {
   if (!form.codigo_postal || form.codigo_postal.length !== 5) {
     newErrors.codigo_postal = true;
   }
-  if (!form.url_map.trim()) newErrors.url_map = true;
+  if (!form.url_map.trim() || !urlValida(form.url_map)) {
+    newErrors.url_map = true;
+  }
 
   // ===== FOTOS =====
   if (fotos.length === 0) {
@@ -76,9 +78,12 @@ function CreateGym() {
     return;
   }
 
+  const dias = horarios.map(h => h.dia);
+  const diasDuplicados = dias.filter((d, i) => dias.indexOf(d) !== i);
+
   for (let h of horarios) {
     if (!h.dia || !h.apertura || !h.cierre) {
-      setError("Todos los horarios deben estar completos");
+      setError("Los campos de horarios deben estar completos");
       scrollToFirstError();
       return;
     }
@@ -86,6 +91,17 @@ function CreateGym() {
     if (!horaEsValida(h.apertura, h.cierre)) {
       setError("La hora de cierre debe ser mayor que la de apertura");
       scrollToFirstError();
+      return;
+    }
+
+    if (diasDuplicados.lenght){
+      setError("No puede haber días repetidos en los horarios");
+      scrollToFirstError();
+      return;
+    }
+
+    if (h.length > 7) {
+      setError("No puedes registrar más de 7 horarios");
       return;
     }
   }
@@ -97,25 +113,37 @@ function CreateGym() {
     return;
   }
 
-  for (const m of membresias) {
-    if (!m.nombre || !m.precio || !m.duracion) {
-      setError("Completa todas las membresías");
-      scrollToFirstError();
-      return;
-    }
+for (const m of membresias) {
 
-    if (Number(m.precio) < 1) {
-      setError("El precio debe ser mayor a 0");
-      scrollToFirstError();
-      return;
-    }
-
-    if (Number(m.duracion) < 1) {
-      setError("La duración debe ser mayor a 0");
-      scrollToFirstError();
-      return;
-    }
+  if (!m.nombre.trim()) {
+    setError("Las membresías deben tener nombre");
+    scrollToFirstError();
+    return;
   }
+
+  if (!m.precio || Number(m.precio) <= 0) {
+    setError("El precio debe ser mayor a 0");
+    scrollToFirstError();
+    return;
+  }
+
+  if (!m.duracion || Number(m.duracion) <= 0) {
+    setError("La duración debe ser mayor a 0 días");
+    scrollToFirstError();
+    return;
+  }
+
+  if (Number(m.duracion) > 3650) {
+    setError("La duración de la membresía es demasiado grande");
+    scrollToFirstError();
+    return;
+  }
+
+  if (m.length > 10) {
+    setError("No puedes registrar más de 10 membresías");
+    return;
+  }
+}
 
   // ===== SI HAY ERRORES DE CAMPOS =====
   if (Object.keys(newErrors).length > 0) {
@@ -137,23 +165,8 @@ function CreateGym() {
 
   setErrors({});
 
-    if (!form.nombre || !form.descripcion) {
-      setError("Nombre y descripción obligatorios");
-      return;
-    }
-
     if (!urlValida(form.url_map)) {
       setError("URL de Google Maps inválida");
-      return;
-    }
-
-    if (!form.direccion || !form.municipio || !form.estado || !form.codigo_postal) {
-      setError("Debes agregar la dirección, municipio, estado y código postal");
-      return;
-    }
-
-    if (!form.url_map) {
-      setError("Debes agregar el enlace de Google Maps");
       return;
     }
 
@@ -215,7 +228,7 @@ const handleChange = (e) => {
 
   // ===== TELEFONO → solo números =====
   if (name === "telefono") {
-    value = value.replace(/[^0-9]/g, "");
+    value = value.replace(/[^0-9]/g, "").slice(0, 10);
   }
 
   // ===== DIRECCIÓN → letras, números y espacios (sin símbolos raros) =====
@@ -225,12 +238,13 @@ const handleChange = (e) => {
 
   // ===== MUNICIPIO / ESTADO / LOCALIDAD → solo letras y espacios =====
   if (name === "municipio" || name === "estado" || name === "localidad") {
-    value = value.replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g, "");
+    value = value.replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g, "")
+    .slice(0, 20);
   }
 
   // ===== CÓDIGO POSTAL → solo números =====
   if (name === "codigo_postal") {
-    value = value.replace(/[^0-9]/g, "");
+    value = value.replace(/[^0-9]/g, "").slice(0, 5);
   }
 
   // ===== URL MAPA → formato url básico =====
@@ -240,7 +254,12 @@ const handleChange = (e) => {
 
   // ===== NOMBRE GIMNASIO → solo letras y números =====
   if (name === "nombre") {
-    value = value.replace(/[^A-Za-z0-9ÁÉÍÓÚáéíóúÑñ\s]/g, "");
+    value = value.replace(/[^A-Za-z0-9ÁÉÍÓÚáéíóúÑñ\s]/g, "")
+    .slice(0, 50);
+  }
+
+  if (name === "descripcion") {
+    value = value.slice(0, 255);
   }
 
   setForm(prev => ({
@@ -338,6 +357,7 @@ const horaEsValida = (apertura, cierre) => {
               <div>
               <label htmlFor="nombre">Nombre del gimnasio *</label>
               <input
+                maxLength={50}
                 className={`w-full bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500
                             ${errors.nombre ? "border-2 border-red-500 input-error" : ""}`}
                 name="nombre"
@@ -349,6 +369,7 @@ const horaEsValida = (apertura, cierre) => {
               <div>
               <label htmlFor="descripcion">Descripción *</label>
               <textarea
+                maxLength={255}
                 className={`w-full bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500
                             ${errors.descripcion ? "border-2 border-red-500 input-error" : ""}`}
                 value={form.descripcion}
@@ -360,6 +381,7 @@ const horaEsValida = (apertura, cierre) => {
               <div>
               <label htmlFor="telefono">Teléfono *</label>
               <input
+                maxLength={10}
                 className={`w-full bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500
                             ${errors.telefono ? "border-2 border-red-500 input-error" : ""}`}
                 name="telefono"
@@ -382,6 +404,7 @@ const horaEsValida = (apertura, cierre) => {
               <div>
               <label htmlFor="direccion">Dirección *</label>
               <input
+                maxLength={20}
                 className={`bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500
                             ${errors.direccion ? "border-2 border-red-500 input-error" : ""}`}
                 name="direccion"
@@ -393,6 +416,7 @@ const horaEsValida = (apertura, cierre) => {
               <div>
               <label htmlFor="municipio">Municipio *</label>
               <input
+                maxLength={20}
                 className={`bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500
                             ${errors.municipio ? "border-2 border-red-500 input-error" : ""}`}
                 name="municipio"
@@ -404,6 +428,7 @@ const horaEsValida = (apertura, cierre) => {
               <div>
               <label htmlFor="estado">Estado *</label>
               <input
+                maxLength={20}
                 className={`bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500
                             ${errors.estado ? "border-2 border-red-500 input-error" : ""}`}
                 name="estado"
@@ -415,6 +440,7 @@ const horaEsValida = (apertura, cierre) => {
               <div>
               <label htmlFor="codigo_postal">Código postal *</label>
               <input
+                maxLength={5}
                 className={`bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500
                             ${errors.codigo_postal ? "border-2 border-red-500 input-error" : ""}`}
                 value={form.codigo_postal}
@@ -426,6 +452,7 @@ const horaEsValida = (apertura, cierre) => {
               <div>
               <label htmlFor="localidad">Localidad / colonia (opcional)</label>
               <input
+                maxLength={20}
                 className={`bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 ${errors.localidad ? "border-red-500" : ""}`}
                 name="localidad"
                 value={form.localidad}
@@ -606,10 +633,13 @@ const horaEsValida = (apertura, cierre) => {
                       <div>
                       <label htmlFor="nombre">Nombre *</label>
                       <input
+                        type="text"
+                        maxLength={15}
                         className="bg-slate-100 rounded-xl px-3 py-2"
                         onChange={e => {
                           const copy = [...membresias];
-                          copy[i].nombre = e.target.value;
+                          let v=e.target.value.replace(/[^A-Za-z0-9ÁÉÍÓÚáéíóúÑñ\s]/g, "").slice(0, 15);
+                          copy[i].nombre = v;
                           setMembresias(copy);
                         }}
                       />
@@ -619,10 +649,12 @@ const horaEsValida = (apertura, cierre) => {
                       <label htmlFor="precio">Precio *</label>
                       <input
                         type="number"
+                        min="1"
                         className="bg-slate-100 rounded-xl px-3 py-2"
                         onChange={e => {
                           const copy = [...membresias];
-                          copy[i].precio = Number(e.target.value);
+                          let v=e.target.value.replace(/[^0-9.]/g, "");
+                          copy[i].precio = v;
                           setMembresias(copy);
                         }}
                       />
@@ -632,10 +664,12 @@ const horaEsValida = (apertura, cierre) => {
                       <label htmlFor="duracion">Duración días *</label>
                       <input
                         type="number"
+                        min="1"
                         className="bg-slate-100 rounded-xl px-3 py-2"
                         onChange={e => {
                           const copy = [...membresias];
-                          copy[i].duracion = Number(e.target.value);
+                          let v=e.target.value.replace(/[^0-9.]/g, "");
+                          copy[i].duracion = v;
                           setMembresias(copy);
                         }}
                       />
@@ -647,10 +681,12 @@ const horaEsValida = (apertura, cierre) => {
                     <div>
                     <label htmlFor="descripcion">Descripción (opcional)</label>
                     <textarea
+                      maxLength={100}
                       className="bg-white rounded-xl px-3 py-2 w-full"
                       onChange={e => {
                         const copy = [...membresias];
-                        copy[i].descripcion = e.target.value;
+                        let v=e.target.value.slice(0, 100);
+                        copy[i].descripcion = v;
                         setMembresias(copy);
                       }}
                     />

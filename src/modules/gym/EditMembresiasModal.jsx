@@ -6,7 +6,7 @@ function EditMembresiasModal({ gym, onClose, onUpdated }) {
   const [membresias, setMembresias] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const noSpecial = (value) => value.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]/g, "");
+  const noSpecial = (value, max) => value.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]/g, "").slice(0, max);
   const onlyNumbers = (value) => value.replace(/[^0-9]/g, "");
 
   // ================= CARGAR EXISTENTES =================
@@ -95,6 +95,16 @@ const handleSave = async () => {
       return;
     }
 
+    if (m.nombre.length > 15) {
+      alert("El nombre no puede tener más de 15 caracteres");
+      return;
+    }
+
+    if (m.descripcion && m.descripcion.length > 100) {
+      alert("La descripción no puede tener más de 100 caracteres");
+      return;
+    }
+
     nombres.add(m.nombre.toLowerCase());
   }
 
@@ -147,10 +157,10 @@ const handleSave = async () => {
             <div className="field-group">
               <label>Nombre *</label>
               <input
-                placeholder="Nombre"
+                maxLenght={15}
                 value={m.nombre}
                 onChange={(e)=>{
-                  const limpio = noSpecial(e.target.value);
+                  const limpio = noSpecial(e.target.value, 15);
                   handleChange(i,"nombre",limpio);
                 }}
               />
@@ -160,7 +170,7 @@ const handleSave = async () => {
               <label>Precio *</label>
               <input
                 type="number"
-                placeholder="Precio"
+                min="1"
                 value={m.precio}
                 onChange={(e)=>{
                   let v = onlyNumbers(e.target.value);
@@ -174,7 +184,7 @@ const handleSave = async () => {
               <label>Duración días *</label>
               <input
                 type="number"
-                placeholder="Duración días"
+                min="1"
                 value={m.duracion}
                 onChange={(e)=>{
                   let v = onlyNumbers(e.target.value);
@@ -187,10 +197,13 @@ const handleSave = async () => {
             <div className="field-group">
               <label>Descripción (opcional)</label>
               <input
+                maxLength={100}
                 className="desc-input"
-                placeholder="Descripción (opcional)"
                 value={m.descripcion}
-                onChange={(e)=>handleChange(i,"descripcion",e.target.value)}
+                onChange={(e)=>{
+                  const v = e.target.value.slice(0, 100);
+                  handleChange(i,"descripcion",v);
+                }}
               />
             </div>
             

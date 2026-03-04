@@ -40,7 +40,7 @@ function MisGimnasios(){
   if(loading){
     return (
       <DashboardLayout>
-        <p style={{padding:40}}>Cargando gimnasios...</p>
+        <h1 style={{padding:40}}>Cargando gimnasios...</h1>
       </DashboardLayout>
     );
   }

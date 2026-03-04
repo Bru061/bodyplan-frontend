@@ -22,9 +22,9 @@ function EditGymModal({ gym, onClose, onUpdated }) {
   const [error, setError] = useState("");
   const [errors,setErrors] = useState({});
 
-  const onlyNumbers = (value) => value.replace(/[^0-9]/g, "");
-  const onlyLetters = (value) => value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "");
-  const lettersNumbers = (value) => value.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]/g, "");
+  const onlyNumbers = (value, max) => value.replace(/[^0-9]/g, "").slice(0, max);
+  const onlyLetters = (value, max) => value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "").slice(0, max);
+  const lettersNumbers = (value, max) => value.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]/g, "").slice(0, max);
 
 const handleSave = async () => {
 
@@ -99,9 +99,11 @@ return (
 
         <label>Nombre del gimnasio *</label>
         <input
+          type="text"
+          maxLength={50}
           value={form.nombre}
           onChange={e=>{
-            const v = e.target.value;
+            const v = lettersNumbers(e.target.value, 50);
             setForm({...form,nombre:v});
           }}
             style={{
@@ -113,8 +115,12 @@ return (
 
         <label>Descripción *</label>
         <textarea
+          maxLength={255}
           value={form.descripcion}
-          onChange={e=>setForm({...form,descripcion:e.target.value})}
+          onChange={e=>{
+            const v = lettersNumbers(e.target.value, 255);
+            setForm({...form,descripcion:v});
+          }}
           style={{
             width: "100%",
             border: errors.descripcion ? "2px solid #dc2626" : "1px solid #d1d5db",
@@ -126,9 +132,10 @@ return (
 
         <label>Teléfono *</label>
         <input
+          maxLength={10}  
           value={form.telefono}
           onChange={e=>{
-            const limpio = onlyNumbers(e.target.value);
+            const limpio = onlyNumbers(e.target.value, 10);
             setForm({...form,telefono:limpio});
           }}
             style={{
@@ -144,9 +151,10 @@ return (
           <div>
             <label>Dirección *</label>
             <input
+              maxLength={20}
               value={form.direccion}
               onChange={e=>{
-                const limpio = lettersNumbers(e.target.value)
+                const limpio = lettersNumbers(e.target.value, 20);
                 setForm({...form,direccion:limpio});
               }}
                 style={{
@@ -160,9 +168,10 @@ return (
           <div>
             <label>Municipio *</label>
             <input
+              maxLength={20}
               value={form.municipio}
               onChange={e=>{
-              const limpio = onlyLetters(e.target.value);
+              const limpio = onlyLetters(e.target.value, 20);
               setForm({...form,municipio:limpio});
             }}
               style={{
@@ -176,9 +185,10 @@ return (
           <div>
             <label>Estado *</label>
             <input
+              maxLength={20}
               value={form.estado}
               onChange={e=>{
-              const limpio = onlyLetters(e.target.value);
+              const limpio = onlyLetters(e.target.value, 20);
               setForm({...form,estado:limpio});
             }}
               style={{
@@ -192,9 +202,10 @@ return (
           <div>
             <label>Código postal *</label>
             <input
+              maxLength={5}
               value={form.codigo_postal}
               onChange={e=>{
-                const limpio = onlyNumbers(e.target.value);
+                const limpio = onlyNumbers(e.target.value, 5);
                 setForm({...form,codigo_postal:limpio});
               }}
               style={{
