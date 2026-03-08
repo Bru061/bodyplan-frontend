@@ -1,93 +1,155 @@
 import DashboardLayout from "../../layout/DashboardLayout";
 import "../../styles/rutinas.css";
-import { FiFilter } from "react-icons/fi";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import api from "../../services/axios";
+import RutinaCard from "../../components/rutinas/RutinaCard";
+import CreateRutinaModal from "./CreateRutinaModal";
+import EditRutinaModal from "./EditRutinaModal";
 
 function Rutinas() {
-    return (
-        <DashboardLayout>
-        <section className="page-header">
+
+  const [rutinas, setRutinas] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal,setShowEditModal] = useState(false);
+  const [rutinaSeleccionada,setRutinaSeleccionada] = useState(null);
+  const [stats, setStats] = useState({
+    total: 0,
+    asignadas: 0,
+    sinAsignar: 0
+  });
+
+  const fetchRutinas = async () => {
+
+    try {
+
+      const res = await api.get("/rutinas");
+
+      const data = res.data.rutinas;
+
+      setRutinas(data);
+
+      setStats({
+        total: data.length,
+        asignadas: 0,
+        sinAsignar: data.length
+      });
+
+    } catch(err) {
+
+      console.error(err);
+
+    } finally {
+
+      setLoading(false);
+
+    }
+
+  };
+
+  useEffect(() => {
+
+    fetchRutinas();
+
+  }, []);
+
+  const handleEdit = (rutina) => {
+    setRutinaSeleccionada(rutina);
+    setShowEditModal(true);
+  };
+
+  return (
+
+    <DashboardLayout>
+
+      <section className="page-header">
+
         <div>
           <p className="eyebrow">Gestión de rutinas</p>
           <h1>Rutinas de gimnasio</h1>
-          <p className="subtitle">Crea, organiza y asigna rutinas a clientes.</p>
+          <p className="subtitle">
+            Crea y administra rutinas para asignarlas a clientes.
+          </p>
         </div>
+
+        <button
+          className="btn btn-primary"
+          onClick={() => setShowCreateModal(true)}
+        >
+          Crear rutina
+        </button>
+
       </section>
 
-      <section className="stats-grid" aria-label="Resumen de rutinas">
+      {/* STATS */}
+
+      <section className="stats-grid">
+
         <article className="stat-card">
           <p className="stat-label">Rutinas creadas</p>
-          <p className="stat-value">42</p>
-          <p className="stat-sub positive">+8 este mes</p>
+          <p className="stat-value">{stats.total}</p>
         </article>
+
         <article className="stat-card">
-          <p className="stat-label">Asignadas a clientes</p>
-          <p className="stat-value">126</p>
-          <p className="stat-sub">Promedio: 3 por cliente</p>
+          <p className="stat-label">Asignadas</p>
+          <p className="stat-value">{stats.asignadas}</p>
         </article>
+
         <article className="stat-card">
           <p className="stat-label">Sin asignar</p>
-          <p className="stat-value">9</p>
-          <p className="stat-sub">Disponibles para nuevos planes</p>
+          <p className="stat-value">{stats.sinAsignar}</p>
         </article>
+
       </section>
 
-      <section className="content-grid">
-        <article className="panel routines-list-panel">
-          <div className="panel-head">
-            <h2>Rutinas actuales</h2>
-            <button type="button" className="btn btn-ghost">
-              <FiFilter />
-              Filtrar
-            </button>
-          </div>
+      {/* LISTA */}
 
-          <div className="routine-item">
-            <div>
-              <h3>Cardio Intensivo</h3>
-              <p>Duración: 45 min · Nivel: Intermedio</p>
-            </div>
-            <span className="badge">18 asignaciones</span>
-          </div>
+      <section className="panel">
 
-          <div className="routine-item">
-            <div>
-              <h3>Hipertrofia Full Body</h3>
-              <p>Duración: 60 min · Nivel: Avanzado</p>
-            </div>
-            <span className="badge">12 asignaciones</span>
-          </div>
+        {loading ? (
 
-          <div className="routine-item">
-            <div>
-              <h3>Fuerza Base</h3>
-              <p>Duración: 50 min · Nivel: Principiante</p>
-            </div>
-            <span className="badge">9 asignaciones</span>
-          </div>
-        </article>
+          <h2 className="loading">Cargando rutinas...</h2>
 
-        <article className="panel form-panel">
-          <h2>Crear rutina</h2>
+        ) : rutinas.length === 0 ? (
 
-          <label htmlFor="routine-name">Nombre de rutina</label>
-          <input id="routine-name" className="input" type="text" placeholder="Ej. Tren superior avanzado" />
+          <h2 className="empty-state">
+            No hay rutinas registradas
+          </h2>
 
-          <label htmlFor="routine-duration">Duración</label>
-          <input id="routine-duration" className="input" type="text" placeholder="Ej. 50 minutos" />
+        ) : (
 
-          <label htmlFor="routine-exercises">Ejercicios</label>
-          <textarea
-            id="routine-exercises"
-            className="input"
-            placeholder="Ej. Press banca 4x10, Dominadas 4x8, Remo 4x12"
-          ></textarea>
+          rutinas.map(rutina => (
+            <RutinaCard
+              key={rutina.id_rutina}
+              rutina={rutina}
+              refresh={fetchRutinas}
+              onEdit={handleEdit}
+            />
+          ))
 
-          <button className="btn btn-primary btn-block" type="button">Guardar rutina</button>
-        </article>
+        )}
+
       </section>
-        </DashboardLayout>
-    );
+
+      {showCreateModal && (
+        <CreateRutinaModal
+          onClose={() => setShowCreateModal(false)}
+          onCreated={fetchRutinas}
+        />
+      )}
+
+      {showEditModal && (
+        <EditRutinaModal
+          rutina={rutinaSeleccionada}
+          onClose={() => setShowEditModal(false)}
+          onUpdated={fetchRutinas}
+        />
+      )}
+
+    </DashboardLayout>
+
+  );
+
 }
 
 export default Rutinas;

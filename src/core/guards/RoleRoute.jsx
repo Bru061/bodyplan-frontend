@@ -10,7 +10,7 @@ export default function RoleRoute({ allowedRoles = [] }) {
 
   if (!allowedRoles.includes(user.role)) {
     // redirección segura según rol
-    if (user.role === "admin") return <Navigate to="/superadmin/dashboard" replace />;
+    if (user.role === "admin") return <Navigate to="/admin/admin-dashboard" replace />;
     if (user.role === "proveedor") return <Navigate to="/dashboard" replace />;
     return <Navigate to="/" replace />;
   }

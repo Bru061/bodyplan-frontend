@@ -6,6 +6,7 @@ import ForgotPassword from "../../modules/auth/ForgotPassword";
 import ResetPassword from "../../modules/auth/ResetPassword";
 import Dashboard from "../../modules/dashboard/Dashboard";
 import Clientes from "../../modules/clientes/Clientes";
+import DetalleCliente from "../../modules/clientes/detalleCliente"
 import MiGimnasio from "../../modules/gym/MiGimnasio";
 import MisGimnasios from "../../modules/gym/MisGimnasios";
 import Rutinas from "../../modules/rutinas/rutinas";
@@ -13,6 +14,8 @@ import Notificaciones from "../../modules/notificaciones/Notificaciones";
 import Perfil from "../../modules/perfil/perfil";
 import CreateGym from "../../modules/gym/CreateGym"
 import AdminDashboard from "../../modules/admin/AdminDashboard";
+import AdminGimnasios from "../../modules/admin/AdminGimnasios";
+import AdminFinanzas from "../../modules/admin/AdminFinanzas";
 import PublicRoute from "../guards/PublicRoute";
 import PrivateRoute from "../guards/PrivateRoute";
 import RoleRoute from "../guards/RoleRoute";
@@ -37,6 +40,7 @@ function AppRouter(){
           <Route path="/crear-gimnasio" element={<CreateGym />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/clientes" element={<Clientes />} />
+          <Route path="/detalle-cliente/:id" element={<DetalleCliente />} />
           <Route path="/mis-gimnasios" element={<MisGimnasios />} />
           <Route path="/gimnasio/:id" element={<MiGimnasio />} />
           <Route path="/rutinas" element={<Rutinas />} />
@@ -45,7 +49,9 @@ function AppRouter(){
         </Route>
 
         <Route element={<RoleRoute allowedRoles={["admin"]} />}>
-          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/admin-dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/admin-gimnasios" element={<AdminGimnasios />} />
+          <Route path="/admin/admin-finanzas" element={<AdminFinanzas />} />
         </Route>
 
         <Route element={<RoleRoute allowedRoles={["user"]} />}>

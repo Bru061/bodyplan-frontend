@@ -13,11 +13,10 @@ function AdminNavbar() {
 
             <nav>
             <ul className="menu">
-                <li><Link to="/AdminDashboard" aria-label="Dashboard">Dashboard</Link></li>
-                <li><Link to="/AdminGimnasios" aria-label="Gimnasios">Gimnasios</Link></li>
-                <li><Link to="/AdminFinanzas" aria-label="Finanzas">Finanzas</Link></li>
-                <li><Link to="/AdminIncidentes" aria-label="Incidentes y auditoría">Incidentes y auditoría</Link></li>
-                <li><Link to="/AdminConfiguración" aria-label="Configuración"><MdSettings size={24} /></Link></li>
+                <li><Link to="/admin/admin-dashboard" aria-label="Dashboard">Dashboard</Link></li>
+                <li><Link to="/admin/admin-gimnasios" aria-label="Gimnasios">Gimnasios</Link></li>
+                <li><Link to="/admin/admin-finanzas" aria-label="Finanzas">Finanzas</Link></li>
+                <li><Link to="/admin/configuracion" aria-label="Configuración"><MdSettings size={24} /></Link></li>
             </ul>
             </nav>
         </div>

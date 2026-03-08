@@ -64,7 +64,7 @@
   margin: 0 0 10px 0;
 }
 
-.login-side p {
+.login-side h3 {
   opacity: 0.8;
   font-size: 1rem;
   line-height: 1.5;
@@ -250,7 +250,7 @@
 .separator::before { margin-right: 10px; }
 .separator::after { margin-left: 10px; }
 
-.login-side h2, p {
+.login-side h2, h3 {
   color: white;
   text-align: center;
 }

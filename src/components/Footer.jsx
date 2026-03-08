@@ -4,12 +4,12 @@ function Footer() {
       <div className="footer-content">
         <div>
           <h3>BodyPlan</h3>
-          <p>Transformando la gestión deportiva.</p>
+          <h3>Transformando la gestión deportiva.</h3>
         </div>
 
         <div>
-          <p>📞 (+52) 245 114 0474</p>
-          <p>✉ devnest.contacto@gmail.com</p>
+          <h3>📞 (+52) 245 114 0474</h3>
+          <h3>✉ devnest.contacto@gmail.com</h3>
         </div>
       </div>
       <p className="footer-copy">© 2026 DevNest - Todos los derechos reservados.</p>

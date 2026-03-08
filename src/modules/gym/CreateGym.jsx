@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/axios";
 import OnboardingLayout from "../../layout/OnboardingLayout";
@@ -29,6 +29,31 @@ function CreateGym() {
   const [error, setError] = useState("");
   const [errors, setErrors] = useState({});
 
+  useEffect(() => {
+
+    const keys = Object.keys(errors);
+    if (keys.length === 0) return;
+
+    let firstField = document.querySelector(`[name="${keys[0]}"]`);
+
+    if (!firstField) {
+      firstField = document.querySelector(`#${keys[0]}`);
+    }
+
+    if (!firstField) return;
+
+    const rect = firstField.getBoundingClientRect();
+    const offset = window.scrollY + rect.top - 120;
+
+    window.scrollTo({
+      top: offset,
+      behavior: "smooth"
+    });
+
+    firstField.focus?.();
+
+  }, [errors]);
+
   const urlValida = (url) => {
     try {
       new URL(url);
@@ -38,290 +63,277 @@ function CreateGym() {
     }
   };
 
+  const horaEsValida = (apertura, cierre) => {
+    if (!apertura || !cierre) return false;
+
+    const [h1, m1] = apertura.split(":").map(Number);
+    const [h2, m2] = cierre.split(":").map(Number);
+
+    const minApertura = h1 * 60 + m1;
+    const minCierre = h2 * 60 + m2;
+
+    return minCierre > minApertura;
+  };
+
   // ===== CREAR GIMNASIO =====
-  const handleCreateGym = async () => {
+const handleCreateGym = async () => {
 
-    let newErrors = {};
-    setError("");
+  const newErrors = {};
+  setError("");
 
-      // ===== INFO BÁSICA =====
-  if (!form.nombre.trim()) newErrors.nombre = true;
-  if (!form.descripcion.trim()) newErrors.descripcion = true;
-  if (!form.telefono.trim()) newErrors.telefono = true;
-  if (!form.telefono || form.telefono.length !== 10) {
-    newErrors.telefono = true;
+  // ===== INFO BASICA =====
+  if (!form.nombre.trim()) {
+    newErrors.nombre = "El nombre del gimnasio es obligatorio";
   }
 
-  // ===== UBICACIÓN =====
-  if (!form.direccion.trim()) newErrors.direccion = true;
-  if (!form.municipio.trim()) newErrors.municipio = true;
-  if (!form.estado.trim()) newErrors.estado = true;
-  if (!form.codigo_postal.trim()) newErrors.codigo_postal = true;
-  if (!form.codigo_postal || form.codigo_postal.length !== 5) {
-    newErrors.codigo_postal = true;
+  if (!form.descripcion.trim()) {
+    newErrors.descripcion = "La descripción es obligatoria";
   }
-  if (!form.url_map.trim() || !urlValida(form.url_map)) {
-    newErrors.url_map = true;
+
+  if (!form.telefono.trim()) {
+    newErrors.telefono = "El teléfono es obligatorio";
+  } else if (form.telefono.length !== 10) {
+    newErrors.telefono = "El teléfono debe tener 10 dígitos";
+  }
+
+  // ===== UBICACION =====
+  if (!form.direccion.trim()) {
+    newErrors.direccion = "La dirección es obligatoria";
+  }
+
+  if (!form.municipio.trim()) {
+    newErrors.municipio = "El municipio es obligatorio";
+  }
+
+  if (!form.estado.trim()) {
+    newErrors.estado = "El estado es obligatorio";
+  }
+
+  if (!form.codigo_postal.trim()) {
+    newErrors.codigo_postal = "El código postal es obligatorio";
+  } else if (form.codigo_postal.length !== 5) {
+    newErrors.codigo_postal = "Debe tener 5 dígitos";
+  }
+
+  if (!form.url_map.trim()) {
+    newErrors.url_map = "Agrega el link de Google Maps";
+  } else if (!urlValida(form.url_map)) {
+    newErrors.url_map = "URL de Google Maps inválida";
   }
 
   // ===== FOTOS =====
   if (fotos.length === 0) {
-    setError("Debes subir al menos una foto");
-    scrollToFirstError();
-    return;
+    newErrors.fotos = "Debes subir al menos una foto";
   }
 
   // ===== HORARIOS =====
   if (horarios.length === 0) {
-    setError("Agrega al menos un horario");
-    scrollToFirstError();
-    return;
+    newErrors.horarios = "Debes agregar al menos un horario";
+  } else {
+
+    const dias = horarios.map(h => h.dia);
+    const diasDuplicados = dias.filter((d, i) => dias.indexOf(d) !== i);
+
+    if (diasDuplicados.length) {
+      newErrors.horarios = "No puede haber días repetidos";
+    }
+
+    if (horarios.length > 7) {
+      newErrors.horarios = "Máximo 7 horarios";
+    }
+
+    for (const h of horarios) {
+      if (!h.dia || !h.apertura || !h.cierre) {
+        newErrors.horarios = "Completa todos los horarios";
+        break;
+      }
+
+      if (!horaEsValida(h.apertura, h.cierre)) {
+        newErrors.horarios = "La hora de cierre debe ser mayor";
+        break;
+      }
+    }
+
   }
 
-  const dias = horarios.map(h => h.dia);
-  const diasDuplicados = dias.filter((d, i) => dias.indexOf(d) !== i);
-
-  for (let h of horarios) {
-    if (!h.dia || !h.apertura || !h.cierre) {
-      setError("Los campos de horarios deben estar completos");
-      scrollToFirstError();
-      return;
-    }
-
-    if (!horaEsValida(h.apertura, h.cierre)) {
-      setError("La hora de cierre debe ser mayor que la de apertura");
-      scrollToFirstError();
-      return;
-    }
-
-    if (diasDuplicados.lenght){
-      setError("No puede haber días repetidos en los horarios");
-      scrollToFirstError();
-      return;
-    }
-
-    if (h.length > 7) {
-      setError("No puedes registrar más de 7 horarios");
-      return;
-    }
-  }
-
-  // ===== MEMBRESÍAS =====
+  // ===== MEMBRESIAS =====
   if (membresias.length === 0) {
-    setError("Agrega al menos una membresía");
-    scrollToFirstError();
-    return;
+    newErrors.membresias = "Debes agregar al menos una membresía";
+  } else {
+
+    if (membresias.length > 10) {
+      newErrors.membresias = "Máximo 10 membresías";
+    }
+
+    for (const m of membresias) {
+
+      if (!m.nombre.trim()) {
+        newErrors.membresias = "Las membresías deben tener nombre";
+        break;
+      }
+
+      if (!m.precio || Number(m.precio) <= 0) {
+        newErrors.membresias = "El precio debe ser mayor a 0";
+        break;
+      }
+
+      if (!m.duracion || Number(m.duracion) <= 0) {
+        newErrors.membresias = "La duración debe ser mayor a 0";
+        break;
+      }
+
+      if (Number(m.duracion) > 3650) {
+        newErrors.membresias = "Duración demasiado grande";
+        break;
+      }
+
+      if (!m.descripcion || !m.descripcion.trim()) {
+        newErrors.membresias = "La descripción es obligatoria";
+        break;
+      }
+
+      if (m.descripcion && m.descripcion.length > 100) {
+        newErrors.membresias = "Máximo 100 caracteres";
+        break;
+      }
+
+    }
+
   }
 
-for (const m of membresias) {
-
-  if (!m.nombre.trim()) {
-    setError("Las membresías deben tener nombre");
-    scrollToFirstError();
-    return;
-  }
-
-  if (!m.precio || Number(m.precio) <= 0) {
-    setError("El precio debe ser mayor a 0");
-    scrollToFirstError();
-    return;
-  }
-
-  if (!m.duracion || Number(m.duracion) <= 0) {
-    setError("La duración debe ser mayor a 0 días");
-    scrollToFirstError();
-    return;
-  }
-
-  if (Number(m.duracion) > 3650) {
-    setError("La duración de la membresía es demasiado grande");
-    scrollToFirstError();
-    return;
-  }
-
-  if (m.length > 10) {
-    setError("No puedes registrar más de 10 membresías");
-    return;
-  }
-}
-
-  // ===== SI HAY ERRORES DE CAMPOS =====
+  // ===== DETENER SI HAY ERRORES =====
   if (Object.keys(newErrors).length > 0) {
-
-    if (newErrors.telefono) {
-      setError("El teléfono debe tener exactamente 10 dígitos");
-    } 
-    else if (newErrors.codigo_postal) {
-      setError("El código postal debe tener exactamente 5 dígitos");
-    }
-    else {
-      setError("Por favor completa los campos obligatorios correctamente");
-    }
-
     setErrors(newErrors);
-    setTimeout(scrollToFirstError, 100);
     return;
   }
 
   setErrors({});
 
-    if (!urlValida(form.url_map)) {
-      setError("URL de Google Maps inválida");
-      return;
+  try {
+
+    setLoading(true);
+
+    const formData = new FormData();
+
+    formData.append("nombre", form.nombre);
+    formData.append("descripcion", form.descripcion);
+    formData.append("telefono", form.telefono);
+
+    const ubicacion = {
+      direccion: form.direccion,
+      municipio: form.municipio,
+      estado: form.estado,
+      pais: form.pais,
+      codigo_postal: form.codigo_postal,
+      localidad: form.localidad || "",
+      latitud: form.latitud || null,
+      longitud: form.longitud || null,
+      url_map: form.url_map
+    };
+
+    formData.append("ubicacion", JSON.stringify(ubicacion));
+    formData.append("horarios", JSON.stringify(horarios));
+    formData.append("membresias", JSON.stringify(membresias));
+
+    fotos.forEach((f) => formData.append("fotos", f));
+
+    await api.post("/gym", formData, {
+      headers: { "Content-Type": "multipart/form-data" }
+    });
+
+    navigate("/mis-gimnasios");
+
+  } catch (err) {
+
+    console.log(err);
+
+    const backendError = err?.response?.data?.error;
+
+    if (backendError?.toLowerCase().includes("url")) {
+      setErrors(prev => ({
+        ...prev,
+        url_map: backendError
+      }));
+    } else {
+      setError(backendError || "Error al crear gimnasio");
     }
 
-    try {
-      setLoading(true);
+  } finally {
 
-      const formData = new FormData();
+    setLoading(false);
 
-      // campos normales
-      formData.append("nombre", form.nombre);
-      formData.append("descripcion", form.descripcion);
-      formData.append("telefono", form.telefono);
+  }
 
-      // ubicación JSON
-      const ubicacion = {
-        direccion: form.direccion,
-        municipio: form.municipio,
-        estado: form.estado,
-        pais: form.pais,
-        codigo_postal: form.codigo_postal,
-        localidad: form.localidad || "",
-        latitud: form.latitud || null,
-        longitud: form.longitud || null,
-        url_map: form.url_map
-      };
+};
 
-      formData.append("ubicacion", JSON.stringify(ubicacion));
-      formData.append("horarios", JSON.stringify(horarios));
-      formData.append("membresias", JSON.stringify(membresias));
+  // ===== VALIDACIONES =====
+  const handleChange = (e) => {
+    let { name, value } = e.target;
 
-      // fotos
-      fotos.forEach((f) => formData.append("fotos", f));
+    if (name === "telefono") {
+      value = value.replace(/[^0-9]/g, "").slice(0, 10);
+    }
+    if (name === "direccion") {
+      value = value.replace(/[^A-Za-z0-9ÁÉÍÓÚáéíóúÑñ\s#.,]/g, "");
+    }
+    if (name === "municipio" || name === "estado" || name === "localidad") {
+      value = value.replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g, "")
+      .slice(0, 20);
+    }
+    if (name === "codigo_postal") {
+      value = value.replace(/[^0-9]/g, "").slice(0, 5);
+    }
 
-      for (let pair of formData.entries()) {
-        console.log(pair[0], pair[1]);
-      }
+    if (name === "url_map") {
+      value = value.replace(/\s/g, "");
+    }
 
-      await api.post("/gym", formData, {
-        headers: { "Content-Type": "multipart/form-data" }
-      });
+    if (name === "nombre") {
+      value = value.replace(/[^A-Za-z0-9ÁÉÍÓÚáéíóúÑñ\s]/g, "")
+      .slice(0, 50);
+    }
 
-      navigate("/mis-gimnasios");
+    if (name === "descripcion") {
+      value = value.slice(0, 255);
+    }
 
-    } catch (err) {
-      console.log("ERROR COMPLETO:");
-      console.log(err);
-      console.log(err.response);
-      console.log(err.response?.data);
-      console.log(err.response?.status);
-      setError(err?.response?.data?.error || "Error al crear gimnasio");
-    } finally {
-      setLoading(false);
+    setForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    
+
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ""
+      }));
     }
   };
 
-  // ===== VALIDACIONES =====
-const handleChange = (e) => {
-  let { name, value } = e.target;
+  const handleCancel = () => {
 
-  // ===== TELEFONO → solo números =====
-  if (name === "telefono") {
-    value = value.replace(/[^0-9]/g, "").slice(0, 10);
-  }
+    const hayCambios =
+      form.nombre ||
+      form.descripcion ||
+      form.telefono ||
+      fotos.length > 0 ||
+      horarios.length > 0 ||
+      membresias.length > 0;
 
-  // ===== DIRECCIÓN → letras, números y espacios (sin símbolos raros) =====
-  if (name === "direccion") {
-    value = value.replace(/[^A-Za-z0-9ÁÉÍÓÚáéíóúÑñ\s#.,]/g, "");
-  }
+    if (!hayCambios) {
+      navigate("/mis-gimnasios");
+      return;
+    }
 
-  // ===== MUNICIPIO / ESTADO / LOCALIDAD → solo letras y espacios =====
-  if (name === "municipio" || name === "estado" || name === "localidad") {
-    value = value.replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g, "")
-    .slice(0, 20);
-  }
+    const confirm = window.confirm(
+      "Tienes cambios sin guardar. ¿Seguro que deseas salir?"
+    );
 
-  // ===== CÓDIGO POSTAL → solo números =====
-  if (name === "codigo_postal") {
-    value = value.replace(/[^0-9]/g, "").slice(0, 5);
-  }
-
-  // ===== URL MAPA → formato url básico =====
-  if (name === "url_map") {
-    value = value.replace(/\s/g, "");
-  }
-
-  // ===== NOMBRE GIMNASIO → solo letras y números =====
-  if (name === "nombre") {
-    value = value.replace(/[^A-Za-z0-9ÁÉÍÓÚáéíóúÑñ\s]/g, "")
-    .slice(0, 50);
-  }
-
-  if (name === "descripcion") {
-    value = value.slice(0, 255);
-  }
-
-  setForm(prev => ({
-    ...prev,
-    [name]: value
-  }));
-
-  if (errors[name]) {
-    setErrors(prev => ({
-      ...prev,
-      [name]: false
-    }));
-  }
-};
-
-const handleCancel = () => {
-
-  const hayCambios =
-    form.nombre ||
-    form.descripcion ||
-    form.telefono ||
-    fotos.length > 0 ||
-    horarios.length > 0 ||
-    membresias.length > 0;
-
-  if (!hayCambios) {
-    navigate("/mis-gimnasios");
-    return;
-  }
-
-  const confirm = window.confirm(
-    "Tienes cambios sin guardar. ¿Seguro que deseas salir?"
-  );
-
-  if (confirm) {
-    navigate("/mis-gimnasios");
-  }
-};
-
-const scrollToFirstError = () => {
-  const firstErrorField = document.querySelector(".input-error");
-  if (firstErrorField) {
-    firstErrorField.scrollIntoView({
-      behavior: "smooth",
-      block: "center"
-    });
-  } else {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-};
-
-const horaEsValida = (apertura, cierre) => {
-  if (!apertura || !cierre) return false;
-
-  const [h1, m1] = apertura.split(":").map(Number);
-  const [h2, m2] = cierre.split(":").map(Number);
-
-  const minutosApertura = h1 * 60 + m1;
-  const minutosCierre = h2 * 60 + m2;
-
-  return minutosCierre > minutosApertura;
-};
+    if (confirm) {
+      navigate("/mis-gimnasios");
+    }
+  };
 
   return (
     <OnboardingLayout>
@@ -348,9 +360,9 @@ const horaEsValida = (apertura, cierre) => {
 
           {/* ================= INFO BASICA ================= */}
           <div className="mb-8">
-            <h3 className="font-semibold text-lg mb-4 text-blue-900">
+            <h2 className="font-semibold text-lg mb-4 text-blue-900">
               Información básica
-            </h3>
+            </h2>
 
             <div className="space-y-4">
 
@@ -358,36 +370,56 @@ const horaEsValida = (apertura, cierre) => {
               <label htmlFor="nombre">Nombre del gimnasio *</label>
               <input
                 maxLength={50}
-                className={`w-full bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500
-                            ${errors.nombre ? "border-2 border-red-500 input-error" : ""}`}
+                className={`w-full bg-slate-100 rounded-xl px-4 py-3 outline-none border
+                            ${errors.nombre
+                              ? "border-red-500 focus:ring-2 focus:ring-red-500 focus:border-red-500 input-error"
+                              : "border-slate-300 focus:ring-2 focus:ring-blue-500"}`}
                 name="nombre"
                 value={form.nombre}
                 onChange={handleChange}
               />
+              {errors.nombre && (
+                <p className="text-red-500 text-sm mt-1">{errors.nombre}</p>
+              )}
               </div>
 
               <div>
               <label htmlFor="descripcion">Descripción *</label>
+              <div className="textarea-wrapper">
               <textarea
                 maxLength={255}
-                className={`w-full bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500
-                            ${errors.descripcion ? "border-2 border-red-500 input-error" : ""}`}
+                className={`w-full bg-slate-100 rounded-xl px-4 py-3 outline-none border
+                ${errors.descripcion 
+                  ? "border-red-500 focus:ring-2 focus:ring-red-500 input-error" 
+                  : "border-slate-300 focus:ring-2 focus:ring-blue-500"}`}
                 value={form.descripcion}
                 onChange={handleChange}
                 name="descripcion"
               />
+              <span className="char-counter">
+                {form.descripcion.length}/255
+              </span>
+              </div>
+              {errors.descripcion && (
+                <p className="text-red-500 text-sm mt-1">{errors.descripcion}</p>
+              )}
               </div>
 
               <div>
               <label htmlFor="telefono">Teléfono *</label>
               <input
                 maxLength={10}
-                className={`w-full bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500
-                            ${errors.telefono ? "border-2 border-red-500 input-error" : ""}`}
+                className={`w-full bg-slate-100 rounded-xl px-4 py-3 outline-none border
+                ${errors.telefono
+                  ? "border-red-500 focus:ring-2 focus:ring-red-500 focus:border-red-500 input-error"
+                  : "border-slate-300 focus:ring-2 focus:ring-blue-500"}`}
                 name="telefono"
                 value={form.telefono}
                 onChange={handleChange}
               />
+              {errors.telefono && (
+                <p className="text-red-500 text-sm mt-1">{errors.telefono}</p>
+              )}
               </div>
 
             </div>
@@ -395,9 +427,9 @@ const horaEsValida = (apertura, cierre) => {
 
           {/* ================= UBICACION ================= */}
           <div className="mb-8">
-            <h3 className="font-semibold text-lg mb-4 text-blue-900">
+            <h2 className="font-semibold text-lg mb-4 text-blue-900">
               Ubicación
-            </h3>
+            </h2>
 
             <div className="grid md:grid-cols-2 gap-4">
 
@@ -405,55 +437,79 @@ const horaEsValida = (apertura, cierre) => {
               <label htmlFor="direccion">Dirección *</label>
               <input
                 maxLength={20}
-                className={`bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500
-                            ${errors.direccion ? "border-2 border-red-500 input-error" : ""}`}
+                className={`w-full bg-slate-100 rounded-xl px-4 py-3 outline-none border
+                ${errors.direccion
+                  ? "border-red-500 focus:ring-2 focus:ring-red-500 focus:border-red-500 input-error"
+                  : "border-slate-300 focus:ring-2 focus:ring-blue-500"}`}
                 name="direccion"
                 value={form.direccion}
                 onChange={handleChange}
               />
+              {errors.direccion && (
+                <p className="text-red-500 text-sm mt-1">{errors.direccion}</p>
+              )}
               </div>
 
               <div>
               <label htmlFor="municipio">Municipio *</label>
               <input
                 maxLength={20}
-                className={`bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500
-                            ${errors.municipio ? "border-2 border-red-500 input-error" : ""}`}
+                className={`w-full bg-slate-100 rounded-xl px-4 py-3 outline-none border
+                ${errors.municipio
+                  ? "border-red-500 focus:ring-2 focus:ring-red-500 focus:border-red-500 input-error"
+                  : "border-slate-300 focus:ring-2 focus:ring-blue-500"}`}
                 name="municipio"
                 value={form.municipio}
                 onChange={handleChange}
               />
+              {errors.municipio && (
+                <p className="text-red-500 text-sm mt-1">{errors.municipio}</p>
+              )}
               </div>
 
               <div>
               <label htmlFor="estado">Estado *</label>
               <input
                 maxLength={20}
-                className={`bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500
-                            ${errors.estado ? "border-2 border-red-500 input-error" : ""}`}
+                className={`w-full bg-slate-100 rounded-xl px-4 py-3 outline-none border
+                ${errors.estado
+                  ? "border-red-500 focus:ring-2 focus:ring-red-500 focus:border-red-500 input-error"
+                  : "border-slate-300 focus:ring-2 focus:ring-blue-500"}`}
                 name="estado"
                 value={form.estado}
                 onChange={handleChange}
               />
+              {errors.estado && (
+                <p className="text-red-500 text-sm mt-1">{errors.estado}</p>
+              )}
               </div>
 
               <div>
               <label htmlFor="codigo_postal">Código postal *</label>
               <input
                 maxLength={5}
-                className={`bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500
-                            ${errors.codigo_postal ? "border-2 border-red-500 input-error" : ""}`}
+                className={`w-full bg-slate-100 rounded-xl px-4 py-3 outline-none border
+                ${errors.codigo_postal
+                  ? "border-red-500 focus:ring-2 focus:ring-red-500 focus:border-red-500 input-error"
+                  : "border-slate-300 focus:ring-2 focus:ring-blue-500"}`}
                 value={form.codigo_postal}
                 onChange={handleChange}
                 name="codigo_postal"
               />
+              {errors.codigo_postal && (
+                <p className="text-red-500 text-sm mt-1">{errors.codigo_postal}</p>
+              )}
               </div>
 
               <div>
               <label htmlFor="localidad">Localidad / colonia (opcional)</label>
               <input
                 maxLength={20}
-                className={`bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 ${errors.localidad ? "border-red-500" : ""}`}
+                className={`w-full bg-slate-100 rounded-xl px-4 py-3 outline-none border
+                ${errors.localidad
+                  ? "border-red-500 focus:ring-2 focus:ring-red-500"
+                  : "border-slate-300 focus:ring-2 focus:ring-blue-500"}
+                `}
                 name="localidad"
                 value={form.localidad}
                 onChange={handleChange}
@@ -463,29 +519,35 @@ const horaEsValida = (apertura, cierre) => {
               <div>
               <label htmlFor="url_map">URL de Google Maps *</label>
               <input
-                className={`bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500
-                            ${errors.url_map ? "border-2 border-red-500 input-error" : ""}`}
+                className={`w-full bg-slate-100 rounded-xl px-4 py-3 outline-none border
+                ${errors.url_map
+                  ? "border-red-500 focus:ring-2 focus:ring-red-500 focus:border-red-500 input-error"
+                  : "border-slate-300 focus:ring-2 focus:ring-blue-500"}`}
                 name="url_map"
                 value={form.url_map}
                 onChange={handleChange}
               />
+              {errors.url_map && (
+                <p className="text-red-500 text-sm mt-1">{errors.url_map}</p>
+              )}
               </div>
 
             </div>
           </div>
 
           {/* ================= FOTOS ================= */}
-          <div className="mb-8">
-            <h3 className="font-semibold text-lg mb-3 text-blue-900">
+          <div id="fotos" className="mb-8">
+            <h2 className="font-semibold text-lg mb-3 text-blue-900">
               Fotos del gimnasio
-            </h3>
+            </h2>
 
             <input
               type="file"
+              name="fotos"
               multiple
               accept="image/*"
               onChange={(e) => {
-
+                  
                 const files = Array.from(e.target.files);
 
                 if (files.length === 0) return;
@@ -518,20 +580,28 @@ const horaEsValida = (apertura, cierre) => {
                 setError("");
                 setFotos(files);
               }}
-              className="block w-full text-sm text-slate-600
-              file:mr-4 file:py-2 file:px-4
-              file:rounded-lg file:border-0
-              file:bg-blue-800 file:text-white
-              hover:file:bg-blue-900"
+              className={`block w-full text-sm text-slate-600
+                file:mr-4 file:py-2 file:px-4
+                file:rounded-lg file:border-0
+                file:bg-blue-800 file:text-white
+                hover:file:bg-blue-900
+                ${errors.fotos ? "input-error" : ""}`}
             />
+            {errors.fotos && (
+              <p className="text-red-500 text-sm mt-1">{errors.fotos}</p>
+            )}
           </div>
 
           {/* ================= HORARIOS ================= */}
-          <div className="mb-8">
+          <div id="horarios" className="mb-8">
             <div className="flex justify-between items-center mb-3">
-              <h3 className="font-semibold text-lg text-blue-900">
+              <h2 className="font-semibold text-lg text-blue-900">
                 Horarios
-              </h3>
+              </h2>
+
+              {errors.horarios && (
+                <p className="text-red-500 text-sm mt-1">{errors.horarios}</p>
+              )}
 
               <button
                 type="button"
@@ -602,11 +672,15 @@ const horaEsValida = (apertura, cierre) => {
           </div>
 
           {/* ================= MEMBRESIAS ================= */}
-          <div className="mb-10">
+          <div id="membresias" className="mb-10">
             <div className="flex justify-between items-center mb-3">
-              <h3 className="font-semibold text-lg text-blue-900">
+              <h2 className="font-semibold text-lg text-blue-900">
                 Membresías
-              </h3>
+              </h2>
+
+              {errors.membresias && (
+                <p className="text-red-500 text-sm mt-1">{errors.membresias}</p>
+              )}
 
               <button
                 type="button"
@@ -677,9 +751,9 @@ const horaEsValida = (apertura, cierre) => {
 
                     </div>
 
-                    {/* DESCRIPCIÓN OPCIONAL */}
                     <div>
-                    <label htmlFor="descripcion">Descripción (opcional)</label>
+                    <label htmlFor="descripcion">Descripción *</label>
+                    <div className="textarea-wrapper">
                     <textarea
                       maxLength={100}
                       className="bg-white rounded-xl px-3 py-2 w-full"
@@ -690,6 +764,13 @@ const horaEsValida = (apertura, cierre) => {
                         setMembresias(copy);
                       }}
                     />
+                    <span className="char-counter">
+                      {(membresias[i]?.descripcion || "").length}/100
+                    </span>
+                    </div>
+                    {errors[`descripcion-${i}`] && (
+                      <p className="text-red-500 text-sm">{errors[`descripcion-${i}`]}</p>
+                    )}
                     </div>
 
                   </div>
@@ -701,6 +782,7 @@ const horaEsValida = (apertura, cierre) => {
           <div className="flex justify-center gap-6">
 
             <button
+              type="button"
               onClick={handleCancel}
               className="bg-gray-600 hover:bg-gray-900 text-white px-6 py-2.5 rounded-xl font-semibold shadow-md transition-all"
             >

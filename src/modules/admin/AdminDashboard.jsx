@@ -1,123 +1,221 @@
-import SuperAdminLayout from '../../layout/AdminLayout'
-import { Link } from 'react-router-dom'
-import '../../styles/dashboard.css' 
-import { MdOutlineCalendarMonth, MdFileDownload } from 'react-icons/md'
+import { useState, useEffect } from "react";
+import SuperAdminLayout from "../../layout/AdminLayout";
+import { Link } from "react-router-dom";
+import { MdOutlineCalendarMonth, MdFileDownload } from "react-icons/md";
+import "../../styles/admin.css";
 
 function AdminDashboard() {
+
+  const [stats, setStats] = useState({
+    totalGyms: 0,
+    activeGyms: 0,
+    blockedGyms: 0,
+    ingresos: 0
+  });
+
+  const [finance, setFinance] = useState({
+    suscripciones: 0,
+    totalRecibido: 0,
+    pagosVencidos: 0
+  });
+
+  const [actividad, setActividad] = useState([]);
+
+  const [alertas, setAlertas] = useState([]);
+
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+
+    // Aquí se conectará el backend después
+    // ejemplo futuro:
+    // api.get("/admin/dashboard")
+
+    setLoading(false);
+
+  }, []);
+
+  if (loading) {
     return (
-        <SuperAdminLayout>
-            <section className="page-header">
-                <div>
-                <p className="eyebrow">Control global de plataforma</p>
-                <h1>Dashboard superadministrador</h1>
-                <p className="subtitle">Monitorea gimnasios, ingresos y eventos críticos de BodyPlan.</p>
-                </div>
-                <div className="header-actions">
-                <button className="btn btn-primary" type="button"><span className="material-icons"><MdFileDownload /></span> Exportar reporte</button>
-                <button className="btn btn-ghost" type="button"><span className="material-icons"><MdOutlineCalendarMonth /></span> Enero 2026</button>  
-                </div>
-            </section>
+      <SuperAdminLayout>
+        <h2 style={{ padding: 40 }}>Cargando dashboard...</h2>
+      </SuperAdminLayout>
+    );
+  }
 
-            <section className="stats-grid" aria-label="Indicadores globales">
-                <article className="stat-card">
-                <p className="stat-label">Total gimnasios</p>
-                <p className="stat-value">40</p>
-                <p className="stat-sub positive">+3 nuevos este mes</p>
-                </article>
-                <article className="stat-card">
-                <p className="stat-label">Gimnasios activos</p>
-                <p className="stat-value">35</p>
-                <p className="stat-sub">87.5% del total</p>
-                </article>
-                <article className="stat-card">
-                <p className="stat-label">Gimnasios bloqueados</p>
-                <p className="stat-value">5</p>
-                <p className="stat-sub warning">3 pendientes de revisión</p>
-                </article>
-                <article className="stat-card">
-                <p className="stat-label">Ingresos globales</p>
-                <p className="stat-value">$1,200</p>
-                <p className="stat-sub positive">+6.8% vs periodo anterior</p>
-                </article>
-            </section>
+  return (
+    <SuperAdminLayout>
 
-            <section className="content-grid">
-                <article className="panel">
-                <div className="panel-header">
-                    <h2>Resumen financiero</h2>
-                    <a href="admin-finance.html" className="inline-link">Ver finanzas</a>
-                </div>
-                <div className="finance-list">
-                    <p><span>Suscripciones vigentes</span><strong>40</strong></p>
-                    <p><span>Total recibido</span><strong>$1,200</strong></p>
-                    <p><span>Pagos vencidos</span><strong>5</strong></p>
-                </div>
-                </article>
+      <section className="page-header">
+        <div>
+          <p className="eyebrow">Control global de plataforma</p>
+          <h1>Dashboard superadministrador</h1>
+          <p className="subtitle">
+            Monitorea gimnasios, ingresos y eventos críticos de BodyPlan.
+          </p>
+        </div>
 
-                <article className="panel">
-                <div className="panel-header">
-                    <h2>Actividad reciente</h2>
-                    <a href="admin-moderation.html" className="inline-link">Ver actividad</a>
-                </div>
-                <ul className="activity-list">
-                    <li>
-                    <span className="badge badge-warning">Bloqueado</span>
-                    Gym "Power District" bloqueado por reporte de pago
-                    <span className="time">Hace 1 h</span>
-                    </li>
-                    <li>
-                    <span className="badge badge-info">Sistema</span>
-                    Actualización de políticas aplicada a 40 gimnasios
-                    <span className="time">Hoy 09:15 AM</span>
-                    </li>
-                </ul>
-                </article>
-            </section>
+        <div className="header-actions">
+          <button className="btn btn-primary">
+            <MdFileDownload />
+            Exportar reporte
+          </button>
 
-            <section className="panel table-panel" aria-label="Gimnasios con alertas">
-                <div className="panel-header">
-                <h2>Gimnasios con alertas críticas</h2>
-                <Link to="/admin-gyms" className="inline-link">Gestionar gimnasios</Link>
-                </div>
-                <div className="table-wrap">
-                <table>
-                    <thead>
-                    <tr>
-                        <th>Gimnasio</th>
-                        <th>Estado</th>
-                        <th>Plan</th>
-                        <th>Último pago</th>
-                        <th>Alerta</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr>
-                        <td>Power District</td>
-                        <td><span class="badge badge-warning">Revisión</span></td>
-                        <td>Pro</td>
-                        <td>02 Ene 2026</td>
-                        <td>Pago vencido (8 días)</td>
-                    </tr>
-                    <tr>
-                        <td>Gym Cumbre</td>
-                        <td><span class="badge badge-danger">Bloqueado</span></td>
-                        <td>Básico</td>
-                        <td>15 Dic 2025</td>
-                        <td>Pendiente validación manual</td>
-                    </tr>
-                    <tr>
-                        <td>Zona Funcional</td>
-                        <td><span class="badge badge-warning">Revisión</span></td>
-                        <td>Básico</td>
-                        <td>05 Ene 2026</td>
-                        <td>Mala calificación</td>
-                    </tr>
-                    </tbody>
-                </table>
-                </div>
-            </section>
-        </SuperAdminLayout>
-    )
+          <button className="btn btn-ghost">
+            <MdOutlineCalendarMonth />
+            Periodo
+          </button>
+        </div>
+      </section>
+
+      {/* STATS */}
+
+      <section className="stats-grid">
+
+        <article className="stat-card">
+          <p className="stat-label">Total gimnasios</p>
+          <p className="stat-value">{stats.totalGyms}</p>
+        </article>
+
+        <article className="stat-card">
+          <p className="stat-label">Gimnasios activos</p>
+          <p className="stat-value">{stats.activeGyms}</p>
+        </article>
+
+        <article className="stat-card">
+          <p className="stat-label">Gimnasios bloqueados</p>
+          <p className="stat-value">{stats.blockedGyms}</p>
+        </article>
+
+        <article className="stat-card">
+          <p className="stat-label">Ingresos globales</p>
+          <p className="stat-value">${stats.ingresos}</p>
+        </article>
+
+      </section>
+
+      {/* CONTENT */}
+
+      <section className="content-grid">
+
+        {/* FINANZAS */}
+
+        <article className="panel">
+          <div className="panel-header">
+            <h2>Resumen financiero</h2>
+            <Link to="/admin/finanzas" className="inline-link">
+              Ver finanzas
+            </Link>
+          </div>
+
+          <div className="finance-list">
+            <p>
+              <span>Suscripciones vigentes</span>
+              <strong>{finance.suscripciones}</strong>
+            </p>
+
+            <p>
+              <span>Total recibido</span>
+              <strong>${finance.totalRecibido}</strong>
+            </p>
+
+            <p>
+              <span>Pagos vencidos</span>
+              <strong>{finance.pagosVencidos}</strong>
+            </p>
+          </div>
+
+        </article>
+
+        {/* ACTIVIDAD */}
+
+        <article className="panel">
+          <div className="panel-header">
+            <h2>Actividad reciente</h2>
+            <Link to="/admin/actividad" className="inline-link">
+              Ver actividad
+            </Link>
+          </div>
+
+          {actividad.length === 0 ? (
+            <p className="empty-state">No hay actividad reciente</p>
+          ) : (
+            <ul className="activity-list">
+              {actividad.map((a, index) => (
+                <li key={index}>
+                  <span className={`badge badge-${a.tipo}`}>
+                    {a.tipo}
+                  </span>
+                  {a.descripcion}
+                  <span className="time">{a.tiempo}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+
+        </article>
+
+      </section>
+
+      {/* ALERTAS */}
+
+      <section className="panel table-panel">
+
+        <div className="panel-header">
+          <h2>Gimnasios con alertas críticas</h2>
+          <Link to="/admin/gimnasios" className="inline-link">
+            Gestionar gimnasios
+          </Link>
+        </div>
+
+        <div className="table-wrap">
+
+          <table>
+
+            <thead>
+              <tr>
+                <th>Gimnasio</th>
+                <th>Estado</th>
+                <th>Plan</th>
+                <th>Último pago</th>
+                <th>Alerta</th>
+              </tr>
+            </thead>
+
+            <tbody>
+
+              {alertas.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="empty-table">
+                    No hay alertas críticas
+                  </td>
+                </tr>
+              ) : (
+                alertas.map((g) => (
+                  <tr key={g.id}>
+                    <td>{g.nombre}</td>
+                    <td>
+                      <span className={`badge badge-${g.estado}`}>
+                        {g.estado}
+                      </span>
+                    </td>
+                    <td>{g.plan}</td>
+                    <td>{g.ultimoPago}</td>
+                    <td>{g.alerta}</td>
+                  </tr>
+                ))
+              )}
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </section>
+
+    </SuperAdminLayout>
+  );
 }
 
-export default AdminDashboard
+export default AdminDashboard;

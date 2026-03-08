@@ -4,14 +4,19 @@ import { useNavigate } from "react-router-dom";
 import api from "../../services/axios";
 import "../../styles/gimnasio.css";
 import { FiPlus} from "react-icons/fi";
+import LoadingScreen from "../../components/ui/LoadingScreen";
 
 function MisGimnasios(){
 
   const [gimnasios,setGimnasios] = useState([]);
   const [loading,setLoading] = useState(true);
+  const [tab,setTab] = useState("activos")
   const navigate = useNavigate();
   const [changingId,setChangingId] = useState(null);
   const gimnasiosOrdenados = [...gimnasios].sort((a,b)=>b.activo - a.activo);
+  const activos = gimnasios.filter(g => g.activo);
+  const archivados = gimnasios.filter(g => !g.activo);
+  const listaMostrar = tab === "activos" ? activos : archivados;
 
   const fetchGyms = async () =>{
     try{
@@ -38,11 +43,7 @@ function MisGimnasios(){
 
 
   if(loading){
-    return (
-      <DashboardLayout>
-        <h1 style={{padding:40}}>Cargando gimnasios...</h1>
-      </DashboardLayout>
-    );
+    return <LoadingScreen message="Cargando Gimnasios" />;
   }
 
     const toggleActivo = async (gym) => {
@@ -94,7 +95,24 @@ function MisGimnasios(){
         </button>
       </section>
 
-      {/* LISTA */}
+      <div className="gym-tabs">
+
+        <button
+          className={`tab-btn ${tab === "activos" ? "active" : ""}`}
+          onClick={()=>setTab("activos")}
+        >
+          Activos ({activos.length})
+        </button>
+
+        <button
+          className={`tab-btn ${tab === "archivados" ? "active" : ""}`}
+          onClick={()=>setTab("archivados")}
+        >
+          Archivados ({archivados.length})
+        </button>
+
+      </div>
+
       <section className="service-list">
 
         {gimnasios.length === 0 && (
@@ -105,12 +123,7 @@ function MisGimnasios(){
           </div>
         )}
 
-        {gimnasiosOrdenados.map(g => (
-          <div key={g.iid_gimnasio} className="service-profile-card">
-          </div>
-        ))}
-
-        {gimnasios.map(g => (
+        {listaMostrar.map(g => (
           <div
             key={g.id_gimnasio}
             className="service-profile-card"
@@ -125,7 +138,7 @@ function MisGimnasios(){
           >
 
             {/* portada */}
-            <div className="cover-card" style={{height:180}}>
+            <div className="cover-card" style={{height:250}}>
               {g.fotos?.[0] && (
                 <img
                   src={`/uploads/gimnasios/${g.fotos[0].url_foto}`}
@@ -138,9 +151,9 @@ function MisGimnasios(){
                 <span className={g.activo ? "badge-activo" : "badge-off"}>
                   {g.activo ? "🟢 Activo" : "🔴 Archivado"}
                 </span>
-                <p>
+                <h3>
                   {g.Ubicacion?.municipio}, {g.Ubicacion?.estado}
-                </p>
+                </h3>
               </div>
             </div>  
 

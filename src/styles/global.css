@@ -222,6 +222,21 @@ a{
   text-align: left;
 }
 
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #dbeafe;
+  border-top: 4px solid #1e3a8a;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* texto derecho onboarding */
 .navbar-onboarding-text{
   color: rgba(255,255,255,0.85);

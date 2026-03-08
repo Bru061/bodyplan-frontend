@@ -6,8 +6,10 @@ import EditFotosModal from "./EditFotosModal"
 import DashboardLayout from "../../layout/DashboardLayout";
 import "../../styles/gimnasio.css";
 import api from "../../services/axios";
-import { FiEdit, FiStar } from "react-icons/fi";
+import { FiStar } from "react-icons/fi";
 import { useParams } from "react-router-dom";
+import LoadingScreen from "../../components/ui/LoadingScreen";
+import { Pencil } from "lucide-react";
 
 function MiGimnasio() {
 
@@ -66,13 +68,33 @@ function MiGimnasio() {
   }, [gym, imgIndex]);
 
 
-  if (loading) return <DashboardLayout><h1>Cargando...</h1></DashboardLayout>;
+  if (loading) {
+    return <LoadingScreen message="Cargando..." />;
+  }
 
   console.log("GYM STATUS:", gym);
   if (!gym) {
     return (
       <DashboardLayout>
-        <h1>No tienes gimnasio aún</h1>
+        <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "60vh",
+          textAlign: "center"
+        }}
+      >
+        <h2
+          style={{
+            color: "#1e3a8a", // azul similar al usado en tu panel
+            fontSize: "28px",
+            fontWeight: "600"
+          }}
+        >
+          No tienes gimnasios aún
+        </h2>
+      </div>
       </DashboardLayout>
     );
   }
@@ -81,49 +103,26 @@ function MiGimnasio() {
     <DashboardLayout>
 
       <section className="page-header">
+        <div className="page-header-row">
+          <button
+          className="back-button"
+          onClick={() => navigate(-1)}
+          >
+          ←
+          </button>
         <div>
           <p className="eyebrow">Gestión de negocio</p>
-          <h1>Mi gimnasio</h1>
+          <h1>{gym.nombre}</h1>
           <p className="subtitle">
             Administra la información de tu gimnasio.
           </p>
         </div>
+      </div>
 
-        <div className="page-header-actions">
-        <button
-          className="btn btn-primary"
-          onClick={() => {
-            console.log("CLICK EDIT");
-            setOpenEdit(true);
-          }}
-        >
-          <FiEdit size={18} />
-          Editar información
-        </button>
-
-        <button
-          className="btn btn-primary"
-          onClick={()=>setOpenHorarios(true)}
-        >
-          <FiEdit size={18} />
-          Editar horarios
-        </button>
-
-        <button
-          className="btn btn-primary"
-          onClick={()=>setOpenMembresias(true)}
-        >
-          <FiEdit size={18} />
-          Editar membresías
-        </button>
-
-        <button
-          className="btn btn-primary"
-          onClick={()=>setOpenFotos(true)}
-        >
-          <FiEdit size={18} />
-          Editar fotos
-        </button>
+      <div className="page-header-actions">
+        <button className="btn btn-primary" type="button">
+              <FiStar size={18} /> Destacar
+            </button>
 
       </div>
 
@@ -135,6 +134,13 @@ function MiGimnasio() {
 
           {/* PORTADA */}
         <section className="cover-card">
+
+          <button
+            className="icon-edit"
+            onClick={() => setOpenFotos(true)}
+          >
+            <Pencil size={18}/>
+          </button>
 
           {gym.fotos?.length > 0 && gym.fotos[imgIndex] && (
             <>
@@ -183,11 +189,6 @@ function MiGimnasio() {
             </>
           )}
 
-          <div className="cover-overlay"></div>
-
-          <div className="cover-content">
-            <h2>{gym.nombre}</h2>
-          </div>
 
         </section>
 
@@ -196,6 +197,12 @@ function MiGimnasio() {
 
           {/* DESCRIPCIÓN */}
           <div className="info-block full">
+            <button
+              className="icon-edit-btn"
+              onClick={() => setOpenEdit(true)}
+            >
+              <Pencil size={18}/>
+            </button>
             <h3>Descripción del gimnasio</h3>
             <p>{gym.descripcion}</p>
           </div>
@@ -214,6 +221,12 @@ function MiGimnasio() {
 
           {/* HORARIOS */}
           <div className="info-block">
+            <button
+              className="icon-edit-btn"
+              onClick={() => setOpenHorarios(true)}
+            >
+              <Pencil size={18}/>
+            </button>
             <h3>Horarios</h3>
 
             {gym.horarios?.length === 0 && <p>No hay horarios</p>}
@@ -230,6 +243,12 @@ function MiGimnasio() {
 
           {/* MEMBRESÍAS */}
           <div className="info-block">
+            <button
+              className="icon-edit-btn"
+              onClick={() => setOpenMembresias(true)}
+            >
+              <Pencil size={18}/>
+            </button>
             <h3>Membresías</h3>
 
             {gym.membresias?.length === 0 && <p>No hay membresías</p>}
@@ -251,15 +270,6 @@ function MiGimnasio() {
           </div>
 
         </section>
-
-          {/* ACCIONES */}
-          <section className="actions-bar">
-
-            <button className="btn btn-primary" type="button">
-              <FiStar size={18} /> Destacar
-            </button>
-
-          </section>
 
         </article>
 

@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { FiLogOut, FiUser } from "react-icons/fi";
 import { useAuth } from "../../core/context/AuthContext";
 import api from "../../services/axios";
+import LoadingScreen from "../../components/ui/LoadingScreen";
 
 function Perfil(){
 
@@ -34,17 +35,31 @@ function Perfil(){
   }, []);
 
   if (loading){
-    return (
-      <DashboardLayout>
-        <p style={{padding:40}}>Cargando perfil...</p>
-      </DashboardLayout>
-    );
+    return <LoadingScreen message="Cargando perfil..." />;
   }
 
   if (!user){
     return (
       <DashboardLayout>
-        <p style={{padding:40}}>No se pudo cargar el perfil</p>
+        <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "60vh",
+          textAlign: "center"
+        }}
+      >
+        <h2
+          style={{
+            color: "#1e3a8a", // azul similar al usado en tu panel
+            fontSize: "28px",
+            fontWeight: "600"
+          }}
+        >
+          No se pudo cargar el perfil
+        </h2>
+      </div>
       </DashboardLayout>
     );
   }

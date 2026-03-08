@@ -5,6 +5,8 @@ function EditMembresiasModal({ gym, onClose, onUpdated }) {
 
   const [membresias, setMembresias] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [errors, setErrors] = useState({});
 
   const noSpecial = (value, max) => value.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]/g, "").slice(0, max);
   const onlyNumbers = (value) => value.replace(/[^0-9]/g, "");
@@ -33,9 +35,20 @@ function EditMembresiasModal({ gym, onClose, onUpdated }) {
 
   // ================= CAMBIOS INPUT =================
   const handleChange = (index, field, value) => {
+
     const copia = [...membresias];
     copia[index][field] = value;
     setMembresias(copia);
+
+    const key = `${field}-${index}`;
+
+    if(errors[key]){
+      setErrors(prev=>({
+        ...prev,
+        [key]: ""
+      }));
+    }
+
   };
 
   // ================= AGREGAR =================
@@ -71,41 +84,39 @@ function EditMembresiasModal({ gym, onClose, onUpdated }) {
   // ================= GUARDAR =================
 const handleSave = async () => {
 
+  let newErrors = {};
   let nombres = new Set();
 
-  for (const m of membresias) {
+  membresias.forEach((m,i)=>{
 
-    if (!m.nombre.trim()) {
-      alert("Las membresías deben tener nombre");
-      return;
-    }
+    if (!m.nombre.trim())
+      newErrors[`nombre-${i}`] = "El nombre es obligatorio";
 
-    if (Number(m.precio) < 1) {
-      alert("El precio debe ser mayor a 0");
-      return;
-    }
+    if (!m.precio || Number(m.precio) < 1)
+      newErrors[`precio-${i}`] = "El precio debe ser mayor a 0";
 
-    if (Number(m.duracion) < 1) {
-      alert("La duración debe ser mayor a 0");
-      return;
-    }
+    if (!m.duracion || Number(m.duracion) < 1)
+      newErrors[`duracion-${i}`] = "La duración debe ser mayor a 0";
 
-    if (nombres.has(m.nombre.toLowerCase())) {
-      alert("No puedes repetir nombres de membresía");
-      return;
-    }
+    if (m.nombre && nombres.has(m.nombre.toLowerCase()))
+      newErrors[`nombre-${i}`] = "Nombre de membresía repetido";
 
-    if (m.nombre.length > 15) {
-      alert("El nombre no puede tener más de 15 caracteres");
-      return;
-    }
+    if (m.nombre.length > 15)
+      newErrors[`nombre-${i}`] = "Máximo 15 caracteres";
 
-    if (m.descripcion && m.descripcion.length > 100) {
-      alert("La descripción no puede tener más de 100 caracteres");
-      return;
-    }
+    if (!m.descripcion || !m.descripcion.trim())
+      newErrors[`descripcion-${i}`] = "La descripción es obligatoria";
+
+    if (m.descripcion && m.descripcion.length > 100)
+      newErrors[`descripcion-${i}`] = "Máximo 100 caracteres";
 
     nombres.add(m.nombre.toLowerCase());
+
+  });
+
+  if(Object.keys(newErrors).length > 0){
+    setErrors(newErrors);
+    return;
   }
 
   try {
@@ -118,14 +129,14 @@ const handleSave = async () => {
           nombre: m.nombre,
           precio: Number(m.precio),
           duracion_dias: Number(m.duracion),
-          descripcion: m.descripcion
+          descripcion: m.descripcion?.trim() || ""
         });
       } else {
         await api.put(`/gym/membresias/${m.id}`, {
           nombre: m.nombre,
           precio: Number(m.precio),
           duracion_dias: Number(m.duracion),
-          descripcion: m.descripcion
+          descripcion: m.descripcion?.trim() || ""
         });
       }
     }
@@ -147,6 +158,9 @@ const handleSave = async () => {
       <div className="modal-card modal-lg">
 
         <h2 className="modal-title">Editar membresías</h2>
+        {error && (
+          <div className="modal-error">{error}</div>
+        )}
 
         {/* LISTA */}
         <div className="horario-row">
@@ -157,13 +171,16 @@ const handleSave = async () => {
             <div className="field-group">
               <label>Nombre *</label>
               <input
-                maxLenght={15}
+                maxLength={15}
                 value={m.nombre}
                 onChange={(e)=>{
                   const limpio = noSpecial(e.target.value, 15);
                   handleChange(i,"nombre",limpio);
                 }}
               />
+              {errors[`nombre-${i}`] && (
+                <p className="text-red-500 text-sm">{errors[`nombre-${i}`]}</p>
+              )}
             </div>
 
             <div className="field-group">
@@ -178,6 +195,9 @@ const handleSave = async () => {
                   handleChange(i,"precio",v);
                 }}
               />
+              {errors[`precio-${i}`] && (
+                <p className="text-red-500 text-sm">{errors[`precio-${i}`]}</p>
+              )}
             </div>
 
             <div className="field-group">
@@ -192,10 +212,14 @@ const handleSave = async () => {
                   handleChange(i,"duracion",v);
                 }}
               />
+              {errors[`duracion-${i}`] && (
+                <p className="text-red-500 text-sm">{errors[`duracion-${i}`]}</p>
+              )}
             </div>
 
             <div className="field-group">
-              <label>Descripción (opcional)</label>
+              <label>Descripción *</label>
+              <div className="textarea-wrapper">
               <input
                 maxLength={100}
                 className="desc-input"
@@ -205,6 +229,13 @@ const handleSave = async () => {
                   handleChange(i,"descripcion",v);
                 }}
               />
+              <span className="char-counter">
+                {(m.descripcion || "").length}/100
+              </span>
+              </div>
+              {errors[`descripcion-${i}`] && (
+                <p className="text-red-500 text-sm">{errors[`descripcion-${i}`]}</p>
+              )}
             </div>
             
             <div className="delete-row">

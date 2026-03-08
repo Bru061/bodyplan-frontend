@@ -1,0 +1,104 @@
+/* ===== ADMIN DASHBOARD ===== */
+
+.admin-container{
+padding:30px;
+}
+
+/* stats */
+
+.stats-grid{
+display:grid;
+grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+gap:20px;
+margin-bottom:25px;
+}
+
+.stat-card{
+background:white;
+padding:20px;
+border-radius:12px;
+box-shadow:0 2px 6px rgba(0,0,0,0.05);
+}
+
+.stat-label{
+font-size:0.9rem;
+color:#6b7280;
+}
+
+.stat-value{
+font-size:1.6rem;
+font-weight:600;
+margin-top:5px;
+}
+
+/* content grid */
+
+.content-grid{
+display:grid;
+grid-template-columns:2fr 1fr;
+gap:20px;
+margin-bottom:25px;
+}
+
+.panel{
+background:white;
+padding:20px;
+border-radius:12px;
+box-shadow:0 2px 6px rgba(0,0,0,0.05);
+}
+
+.panel-header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:15px;
+}
+
+.inline-link{
+font-size:0.9rem;
+color:#2563eb;
+cursor:pointer;
+}
+
+/* finance */
+
+.finance-list p{
+display:flex;
+justify-content:space-between;
+margin-bottom:10px;
+}
+
+/* activity */
+
+.activity-list{
+list-style:none;
+padding:0;
+margin:0;
+}
+
+.activity-list li{
+display:flex;
+justify-content:space-between;
+padding:8px 0;
+border-bottom:1px solid #eee;
+}
+
+.time{
+font-size:0.8rem;
+color:#9ca3af;
+}
+
+/* table */
+
+.table-panel{
+margin-top:20px;
+}
+
+.table-wrap{
+overflow-x:auto;
+}
+
+.empty-state{
+color:#6b7280;
+font-size:0.9rem;
+}

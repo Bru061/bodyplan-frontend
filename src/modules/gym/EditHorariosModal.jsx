@@ -5,31 +5,64 @@ function EditHorariosModal({ gym, onClose, onUpdated }) {
 
   const [horarios, setHorarios] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [errors, setErrors] = useState({});
 
-// CARGAR HORARIOS EXISTENTES
-useEffect(() => {
-  if (!gym) return;
+  useEffect(() => {
 
-  if (gym.horarios && gym.horarios.length > 0) {
-    setHorarios(
-      gym.horarios.map(h => ({
-        id_horario: h.id_horario, 
-        dia: h.dia_semana,
-        apertura: h.hora_apertura?.slice(0,5),
-        cierre: h.hora_cierre?.slice(0,5)
-      }))
-    );
-  } else {
-    setHorarios([{ dia: "", apertura: "", cierre: "" }]);
-  }
+    const keys = Object.keys(errors);
+    if (keys.length === 0) return;
 
-}, [gym]);
+    const field = document.querySelector(`[name="${keys[0]}"]`);
 
-// CAMBIOS INPUT
-const handleChange = (index, field, value) => {
+    if (!field) return;
+
+    const rect = field.getBoundingClientRect();
+    const offset = window.scrollY + rect.top - 120;
+
+    window.scrollTo({
+      top: offset,
+      behavior: "smooth"
+    });
+
+    field.focus?.();
+
+  }, [errors]);
+
+  useEffect(() => {
+    if (!gym) return;
+
+    if (gym.horarios && gym.horarios.length > 0) {
+      setHorarios(
+        gym.horarios.map(h => ({
+          id_horario: h.id_horario, 
+          dia: h.dia_semana,
+          apertura: h.hora_apertura?.slice(0,5),
+          cierre: h.hora_cierre?.slice(0,5)
+        }))
+      );
+    } else {
+      setHorarios([{ dia: "", apertura: "", cierre: "" }]);
+    }
+
+  }, [gym]);
+
+
+  const handleChange = (index, field, value) => {
+
     const copia = [...horarios];
     copia[index][field] = value;
     setHorarios(copia);
+
+    const key = `${field}-${index}`;
+
+    if (errors[key]) {
+      setErrors(prev => ({
+        ...prev,
+        [key]: ""
+      }));
+    }
+
   };
 
 
@@ -68,71 +101,97 @@ const handleChange = (index, field, value) => {
       setHorarios(copia);
     };
 
-const handleSave = async () => {
-  try {
-    setLoading(true);
+  const handleSave = async () => {
 
-    for (const h of horarios) {
+    let newErrors = {};
+    setError("");
 
-      let diasUsados = new Set();
+    const diasUsados = new Set();
 
-      // 🔴 VALIDAR VACÍOS
-      if(!h.dia || !h.apertura || !h.cierre){
-        alert("Todos los horarios deben estar completos");
-        setLoading(false);
-        return;
-      }
+    horarios.forEach((h, i) => {
 
-      if (!horaEsValida(h.apertura, h.cierre)) {
-        alert("La hora de cierre debe ser mayor que la apertura");
-        setLoading(false);
-        return;
-      }
+      if (!h.dia)
+        newErrors[`dia-${i}`] = "Selecciona un día";
 
-      if (diasUsados.has(h.dia)) {
-        alert("No puedes repetir el mismo día");
-        setLoading(false);
-        return;
-      }
+      if (!h.apertura)
+        newErrors[`apertura-${i}`] = "Selecciona hora de apertura";
 
-      diasUsados.add(h.dia);
+      if (!h.cierre)
+        newErrors[`cierre-${i}`] = "Selecciona hora de cierre";
 
-      const apertura = h.apertura.length === 5 ? h.apertura + ":00" : h.apertura;
-      const cierre = h.cierre.length === 5 ? h.cierre + ":00" : h.cierre;
+      if (h.apertura && h.cierre && !horaEsValida(h.apertura, h.cierre))
+        newErrors[`cierre-${i}`] = "La hora de cierre debe ser mayor";
 
-      // 🟢 NUEVO
-      if (!h.id_horario) {
+      if (h.dia) {
 
-        await api.post(`/gym/${gym.id_gimnasio}/horarios`, {
-          dia_semana: h.dia,
-          hora_apertura: apertura,
-          hora_cierre: cierre
-        });
+        if (diasUsados.has(h.dia))
+          newErrors[`dia-${i}`] = "Este día ya está registrado";
 
-      } 
-      
-      // 🔵 EDITAR
-      else {
-
-        await api.put(`/gym/${gym.id_gimnasio}/horarios/${h.id_horario}`, {
-          dia_semana: h.dia,
-          hora_apertura: apertura,
-          hora_cierre: cierre
-        });
+        diasUsados.add(h.dia);
 
       }
+
+    });
+
+    if (horarios.length === 0) {
+      setError("Debe existir al menos un horario");
+      return;
     }
 
-    onUpdated();
-    onClose();
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
 
-  } catch (err) {
-    console.error("Error guardando horarios", err.response?.data || err);
-    alert("Error al guardar horarios");
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+
+      setLoading(true);
+
+      for (const h of horarios) {
+
+        const apertura = h.apertura.length === 5 ? h.apertura + ":00" : h.apertura;
+        const cierre = h.cierre.length === 5 ? h.cierre + ":00" : h.cierre;
+
+        // 🟢 CREAR
+        if (!h.id_horario) {
+
+          await api.post(`/gym/${gym.id_gimnasio}/horarios`, {
+            dia_semana: h.dia,
+            hora_apertura: apertura,
+            hora_cierre: cierre
+          });
+
+        }
+
+        // 🔵 EDITAR
+        else {
+
+          await api.put(`/gym/${gym.id_gimnasio}/horarios/${h.id_horario}`, {
+            dia_semana: h.dia,
+            hora_apertura: apertura,
+            hora_cierre: cierre
+          });
+
+        }
+
+      }
+
+      onUpdated();
+      onClose();
+
+    } catch (err) {
+
+      const backendError = err?.response?.data?.error;
+
+      setError(backendError || "Error al guardar horarios");
+
+    } finally {
+
+      setLoading(false);
+
+    }
+
+  };
 
 const horaEsValida = (apertura, cierre) => {
   const [h1, m1] = apertura.split(":").map(Number);
@@ -145,6 +204,11 @@ const horaEsValida = (apertura, cierre) => {
       <div className="modal-card modal-lg">
 
         <h2 className="modal-title">Editar horarios</h2>
+        {error && (
+          <div className="modal-error">
+            {error}
+          </div>
+        )}
 
         <div className="horario-row">
 
@@ -154,6 +218,7 @@ const horaEsValida = (apertura, cierre) => {
             <div className="field-group">
               <label>Día *</label>
               <select
+                name={`dia-${index}`}
                 value={h.dia}
                 onChange={e => handleChange(index, "dia", e.target.value)}
               >
@@ -166,24 +231,41 @@ const horaEsValida = (apertura, cierre) => {
                 <option>Sabado</option>
                 <option>Domingo</option>
               </select>
+              {errors[`dia-${index}`] && (
+                <p className="text-red-500 text-sm">
+                  {errors[`dia-${index}`]}
+                </p>
+              )}
             </div>
 
             <div className="field-group">
               <label>Apertura *</label>
               <input
+                name={`apertura-${index}`}
                 type="time"
                 value={h.apertura}
                 onChange={e => handleChange(index, "apertura", e.target.value)}
               />
+              {errors[`apertura-${index}`] && (
+                <p className="text-red-500 text-sm">
+                  {errors[`apertura-${index}`]}
+                </p>
+              )}
             </div>
 
             <div className="field-group">
               <label>Cierre *</label>
               <input
+                name={`cierre-${index}`}
                 type="time"
                 value={h.cierre}
                 onChange={e => handleChange(index, "cierre", e.target.value)}
               />
+              {errors[`cierre-${index}`] && (
+                <p className="text-red-500 text-sm">
+                  {errors[`cierre-${index}`]}
+                </p>
+              )}
             </div>
 
             <div className="delete-row">

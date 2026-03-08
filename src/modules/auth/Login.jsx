@@ -90,9 +90,9 @@ function Login() {
               <MdAssignmentInd size={70} color="white" />
             </div>
             <h2>BodyPlan</h2>
-            <p>
+            <h3>
               Tu portal integral para conectar con los mejores gimnasios y nutricionistas.
-            </p>
+            </h3>
           </div>
         </section>
 
