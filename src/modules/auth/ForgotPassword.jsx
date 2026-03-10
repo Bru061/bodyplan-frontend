@@ -97,9 +97,9 @@ function ForgotPassword() {
               <MdAssignmentInd size={70} color="white" />
             </div>
             <h2>BodyPlan</h2>
-            <p>
-              Tu portal integral para conectar con los mejores gimnasios y nutricionistas.
-            </p>
+            <h3>
+              Conecta tu gimnasio con clientes y gestiona rutinas de manera inteligente.
+            </h3>
           </div>
         </section>
         <section className="login-form">

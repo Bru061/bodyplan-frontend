@@ -79,12 +79,12 @@ function Dashboard() {
                 </p>
               </article>
               <article className="metric-card">
-                <p className="metric-title">Servicios publicados</p>
+                <p className="metric-title">Gimnasios registrados</p>
                 <p className="metric-value">
-                  {loading ? "..." : dashboard.metrics.servicios}
+                  {loading ? "..." : dashboard.metrics.gimnasios}
                 </p>
                 <p className="metric-sub">
-                  {loading ? "" : dashboard.descriptions.servicios}
+                  {loading ? "" : dashboard.descriptions.gimnasios}
                 </p>
               </article>
             </section>

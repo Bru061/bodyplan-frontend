@@ -82,7 +82,11 @@ function Register() {
         password: form.password,
       });
 
-      navigate("/mis-gimnasios");
+      navigate("/verify-email", {
+        state: {
+          correo: form.correo
+        }
+      });
 
     } catch (err) {
       const msg =
@@ -123,7 +127,7 @@ function Register() {
               <MdAssignmentInd size={70} color="white" />
             </div>
             <h2>BodyPlan</h2>
-            <h3>Tu portal integral para conectar con los mejores gimnasios y nutricionistas.</h3>
+            <h3>Conecta tu gimnasio con clientes y gestiona rutinas de manera inteligente.</h3>
           </div>
         </section>
 

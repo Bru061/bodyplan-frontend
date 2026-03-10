@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-// import axios from "../../../services/axios"; // 🔵 Activar cuando backend esté listo
+import api from "../../../services/axios";
 
 export const useDashboardData = () => {
 
@@ -9,14 +9,14 @@ export const useDashboardData = () => {
       clientesInactivos: 0,
       membresiasActivas: 0,
       rutinas: 0,
-      servicios: 0
+      gimnasios: 0
     },
     descriptions: {
       clientesActivos: "",
       clientesInactivos: "",
       membresiasActivas: "",
       rutinas: "",
-      servicios: ""
+      gimnasios: ""
     },
     alerts: []
   });
@@ -24,58 +24,52 @@ export const useDashboardData = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchDashboard = async () => {
-      try {
 
-        // 🟢 CUANDO EL BACKEND ESTÉ LISTO (DESCOMENTAR)
-        /*
-        const { data } = await axios.get("/dashboard/metrics");
-        setDashboard(data);
-        */
+  const fetchData = async () => {
 
-        // 🟡 MOCK PROFESIONAL TEMPORAL
-        await new Promise(resolve => setTimeout(resolve, 600));
+    try {
 
-        setDashboard({
-          metrics: {
-            clientesActivos: 0,
-            clientesInactivos: 0,
-            membresiasActivas: 0,
-            rutinas: 0,
-            servicios: 0
-          },
-          descriptions: {
-            clientesActivos: "No se han registrado clientes",
-            clientesInactivos: "No se han registrado clientes",
-            membresiasActivas: "No se han registrado membresías",
-            rutinas: "No se han registrado rutinas",
-            servicios: "No se han registrado servicios"
-          },
-          alerts: [
-            {
-              type: "warning",
-              message: ""
-            },
-            {
-              type: "info",
-              message: ""
-            },
-            {
-              type: "danger",
-              message: ""
-            }
-          ]
-        });
+      const [clientesRes, gymRes, rutinasRes] = await Promise.all([
+        api.get("/clientes"),
+        api.get("/gym"),
+        api.get("/rutinas")
+      ]);
 
-      } catch (error) {
-        console.error("Error cargando dashboard:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+      const stats = clientesRes.data.estadisticas || {};
 
-    fetchDashboard();
+      const gimnasios = gymRes.data.gimnasios || [];
+      const rutinas = rutinasRes.data.rutinas || [];
+
+      setDashboard({
+        metrics: {
+          clientesActivos: stats.clientes_activos || 0,
+          clientesInactivos: stats.clientes_inactivos || 0,
+          membresiasActivas: stats.membresias_activas || 0,
+          rutinas: rutinas.length,
+          gimnasios: gimnasios.length
+        },
+        descriptions: {
+          clientesActivos: "Clientes con membresía vigente",
+          clientesInactivos: "Clientes sin membresía activa",
+          membresiasActivas: "Membresías activas",
+          rutinas: "Rutinas creadas",
+          gimnasios: "Gimnasios registrados"
+        },
+        alerts: []
+      });
+
+    } catch (err) {
+      console.error("Error cargando dashboard", err);
+    } finally {
+      setLoading(false);
+    }
+
+  };
+
+    fetchData();
+
   }, []);
 
   return { dashboard, loading };
+
 };

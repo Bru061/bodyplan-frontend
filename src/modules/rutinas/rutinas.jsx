@@ -19,15 +19,44 @@ function Rutinas() {
     sinAsignar: 0
   });
 
+  const [hasGym, setHasGym] = useState(true);
+  const [vista, setVista] = useState("activas");
+  const [clientesPorRutina, setClientesPorRutina] = useState({});
+
+  const checkGym = async () => {
+
+    try {
+
+      const res = await api.get("/gym");
+
+      if (!res.data.gimnasios || res.data.gimnasios.length === 0) {
+        setHasGym(false);
+      } else {
+        setHasGym(true);
+      }
+
+    } catch (err) {
+      console.error(err);
+    }
+
+  };
+
   const fetchRutinas = async () => {
 
     try {
 
-      const res = await api.get("/rutinas");
+      const endpoint =
+        vista === "activas"
+          ? "/rutinas"
+          : "/rutinas/desactivadas";
+
+      const res = await api.get(endpoint);
 
       const data = res.data.rutinas;
 
       setRutinas(data);
+
+      fetchClientesPorRutina(data);
 
       setStats({
         total: data.length,
@@ -50,12 +79,39 @@ function Rutinas() {
   useEffect(() => {
 
     fetchRutinas();
+    checkGym();
 
-  }, []);
+  }, [vista]);
 
   const handleEdit = (rutina) => {
     setRutinaSeleccionada(rutina);
     setShowEditModal(true);
+  };
+
+  const fetchClientesPorRutina = async (rutinas) => {
+
+    try {
+
+      const conteo = {};
+
+      for (const r of rutinas) {
+
+        const res = await api.get(`/rutinas/${r.id_rutina}/clientes`);
+
+        const clientes = res.data?.clientes || [];
+
+        conteo[r.id_rutina] = clientes.length;
+
+      }
+
+      setClientesPorRutina(conteo);
+
+    } catch (err) {
+
+      console.error("Error obteniendo clientes por rutina", err);
+
+    }
+
   };
 
   return (
@@ -74,7 +130,20 @@ function Rutinas() {
 
         <button
           className="btn btn-primary"
-          onClick={() => setShowCreateModal(true)}
+          onClick={async () => {
+          try {
+            const res = await api.get("/gym");
+            if (!res.data.gimnasios || res.data.gimnasios.length === 0) {
+              alert("Debes registrar al menos un gimnasio antes de crear rutinas.");
+              return;
+            }
+            setShowCreateModal(true);
+          } catch (err) {
+            console.error(err);
+            alert("No se pudo verificar tus gimnasios.");
+          }
+
+        }}
         >
           Crear rutina
         </button>
@@ -104,6 +173,24 @@ function Rutinas() {
 
       {/* LISTA */}
 
+      <div className="tabs">
+
+        <button
+        className={vista === "activas" ? "tab active" : "tab"}
+        onClick={() => setVista("activas")}
+        >
+        Rutinas activas
+        </button>
+
+        <button
+        className={vista === "desactivadas" ? "tab active" : "tab"}
+        onClick={() => setVista("desactivadas")}
+        >
+        Rutinas desactivadas
+        </button>
+
+      </div>
+
       <section className="panel">
 
         {loading ? (
@@ -124,6 +211,7 @@ function Rutinas() {
               rutina={rutina}
               refresh={fetchRutinas}
               onEdit={handleEdit}
+              clientesCount={clientesPorRutina[rutina.id_rutina] || 0}
             />
           ))
 

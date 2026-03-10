@@ -152,7 +152,7 @@ function EditRutinaModal({ rutina, onClose, onUpdated }) {
 
         <form onSubmit={handleSubmit}>
 
-          <label>Nombre</label>
+          <label>Nombre *</label>
           <input
             name="nombre"
             value={form.nombre}
@@ -161,7 +161,7 @@ function EditRutinaModal({ rutina, onClose, onUpdated }) {
           />
           {errors.nombre && <p className="error-text">{errors.nombre}</p>}
 
-          <label>Descripción</label>
+          <label>Descripción *</label>
           <div className="textarea-wrapper">
             <textarea
               name="descripcion"
@@ -175,7 +175,7 @@ function EditRutinaModal({ rutina, onClose, onUpdated }) {
           </div>
           {errors.descripcion && <p className="error-text">{errors.descripcion}</p>}
 
-          <label>Objetivo</label>
+          <label>Objetivo *</label>
           <input
             name="objetivo"
             value={form.objetivo}
@@ -186,7 +186,7 @@ function EditRutinaModal({ rutina, onClose, onUpdated }) {
           <div className="form-grid">
 
             <div className="form-group">
-              <label>Categoría</label>
+              <label>Categoría *</label>
               <select
                 name="categoria"
                 value={form.categoria}
@@ -203,7 +203,7 @@ function EditRutinaModal({ rutina, onClose, onUpdated }) {
             </div>
 
             <div className="form-group">
-              <label>Nivel</label>
+              <label>Nivel *</label>
               <select
                 name="nivel"
                 value={form.nivel}
@@ -216,7 +216,7 @@ function EditRutinaModal({ rutina, onClose, onUpdated }) {
             </div>
 
             <div className="form-group">
-              <label>Tipo rutina</label>
+              <label>Tipo rutina *</label>
               <select
                 name="tipo_rutina"
                 value={form.tipo_rutina}
@@ -228,7 +228,7 @@ function EditRutinaModal({ rutina, onClose, onUpdated }) {
             </div>
 
             <div className="form-group">
-              <label>Duración (min)</label>
+              <label>Duración (min) *</label>
               <input
                 type="number"
                 name="duracion_min"
@@ -239,7 +239,7 @@ function EditRutinaModal({ rutina, onClose, onUpdated }) {
             </div>
 
             <div className="form-group">
-              <label>Equipamiento</label>
+              <label>Equipamiento *</label>
               <input
                 name="equipamiento"
                 value={form.equipamiento}
@@ -249,7 +249,7 @@ function EditRutinaModal({ rutina, onClose, onUpdated }) {
             </div>
 
             <div>
-              <label className="form-group">Calorías estimadas</label>
+              <label className="form-group">Calorías estimadas *</label>
               <input
                 type="number"
                 name="calorias_estimadas"
@@ -261,7 +261,7 @@ function EditRutinaModal({ rutina, onClose, onUpdated }) {
 
           </div>
 
-          <label>Instrucciones</label>
+          <label>Instrucciones *</label>
           <div className="textarea-wrapper">
             <textarea
               name="instrucciones"

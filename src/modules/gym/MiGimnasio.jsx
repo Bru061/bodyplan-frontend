@@ -10,9 +10,11 @@ import { FiStar } from "react-icons/fi";
 import { useParams } from "react-router-dom";
 import LoadingScreen from "../../components/ui/LoadingScreen";
 import { Pencil } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 function MiGimnasio() {
 
+  const navigate = useNavigate();
   const [gym, setGym] = useState(null);
   const [imgIndex, setImgIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -87,7 +89,7 @@ function MiGimnasio() {
       >
         <h2
           style={{
-            color: "#1e3a8a", // azul similar al usado en tu panel
+            color: "#1e3a8a",
             fontSize: "28px",
             fontWeight: "600"
           }}
@@ -106,7 +108,13 @@ function MiGimnasio() {
         <div className="page-header-row">
           <button
           className="back-button"
-          onClick={() => navigate(-1)}
+          onClick={() => {
+            if (window.history.length > 1) {
+              navigate(-1);
+            } else {
+              navigate("/mis-gimnasios");
+            }
+          }}
           >
           ←
           </button>
@@ -139,7 +147,7 @@ function MiGimnasio() {
             className="icon-edit"
             onClick={() => setOpenFotos(true)}
           >
-            <Pencil size={18}/>
+            <Pencil size={25} color="#dbdfe9ff" />
           </button>
 
           {gym.fotos?.length > 0 && gym.fotos[imgIndex] && (

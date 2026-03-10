@@ -95,6 +95,8 @@ function DetalleCliente() {
                     email: usuario.correo,
                     telefono: usuario.telefono,
 
+                    gimnasio: suscripcion?.gimnasio?.nombre || "Sin gimnasio",
+
                     fechaRegistro: suscripcion
                         ? new Date(suscripcion.fecha_inicio).toLocaleDateString()
                         : "Sin registro",
@@ -182,6 +184,11 @@ function DetalleCliente() {
                     </div>
 
                     <div className="info-row">
+                        <span>Gimnasio</span>
+                        <span>{cliente.gimnasio}</span>
+                    </div>
+
+                    <div className="info-row">
                         <span>Miembro desde</span>
                         <span>{cliente.fechaRegistro}</span>
                     </div>
@@ -224,6 +231,54 @@ function DetalleCliente() {
                 </article>
 
             </section>
+
+                <section className="panel">
+
+                <h2>Historial de suscripciones</h2>
+
+                {historial.length === 0 ? (
+
+                <p className="empty-state">
+                Este cliente no tiene suscripciones registradas.
+                </p>
+
+                ) : (
+
+                historial.map((s, index) => (
+
+                <div className="row-item" key={index}>
+
+                <div>
+
+                <strong>{s.gimnasio.nombre} - </strong>
+
+                <span>
+                {s.membresia?.nombre || "Sin membresía"}
+                </span>
+
+                <p>
+                Inicio: {new Date(s.fecha_inicio).toLocaleDateString()}
+                </p>
+
+                </div>
+
+                <span className={`badge ${
+                s.estado === "activa"
+                ? "badge-success"
+                : "badge-danger"
+                }`}>
+
+                {s.estado}
+
+                </span>
+
+                </div>
+
+                ))
+
+                )}
+
+                </section>
 
             <section className="panel routines-panel">
 

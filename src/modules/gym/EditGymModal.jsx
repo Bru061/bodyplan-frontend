@@ -214,10 +214,10 @@ return (
             <label>Dirección *</label>
             <input
               nombre="direccion"
-              maxLength={20}
+              maxLength={50}
               value={form.direccion}
               onChange={e=>{
-                const limpio = lettersNumbers(e.target.value, 20);
+                const limpio = lettersNumbers(e.target.value, 50);
                 setForm({...form,direccion:limpio});
                 if(errors.direccion){
                   setErrors(prev=>({...prev,direccion:""}));

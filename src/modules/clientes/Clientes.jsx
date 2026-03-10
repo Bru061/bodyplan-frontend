@@ -7,16 +7,20 @@ import { useState, useEffect } from "react";
 import api from "../../services/axios";
 import "../../styles/clientes.css";
 import AddClienteModal from "./AddClienteModal";
+import * as XLSX from "xlsx";
 
 function Clientes() {
 
   const [clientes, setClientes] = useState([]);
   const [search, setSearch] = useState("");
+  const [hasGym, setHasGym] = useState(true);
 
   const [showAddModal, setShowAddModal] = useState(false);
 
   const [gimnasios, setGimnasios] = useState([]);
   const [membresias, setMembresias] = useState([]);
+  const [filtroEstado, setFiltroEstado] = useState("");
+  const [filtroGym, setFiltroGym] = useState("");
 
   const [stats, setStats] = useState({
     activos: 0,
@@ -24,7 +28,23 @@ function Clientes() {
     conMembresia: 0
   });
 
-  // ================= CLIENTES =================
+  const checkGym = async () => {
+
+    try {
+
+        const res = await api.get("/gym");
+
+        if (!res.data.gimnasios || res.data.gimnasios.length === 0) {
+        setHasGym(false);
+        } else {
+        setHasGym(true);
+        }
+
+    } catch (err) {
+        console.error(err);
+    }
+
+    };
 
   const cargarClientes = async (searchTerm = "") => {
 
@@ -42,7 +62,9 @@ function Clientes() {
         telefono: c.telefono || "-",
         estado: c.estado,
         fechaInicio: new Date(c.fecha_inicio).toLocaleDateString(),
-        membresia: c.membresia?.nombre || "Sin membresía"
+        membresia: c.membresia?.nombre || "Sin membresía",
+        gimnasio: c.gimnasio?.nombre || "Sin gimnasio",
+        id_gimnasio: c.gimnasio?.id_gimnasio || null
       }));
 
       setClientes(clientesFormateados);
@@ -63,6 +85,7 @@ function Clientes() {
 
   useEffect(() => {
     cargarClientes();
+    checkGym();
   }, []);
 
   useEffect(() => {
@@ -119,6 +142,45 @@ function Clientes() {
 
   };
 
+    const exportClientes = () => {
+
+    if (clientes.length === 0) {
+        alert("No hay clientes para exportar");
+        return;
+    }
+
+    const data = clientes.map(c => ({
+        Nombre: c.nombre,
+        Telefono: c.telefono,
+        Gimnasio: c.gimnasio,
+        Estado: c.estado,
+        "Fecha inicio": c.fechaInicio,
+        Membresia: c.membresia
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Clientes");
+
+    XLSX.writeFile(workbook, "reporte_clientes_bodyplan.xlsx");
+
+    };
+
+    const clientesFiltrados = clientes.filter((c) => {
+
+    if (filtroEstado && c.estado !== filtroEstado) {
+        return false;
+    }
+
+    if (filtroGym && c.id_gimnasio !== Number(filtroGym)) {
+        return false;
+    }
+
+    return true;
+
+    });
+
 
     return (
         <DashboardLayout>
@@ -133,14 +195,27 @@ function Clientes() {
                 </div>
 
                 <div className="header-actions">
-                    <button type="button" className="btn btn-primary">
+                    <button type="button" className="btn btn-primary"
+                        onClick={exportClientes}>
                         <FiDownload />
-                        Exportar
+                        Exportar reporte
                     </button>
 
                     <button
                     className="btn btn-primary"
-                    onClick={() => setShowAddModal(true)}
+                    onClick={async () => {
+                    try {
+                        const res = await api.get("/gym");
+                        if (!res.data.gimnasios || res.data.gimnasios.length === 0) {
+                        alert("Debes registrar un gimnasio antes de agregar clientes.");
+                        return;
+                        }
+                        setShowAddModal(true);
+                    } catch (err) {
+                        console.error(err);
+                        alert("No se pudo verificar tus gimnasios.");
+                    }
+                    }}
                     >
                     <FiPlus/> Registrar cliente
                     </button>
@@ -184,15 +259,29 @@ function Clientes() {
 
                     <div className="toolbar-actions">
 
-                        <button className="btn btn-filter">
-                            <FiFilter size={15} />
-                            Estado
-                        </button>
+                    <select
+                        value={filtroEstado}
+                        onChange={(e)=>setFiltroEstado(e.target.value)}
+                    >
+                        <option value="">Todos los estados</option>
+                        <option value="activa">Activos</option>
+                        <option value="inactiva">Inactivos</option>
+                    </select>
 
-                        <button className="btn btn-filter">
-                            <MdWorkspacePremium size={15} />
-                            Suscripción
-                        </button>
+                    <select
+                    value={filtroGym}
+                    onChange={(e)=>setFiltroGym(e.target.value)}
+                    >
+
+                    <option value="">Todos los gimnasios</option>
+
+                    {gimnasios.map(g => (
+                    <option key={g.id_gimnasio} value={g.id_gimnasio}>
+                        {g.nombre}
+                    </option>
+                    ))}
+
+                    </select>
 
                     </div>
 
@@ -207,6 +296,7 @@ function Clientes() {
                             <tr>
                                 <th>Nombre</th>
                                 <th>Teléfono</th>
+                                <th>Gimnasio</th>
                                 <th>Estado</th>
                                 <th>Suscripción</th>
                                 <th>Acciones</th>
@@ -216,17 +306,17 @@ function Clientes() {
 
                         <tbody>
 
-                            {clientes.length === 0 ? (
+                            {clientesFiltrados.length === 0 ? (
 
                                 <tr>
-                                    <td colSpan="5" className="empty-table">
-                                        No hay clientes registrados
+                                    <td colSpan="6" className="empty-table">
+                                        No hay clientes que coincidan con el filtro
                                     </td>
                                 </tr>
 
                             ) : (
 
-                                clientes.map((cliente, index) => (
+                                clientesFiltrados.map((cliente, index) => (
 
                                     <tr key={`${cliente.id}-${index}`}>
 
@@ -238,6 +328,12 @@ function Clientes() {
                                         </td>
 
                                         <td>{cliente.telefono}</td>
+
+                                        <td>
+                                        <span className="badge badge-secondary">
+                                        {cliente.gimnasio || "No asignado"}
+                                        </span>
+                                        </td>
 
                                         <td>
 
@@ -271,13 +367,6 @@ function Clientes() {
                                                 >
                                                     Ver detalle
                                                 </Link>
-
-                                                <button
-                                                    className="icon-btn"
-                                                    aria-label={`Contactar a ${cliente.nombre}`}
-                                                >
-                                                    <FiMail size={15}/>
-                                                </button>
 
                                             </div>
 

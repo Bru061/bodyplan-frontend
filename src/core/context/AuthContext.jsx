@@ -80,21 +80,19 @@ export function AuthProvider({ children }) {
   };
 
   const signUp = async ({ nombre,apellido_paterno,apellido_materno, correo, password, role = "proveedor" }) => {
-    const data = await registerAuth({ nombre, apellido_paterno, apellido_materno, correo, password, role });
-    const roleMapped = mapRole(data.usuario.id_rol)
 
-    const adapted = {
-      token: data.token,
-      user: {
-        ...data.usuario,
-        role: roleMapped,
-      },
-      gymId: null,
-    };
+    const data = await registerAuth({
+      nombre,
+      apellido_paterno,
+      apellido_materno,
+      correo,
+      password,
+      role
+    });
 
-    persistSession(adapted);
+    // NO crear sesión todavía
+    return data;
 
-    return adapted;
   };
 
   const signOut = () => {

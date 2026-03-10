@@ -192,13 +192,19 @@ const handleCreateGym = async () => {
         break;
       }
 
-      if (m.descripcion && m.descripcion.length > 100) {
-        newErrors.membresias = "Máximo 100 caracteres";
+      if (m.descripcion && m.descripcion.length > 200) {
+        newErrors.membresias = "Máximo 200 caracteres";
         break;
       }
 
     }
 
+  }
+
+  if (fotos.length + files.length > 5) {
+    setError("Máximo 5 imágenes permitidas");
+    e.target.value = "";
+    return;
   }
 
   // ===== DETENER SI HAY ERRORES =====
@@ -436,7 +442,7 @@ const handleCreateGym = async () => {
               <div>
               <label htmlFor="direccion">Dirección *</label>
               <input
-                maxLength={20}
+                maxLength={50}
                 className={`w-full bg-slate-100 rounded-xl px-4 py-3 outline-none border
                 ${errors.direccion
                   ? "border-red-500 focus:ring-2 focus:ring-red-500 focus:border-red-500 input-error"
@@ -578,7 +584,7 @@ const handleCreateGym = async () => {
                 }
 
                 setError("");
-                setFotos(files);
+                setFotos(prev => [...prev, ...files].slice(0,5));
               }}
               className={`block w-full text-sm text-slate-600
                 file:mr-4 file:py-2 file:px-4
@@ -587,6 +593,30 @@ const handleCreateGym = async () => {
                 hover:file:bg-blue-900
                 ${errors.fotos ? "input-error" : ""}`}
             />
+            {fotos.length > 0 && (
+              <ul className="mt-3 space-y-2">
+                {fotos.map((file, index) => (
+                  <li
+                    key={index}
+                    className="flex items-center justify-between bg-gray-100 px-3 py-2 rounded"
+                  >
+                    <span className="text-sm text-gray-700 truncate">
+                      {file.name}
+                    </span>
+
+                    <button
+                      type="button"
+                      className="text-red-500 text-sm hover:text-red-700"
+                      onClick={() =>
+                        setFotos(prev => prev.filter((_, i) => i !== index))
+                      }
+                    >
+                      Quitar
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
             {errors.fotos && (
               <p className="text-red-500 text-sm mt-1">{errors.fotos}</p>
             )}
@@ -755,17 +785,17 @@ const handleCreateGym = async () => {
                     <label htmlFor="descripcion">Descripción *</label>
                     <div className="textarea-wrapper">
                     <textarea
-                      maxLength={100}
+                      maxLength={200}
                       className="bg-white rounded-xl px-3 py-2 w-full"
                       onChange={e => {
                         const copy = [...membresias];
-                        let v=e.target.value.slice(0, 100);
+                        let v=e.target.value.slice(0, 200);
                         copy[i].descripcion = v;
                         setMembresias(copy);
                       }}
                     />
                     <span className="char-counter">
-                      {(membresias[i]?.descripcion || "").length}/100
+                      {(membresias[i]?.descripcion || "").length}/200
                     </span>
                     </div>
                     {errors[`descripcion-${i}`] && (

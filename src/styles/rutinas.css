@@ -256,6 +256,38 @@ textarea{
   margin-top:10px;
 }
 
+.tabs{
+display:flex;
+gap:10px;
+margin-bottom:20px;
+}
+
+.tab{
+padding:8px 16px;
+border-radius:8px;
+border:none;
+background:#e5e7eb;
+cursor:pointer;
+}
+
+.tab.active{
+background:#1e3a8a;
+color:white;
+}
+
+.routine-actions{
+display:flex;
+gap:12px;
+align-items:center;
+flex-wrap:wrap;
+}
+
+.routine-meta{
+font-size:0.9rem;
+color:#64748b;
+margin-top:6px;
+}
+
 @media (max-width: 900px) {
   .navbar-container {
     flex-direction: column;

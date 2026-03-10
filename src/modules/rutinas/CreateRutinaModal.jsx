@@ -6,6 +6,10 @@ function CreateRutinaModal({ onClose,onCreated }){
 
   const [loading,setLoading] = useState(false);
   const [errors,setErrors] = useState({});
+  const [apiError,setApiError] = useState("");
+
+  const cleanObjetivo = (value) =>
+    value.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]/g,"");
 
   const [form,setForm] = useState({
     nombre:"",
@@ -37,6 +41,8 @@ function CreateRutinaModal({ onClose,onCreated }){
   };
 
   const handleSubmit = async (e)=>{
+
+    setApiError("");
 
     e.preventDefault();
 
@@ -79,7 +85,13 @@ function CreateRutinaModal({ onClose,onCreated }){
       onClose();
     }catch(err){
 
-      console.error("Error completo:", err.response?.data || err);
+    const msg =
+      err?.response?.data?.message ||
+      err?.response?.data?.error ||
+      "No se pudo crear la rutina";
+
+    setApiError(msg);
+
 
     }finally{
 
@@ -93,7 +105,6 @@ function CreateRutinaModal({ onClose,onCreated }){
 
     let newErrors = {};
 
-    // NOMBRE
     if(!form.nombre.trim()){
       newErrors.nombre = "El nombre es obligatorio";
     }
@@ -101,7 +112,6 @@ function CreateRutinaModal({ onClose,onCreated }){
       newErrors.nombre = "Máximo 20 caracteres";
     }
 
-    // DESCRIPCIÓN
     if(!form.descripcion.trim()){
       newErrors.descripcion = "La descripción es obligatoria";
     }
@@ -109,7 +119,6 @@ function CreateRutinaModal({ onClose,onCreated }){
       newErrors.descripcion = "Máximo 100 caracteres";
     }
 
-    // DURACIÓN
     if(!form.duracion_min){
       newErrors.duracion_min = "La duración es obligatoria";
     }
@@ -117,7 +126,6 @@ function CreateRutinaModal({ onClose,onCreated }){
       newErrors.duracion_min = "La duración debe ser mayor a 0";
     }
 
-    // INSTRUCCIONES
     if(!form.instrucciones.trim()){
       newErrors.instrucciones = "Las instrucciones son obligatorias";
     }
@@ -129,22 +137,33 @@ function CreateRutinaModal({ onClose,onCreated }){
       newErrors.duracion_min = "Duración inválida";
     }
 
-    // OBJETIVO
   if(!form.objetivo.trim()){
     newErrors.objetivo = "El objetivo es obligatorio";
   }
 
-  // EQUIPAMIENTO
   if(!form.equipamiento.trim()){
     newErrors.equipamiento = "El equipamiento es obligatorio";
   }
 
-  // CALORIAS
   if(!form.calorias_estimadas){
     newErrors.calorias_estimadas = "Las calorías son obligatorias";
   }
   else if(form.calorias_estimadas < 0){
     newErrors.calorias_estimadas = "Las calorías no pueden ser negativas";
+  }
+
+  if (!form.categoria)
+  newErrors.categoria = "La categoría es obligatoria";
+
+  if (!form.tipo)
+    newErrors.tipo = "El tipo es obligatorio";
+
+  if (!form.nivel)
+    newErrors.nivel = "El nivel es obligatorio";
+
+  if (Object.keys(newErrors).length > 0){
+    setErrors(newErrors);
+    return;
   }
 
     setErrors(newErrors);
@@ -161,9 +180,15 @@ function CreateRutinaModal({ onClose,onCreated }){
 
         <h2>Crear rutina</h2>
 
+        {apiError && (
+          <p className="error-text" style={{marginBottom:"15px"}}>
+            {apiError}
+          </p>
+        )}
+
         <form onSubmit={handleSubmit}>
 
-          <label>Nombre</label>
+          <label>Nombre *</label>
           <input
             name="nombre"
             value={form.nombre}
@@ -174,7 +199,7 @@ function CreateRutinaModal({ onClose,onCreated }){
             <p className="error-text">{errors.nombre}</p>
           )}
 
-          <label>Descripción</label>
+          <label>Descripción *</label>
           <div className="textarea-wrapper">
           <textarea
             name="descripcion"
@@ -190,11 +215,16 @@ function CreateRutinaModal({ onClose,onCreated }){
             <p className="error-text">{errors.descripcion}</p>
           )}
 
-          <label>Objetivo</label>
+          <label>Objetivo *</label>
           <input
             name="objetivo"
             value={form.objetivo}
-            onChange={handleChange}
+            onChange={(e)=>
+              setForm({
+                ...form,
+                objetivo: cleanObjetivo(e.target.value)
+              })
+            }
           />
           {errors.objetivo && (
             <p className="error-text">{errors.objetivo}</p>
@@ -203,7 +233,7 @@ function CreateRutinaModal({ onClose,onCreated }){
           <div className="form-grid">
 
           <div className="form-group">
-          <label>Categoría</label>
+          <label>Categoría *</label>
           <select
             name="categoria"
             value={form.categoria}
@@ -219,7 +249,7 @@ function CreateRutinaModal({ onClose,onCreated }){
           </div>
 
           <div className="form-group">
-          <label>Nivel</label>
+          <label>Nivel *</label>
           <select
             name="nivel"
             value={form.nivel}
@@ -232,7 +262,7 @@ function CreateRutinaModal({ onClose,onCreated }){
           </div>
 
           <div className="form-group">
-          <label>Tipo rutina</label>
+          <label>Tipo rutina *</label>
           <select
             name="tipo_rutina"
             value={form.tipo_rutina}
@@ -244,7 +274,7 @@ function CreateRutinaModal({ onClose,onCreated }){
           </div>
 
           <div className="form-group">
-          <label>Duración (min)</label>
+          <label>Duración (min) *</label>
           <input
             type="number"
             name="duracion_min"
@@ -258,7 +288,7 @@ function CreateRutinaModal({ onClose,onCreated }){
           </div>
 
           <div className="form-group">
-          <label>Equipamiento</label>
+          <label>Equipamiento *</label>
           <input
             name="equipamiento"
             value={form.equipamiento}
@@ -270,7 +300,7 @@ function CreateRutinaModal({ onClose,onCreated }){
           </div>
 
           <div className="form-group">
-          <label>Calorías estimadas</label>
+          <label>Calorías estimadas *</label>
           <input
             type="number"
             name="calorias_estimadas"
@@ -285,7 +315,7 @@ function CreateRutinaModal({ onClose,onCreated }){
 
           </div>
 
-          <label>Instrucciones</label>
+          <label>Instrucciones *</label>
           <div className="textarea-wrapper">
 
             <textarea

@@ -91,7 +91,7 @@ function Login() {
             </div>
             <h2>BodyPlan</h2>
             <h3>
-              Tu portal integral para conectar con los mejores gimnasios y nutricionistas.
+              Conecta tu gimnasio con clientes y gestiona rutinas de manera inteligente.
             </h3>
           </div>
         </section>

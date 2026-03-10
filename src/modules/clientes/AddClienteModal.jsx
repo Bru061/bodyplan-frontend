@@ -25,7 +25,9 @@ function AddClienteModal({
   const onlyLetters = (value) =>
     value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "");
   const onlyNumbers = (value) =>
-    value.replace(/[^0-9]/g, "");
+    value.replace(/[^0-9]/g, "").slice(0,10);
+  const onlyLettersNoSpace = (value) =>
+  value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ]/g, "");
 
 
   const handleChange = (e) => {
@@ -90,10 +92,10 @@ function AddClienteModal({
     newErrors.telefono = "El teléfono debe tener 10 dígitos";
 
   if (!form.id_gimnasio)
-    newErrors.id_gimnasio = "Selecciona un gimnasio";
+    newErrors.id_gimnasio = "Debes seleccionar un gimnasio";
 
   if (!form.id_membresia)
-    newErrors.id_membresia = "Selecciona una membresía";
+    newErrors.id_membresia = "Debes seleccionar una membresía";
 
   if (Object.keys(newErrors).length > 0) {
     setErrors(newErrors);
@@ -154,37 +156,58 @@ function AddClienteModal({
 
         <div className="modal-form">
 
-          <label>Nombre</label>
+          <label>Nombre *</label>
           <input
             name="nombre"
             value={form.nombre}
-            onChange={handleChange}
+            onChange={(e) =>
+              handleChange({
+                target:{
+                  name:"nombre",
+                  value:onlyLetters(e.target.value)
+                }
+              })
+            }
           />
           {errors.nombre && (
             <p className="text-red-500 text-sm">{errors.nombre}</p>
           )}
 
-          <label>Apellido paterno</label>
+          <label>Apellido paterno *</label>
           <input
             name="apellido_paterno"
             value={form.apellido_paterno}
-            onChange={handleChange}
+            onChange={(e) =>
+              handleChange({
+                target:{
+                  name:"apellido_paterno",
+                  value:onlyLettersNoSpace(e.target.value)
+                }
+              })
+            }
           />
           {errors.apellido_paterno && (
             <p className="text-red-500 text-sm">{errors.apellido_paterno}</p>
           )}
 
-          <label>Apellido materno</label>
+          <label>Apellido materno *</label>
           <input
             name="apellido_materno"
             value={form.apellido_materno}
-            onChange={handleChange}
+            onChange={(e) =>
+              handleChange({
+                target:{
+                  name:"apellido_materno",
+                  value:onlyLettersNoSpace(e.target.value)
+                }
+              })
+            }
           />
           {errors.apellido_materno && (
             <p className="text-red-500 text-sm">{errors.apellido_materno}</p>
           )}
 
-          <label>Correo</label>
+          <label>Correo *</label>
           <input
             type="email"
             name="correo"
@@ -195,25 +218,29 @@ function AddClienteModal({
             <p className="text-red-500 text-sm">{errors.correo}</p>
           )}
 
-          <label>Teléfono</label>
+          <label>Teléfono *</label>
           <input
             name="telefono"
             value={form.telefono}
-            onChange={handleChange}
+            onChange={(e)=>
+              handleChange({
+                target:{
+                  name:"telefono",
+                  value:onlyNumbers(e.target.value)
+                }
+              })
+            }
           />
           {errors.telefono && (
             <p className="text-red-500 text-sm">{errors.telefono}</p>
           )}
 
-          <label>Gimnasio</label>
+          <label>Gimnasio *</label>
           <select
             name="id_gimnasio"
             value={form.id_gimnasio ?? ""}
             onChange={handleGymChange}
           >
-          {errors.id_gimnasio && (
-            <p className="text-red-500 text-sm">{errors.id_gimnasio}</p>
-          )}
 
             <option value="">Seleccionar</option>
 
@@ -227,17 +254,16 @@ function AddClienteModal({
             ))}
 
           </select>
+          {errors.id_gimnasio && (
+            <p className="text-red-500 text-sm">{errors.id_gimnasio}</p>
+          )}
 
-          <label>Membresía</label>
+          <label>Membresía *</label>
           <select
             name="id_membresia"
             value={form.id_membresia ?? ""}
             onChange={handleChange}
           >
-          {errors.id_membresia && (
-            <p className="text-red-500 text-sm">{errors.id_membresia}</p>
-          )}
-
             <option value="">Seleccionar</option>
 
             {membresias.map(m => (
@@ -250,6 +276,9 @@ function AddClienteModal({
             ))}
 
           </select>
+          {errors.id_membresia && (
+            <p className="text-red-500 text-sm">{errors.id_membresia}</p>
+          )}
 
         </div>
 

@@ -107,8 +107,8 @@ const handleSave = async () => {
     if (!m.descripcion || !m.descripcion.trim())
       newErrors[`descripcion-${i}`] = "La descripción es obligatoria";
 
-    if (m.descripcion && m.descripcion.length > 100)
-      newErrors[`descripcion-${i}`] = "Máximo 100 caracteres";
+    if (m.descripcion && m.descripcion.length > 200)
+      newErrors[`descripcion-${i}`] = "Máximo 200 caracteres";
 
     nombres.add(m.nombre.toLowerCase());
 
@@ -221,16 +221,16 @@ const handleSave = async () => {
               <label>Descripción *</label>
               <div className="textarea-wrapper">
               <input
-                maxLength={100}
+                maxLength={200}
                 className="desc-input"
                 value={m.descripcion}
                 onChange={(e)=>{
-                  const v = e.target.value.slice(0, 100);
+                  const v = e.target.value.slice(0, 200);
                   handleChange(i,"descripcion",v);
                 }}
               />
               <span className="char-counter">
-                {(m.descripcion || "").length}/100
+                {(m.descripcion || "").length}/200
               </span>
               </div>
               {errors[`descripcion-${i}`] && (

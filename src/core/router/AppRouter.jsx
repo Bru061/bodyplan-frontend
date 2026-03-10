@@ -4,6 +4,7 @@ import Login from "../../modules/auth/Login";
 import Register from "../../modules/auth/Register";
 import ForgotPassword from "../../modules/auth/ForgotPassword";
 import ResetPassword from "../../modules/auth/ResetPassword";
+import VerifyEmail from "../../modules/auth/VerifyEmail";
 import Dashboard from "../../modules/dashboard/Dashboard";
 import Clientes from "../../modules/clientes/Clientes";
 import DetalleCliente from "../../modules/clientes/detalleCliente"
@@ -32,6 +33,7 @@ function AppRouter(){
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
       </Route>
 
       {/* PRIVADAS */}

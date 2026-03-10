@@ -1,4 +1,56 @@
-function RutinaCard({ rutina, onEdit }){
+import { useState, useEffect } from "react";
+import api from "../../services/axios";
+
+function RutinaCard({ rutina, onEdit, clientesCount }){
+
+  const handleDesactivar = async () => {
+
+    const confirmar = confirm("¿Deseas desactivar esta rutina?");
+
+    if (!confirmar) return;
+
+    try {
+
+      await api.put(`/rutinas/${rutina.id_rutina}/desactivar`);
+
+      alert("Rutina desactivada correctamente");
+
+      refresh();
+
+    } catch (error) {
+
+      console.error("Error desactivando rutina", error);
+      alert("No se pudo desactivar la rutina");
+
+    }
+
+  };
+
+  useEffect(()=>{
+
+    const fetchClientes = async () =>{
+
+      try{
+
+        const res = await api.get(`/rutinas/${rutina.id_rutina}/clientes`);
+
+        const clientes =
+          res.data.clientes ||
+          res.data.data ||
+          res.data ||
+          [];
+
+      }catch(err){
+
+        console.error("Error cargando clientes de rutina",err);
+
+      }
+
+    };
+
+    fetchClientes();
+
+  },[]);
 
   return(
 
@@ -23,6 +75,10 @@ function RutinaCard({ rutina, onEdit }){
           Instrucciones: {rutina.instrucciones}
         </p>
 
+        <p className="routine-meta">
+        Clientes usando esta rutina: <strong>{clientesCount}</strong>
+        </p>
+
       </div>
 
       <div className="routine-actions">
@@ -32,6 +88,13 @@ function RutinaCard({ rutina, onEdit }){
           onClick={() => onEdit(rutina)}
         >
           Editar
+        </button>
+
+        <button
+        className="btn btn-danger"
+        onClick={handleDesactivar}
+        >
+        Desactivar
         </button>
 
       </div>
