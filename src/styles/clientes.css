@@ -373,6 +373,37 @@ border-bottom:1px solid #eee;
   color: black;
 }
 
+/* ── Toolbar filtros en una sola fila ── */
+.table-toolbar {
+  flex-wrap: nowrap;
+  align-items: center;
+}
+
+.toolbar-actions {
+  flex-wrap: nowrap;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.toolbar-actions select {
+  height: 38px;
+  padding: 0 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+  font-size: 0.88rem;
+  color: var(--text-main);
+  outline: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.2s;
+}
+
+.toolbar-actions select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
 @media (max-width: 900px) {
   .navbar-container {
     flex-direction: column;
@@ -392,5 +423,25 @@ border-bottom:1px solid #eee;
 
   .toolbar-actions {
     width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .table-toolbar {
+    flex-wrap: wrap;
+  }
+
+  .search-field {
+    min-width: 100%;
+  }
+
+  .toolbar-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .toolbar-actions select {
+    flex: 1;
+    min-width: 140px;
   }
 }

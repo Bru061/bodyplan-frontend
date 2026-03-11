@@ -260,6 +260,121 @@
   color: var(--text-secondary);
 }
 
+.verify-title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+  margin-top: 10px;
+  text-align: center;
+  color: #071950;
+}
+
+.verify-subtitle {
+  text-align: center;
+  margin-bottom: 35px;
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+/* FLOATING LABELS */
+
+.float-field {
+  position: relative;
+  width: 100%;
+}
+
+.float-field input {
+  width: 100%;
+  padding: 22px 16px 8px 16px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: #f1f5f9;
+  font-size: 1rem;
+  outline: none;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.float-field:has(.eye-btn) input {
+  padding-right: 44px;
+}
+
+.float-field input:focus {
+  background: white;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
+.float-field label {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1rem;
+  color: #94a3b8;
+  pointer-events: none;
+  transition: all 0.18s ease;
+  line-height: 1;
+}
+
+.float-field input:focus ~ label,
+.float-field input:not(:placeholder-shown) ~ label {
+  top: 10px;
+  transform: translateY(0);
+  font-size: 0.72rem;
+  color: var(--primary);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.float-field input:not(:focus):not(:placeholder-shown) ~ label {
+  color: #64748b;
+}
+
+.float-field .eye-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  transition: color 0.2s;
+}
+
+.float-field .eye-btn:hover {
+  color: var(--primary);
+}
+
+.float-field .password-field {
+  position: relative;
+}
+
+.float-field .password-field input {
+  padding-right: 44px;
+}
+
+.float-field.has-error input {
+  border-color: #ef4444;
+  background: #fff5f5;
+}
+
+.float-field.has-error input:focus {
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+}
+
+.float-field.has-error label,
+.float-field.has-error input:focus ~ label,
+.float-field.has-error input:not(:placeholder-shown) ~ label {
+  color: #ef4444;
+}
+
 
 /* ============================= */
 /* RESPONSIVE LOGIN BODYPLAN */

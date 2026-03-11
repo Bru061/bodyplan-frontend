@@ -4,27 +4,26 @@ import "../../styles/rutinas.css";
 
 function EditRutinaModal({ rutina, onClose, onUpdated }) {
 
-  const [loading,setLoading] = useState(false);
-  const [errors,setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
+  // ✅ MEJORA: apiError state para mostrar errores del backend al usuario
+  const [apiError, setApiError] = useState("");
 
-  const [form,setForm] = useState({
-    nombre:"",
-    descripcion:"",
-    objetivo:"",
-    categoria:"",
-    nivel:"principiante",
-    tipo_rutina:"gimnasio",
-    equipamiento:"",
-    calorias_estimadas:"",
-    duracion_min:"",
-    instrucciones:""
+  const [form, setForm] = useState({
+    nombre: "",
+    descripcion: "",
+    objetivo: "",
+    categoria: "",
+    nivel: "principiante",
+    tipo_rutina: "gimnasio",
+    equipamiento: "",
+    calorias_estimadas: "",
+    duracion_min: "",
+    instrucciones: ""
   });
 
-  // Cargar datos de la rutina seleccionada
-  useEffect(()=>{
-
-    if(rutina){
-
+  useEffect(() => {
+    if (rutina) {
       setForm({
         nombre: rutina.nombre || "",
         descripcion: rutina.descripcion || "",
@@ -37,78 +36,109 @@ function EditRutinaModal({ rutina, onClose, onUpdated }) {
         duracion_min: rutina.duracion_min || "",
         instrucciones: rutina.instrucciones || ""
       });
+    }
+  }, [rutina]);
 
+  const handleChange = (e) => {
+    let { name, value } = e.target;
+
+    // ✅ FIX: Solo números enteros positivos, sin símbolos (+, -, ., e)
+    if (name === "duracion_min") {
+      value = value.replace(/[^0-9]/g, "").slice(0, 3);
     }
 
-  },[rutina]);
+    if (name === "calorias_estimadas") {
+      value = value.replace(/[^0-9]/g, "").slice(0, 4);
+    }
 
-  const handleChange = (e)=>{
+    if (name === "objetivo") {
+      value = value.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]/g, "");
+    }
 
-    const {name,value} = e.target;
+    if (name === "nombre") {
+      value = value.slice(0, 20);
+    }
 
-    setForm(prev=>({
-      ...prev,
-      [name]:value
-    }));
+    if (name === "descripcion") {
+      value = value.slice(0, 100);
+    }
 
-    setErrors(prev=>({
-      ...prev,
-      [name]:null
-    }));
+    if (name === "instrucciones") {
+      value = value.slice(0, 255);
+    }
 
+    setForm(prev => ({ ...prev, [name]: value }));
+    setErrors(prev => ({ ...prev, [name]: null }));
   };
 
-  const validate = ()=>{
+  const validate = () => {
 
-    let newErrors = {};
+    const newErrors = {};
 
-    if(!form.nombre.trim()){
+    if (!form.nombre.trim()) {
       newErrors.nombre = "El nombre es obligatorio";
-    } else if(form.nombre.length > 20){
+    } else if (form.nombre.length > 20) {
       newErrors.nombre = "Máximo 20 caracteres";
     }
 
-    if(!form.descripcion.trim()){
+    if (!form.descripcion.trim()) {
       newErrors.descripcion = "La descripción es obligatoria";
+    } else if (form.descripcion.length > 100) {
+      newErrors.descripcion = "Máximo 100 caracteres";
     }
 
-    if(!form.objetivo.trim()){
+    if (!form.objetivo.trim()) {
       newErrors.objetivo = "El objetivo es obligatorio";
     }
 
-    if(!form.categoria){
+    if (!form.categoria) {
       newErrors.categoria = "Selecciona una categoría";
     }
 
-    if(!form.duracion_min){
-      newErrors.duracion_min = "La duración es obligatoria";
-    }
-
-    if(!form.equipamiento.trim()){
+    if (!form.equipamiento.trim()) {
       newErrors.equipamiento = "El equipamiento es obligatorio";
     }
 
-    if(!form.calorias_estimadas){
-      newErrors.calorias_estimadas = "Las calorías son obligatorias";
+    // ✅ MEJORA: Validación completa de duración
+    if (!form.duracion_min) {
+      newErrors.duracion_min = "La duración es obligatoria";
+    } else if (isNaN(Number(form.duracion_min))) {
+      newErrors.duracion_min = "Duración inválida";
+    } else if (Number(form.duracion_min) <= 0) {
+      newErrors.duracion_min = "La duración debe ser mayor a 0";
+    } else if (Number(form.duracion_min) > 300) {
+      newErrors.duracion_min = "La duración máxima es 300 minutos";
     }
 
-    if(!form.instrucciones.trim()){
+    // ✅ MEJORA: Validación completa de calorías
+    if (!form.calorias_estimadas) {
+      newErrors.calorias_estimadas = "Las calorías son obligatorias";
+    } else if (isNaN(Number(form.calorias_estimadas))) {
+      newErrors.calorias_estimadas = "Valor inválido";
+    } else if (Number(form.calorias_estimadas) <= 0) {
+      newErrors.calorias_estimadas = "Las calorías deben ser mayor a 0";
+    } else if (Number(form.calorias_estimadas) > 5000) {
+      newErrors.calorias_estimadas = "Máximo 5000 calorías";
+    }
+
+    if (!form.instrucciones.trim()) {
       newErrors.instrucciones = "Las instrucciones son obligatorias";
+    } else if (form.instrucciones.length > 255) {
+      newErrors.instrucciones = "Máximo 255 caracteres";
     }
 
     setErrors(newErrors);
-
     return Object.keys(newErrors).length === 0;
-
   };
 
-  const handleSubmit = async (e)=>{
+  const handleSubmit = async (e) => {
 
     e.preventDefault();
+    setApiError("");
 
-    if(!validate()) return;
+    if (!validate()) return;
 
-    try{
+    try {
 
       setLoading(true);
 
@@ -120,21 +150,29 @@ function EditRutinaModal({ rutina, onClose, onUpdated }) {
         nivel: form.nivel,
         tipo_rutina: form.tipo_rutina,
         equipamiento: form.equipamiento.trim(),
-        calorias_estimadas: parseInt(form.calorias_estimadas,10),
+        calorias_estimadas: parseInt(form.calorias_estimadas, 10),
         instrucciones: form.instrucciones.trim(),
-        duracion_min: parseInt(form.duracion_min,10)
+        duracion_min: parseInt(form.duracion_min, 10)
       };
 
-      await api.put(`/rutinas/${rutina.id_rutina}`,payload);
+      await api.put(`/rutinas/${rutina.id_rutina}`, payload);
 
       onUpdated();
       onClose();
 
-    }catch(err){
+    } catch (err) {
 
-      console.error("Error al actualizar rutina:",err.response?.data || err);
+      // ✅ FIX: Error del backend ahora se muestra al usuario en lugar de solo loguearse
+      console.error("Error al actualizar rutina:", err.response?.data || err);
 
-    }finally{
+      const msg =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        "No se pudo actualizar la rutina";
+
+      setApiError(msg);
+
+    } finally {
 
       setLoading(false);
 
@@ -142,13 +180,19 @@ function EditRutinaModal({ rutina, onClose, onUpdated }) {
 
   };
 
-  return(
+  return (
 
     <div className="modal-overlay">
-
       <div className="modal-card">
 
         <h2>Editar rutina</h2>
+
+        {/* ✅ MEJORA: Error del backend visible al usuario */}
+        {apiError && (
+          <p className="error-text" style={{ marginBottom: "15px" }}>
+            {apiError}
+          </p>
+        )}
 
         <form onSubmit={handleSubmit}>
 
@@ -229,11 +273,14 @@ function EditRutinaModal({ rutina, onClose, onUpdated }) {
 
             <div className="form-group">
               <label>Duración (min) *</label>
+              {/* ✅ FIX: type="text" + replace en handleChange evita símbolos +, -, ., e */}
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
                 name="duracion_min"
                 value={form.duracion_min}
                 onChange={handleChange}
+                maxLength={3}
               />
               {errors.duracion_min && <p className="error-text">{errors.duracion_min}</p>}
             </div>
@@ -248,13 +295,17 @@ function EditRutinaModal({ rutina, onClose, onUpdated }) {
               {errors.equipamiento && <p className="error-text">{errors.equipamiento}</p>}
             </div>
 
-            <div>
-              <label className="form-group">Calorías estimadas *</label>
+            {/* ✅ FIX: className="form-group" estaba en el label en lugar del div contenedor */}
+            <div className="form-group">
+              <label>Calorías estimadas *</label>
+              {/* ✅ FIX: type="text" + replace en handleChange evita símbolos +, -, ., e */}
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
                 name="calorias_estimadas"
                 value={form.calorias_estimadas}
                 onChange={handleChange}
+                maxLength={4}
               />
               {errors.calorias_estimadas && <p className="error-text">{errors.calorias_estimadas}</p>}
             </div>
@@ -276,7 +327,6 @@ function EditRutinaModal({ rutina, onClose, onUpdated }) {
           {errors.instrucciones && <p className="error-text">{errors.instrucciones}</p>}
 
           <div className="modal-actions">
-
             <button
               type="button"
               className="btn-ghost"
@@ -284,20 +334,17 @@ function EditRutinaModal({ rutina, onClose, onUpdated }) {
             >
               Cancelar
             </button>
-
             <button
               className="btn-primary"
               disabled={loading}
             >
               {loading ? "Guardando..." : "Guardar cambios"}
             </button>
-
           </div>
 
         </form>
 
       </div>
-
     </div>
 
   );

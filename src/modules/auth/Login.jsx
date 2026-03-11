@@ -10,7 +10,8 @@ import { FcGoogle } from "react-icons/fc";
 import api from "../../services/axios";
 
 function Login() {
-  const { signIn } = useAuth();
+  // ✅ FIX: signInWithGoogle unificado en el mismo useAuth, eliminado el duplicado
+  const { signIn, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
 
@@ -21,7 +22,6 @@ function Login() {
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { signInWithGoogle } = useAuth();
 
   const handleChange = (e) => {
     setError("");
@@ -42,7 +42,6 @@ function Login() {
         password: form.password,
       });
 
-      // 🔥 Aquí decides
       const resGyms = await api.get("/gym");
       const gimnasios = resGyms.data.gimnasios || [];
 
@@ -57,7 +56,6 @@ function Login() {
         err?.response?.data?.error ||
         err?.response?.data?.message ||
         "Error al iniciar sesión";
-
       setError(msg);
     } finally {
       setLoading(false);
@@ -67,14 +65,10 @@ function Login() {
   const handleGoogleLogin = async () => {
     try {
       setError("");
-
       const result = await signInWithPopup(auth, provider);
       const idToken = await result.user.getIdToken();
-
       const response = await signInWithGoogle(idToken);
-
       navigate(response.redirectTo);
-
     } catch (error) {
       console.error(error);
       setError("Error al iniciar sesión con Google");
@@ -84,6 +78,7 @@ function Login() {
   return (
     <AuthLayout>
       <div className="login-container">
+
         <section className="login-side">
           <div className="login-side-content">
             <div className="login-avatar">
@@ -102,49 +97,67 @@ function Login() {
             <h2>BODYPLAN</h2>
             <p className="subtitle">Inicia sesión para continuar.</p>
 
-            {error && <p style={{ color: "red", textAlign: "center" }}>{error}</p>}
+            {error && (
+              <p style={{ color: "red", textAlign: "center" }}>{error}</p>
+            )}
 
-            <form
-              className="login-fields"
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSubmit(e);
-              }}>
-              <div>
-              <label htmlFor="correo">Correo electrónico</label>
-              <input
-                type="email"
-                name="correo"
-                value={form.correo}
-                onChange={handleChange}
-                required
-              />
-              </div>
-              
-              <div className="password-field">
-                <label htmlFor="password">Contraseña</label>
+            {/* ✅ FIX: onSubmit simplificado — el doble e.preventDefault era innecesario */}
+            <form className="login-fields" onSubmit={handleSubmit}>
+
+              {/* ── Correo ── */}
+              <div className="float-field">
                 <input
+                  id="correo"
+                  type="email"
+                  name="correo"
+                  placeholder=" "
+                  value={form.correo}
+                  onChange={handleChange}
+                  required
+                />
+                <label htmlFor="correo">Correo electrónico</label>
+              </div>
+
+              {/* ── Contraseña — eye-btn dentro del float-field sin wrapper intermedio ── */}
+              <div className="float-field">
+                <input
+                  id="password"
                   type={showPassword ? "text" : "password"}
                   name="password"
+                  placeholder=" "
                   value={form.password}
                   onChange={handleChange}
                   required
                 />
-                <button type="button" className="eye-btn" onClick={() => setShowPassword(!showPassword)}>
+                <label htmlFor="password">Contraseña</label>
+                <button
+                  type="button"
+                  className="eye-btn"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
                   {showPassword ? <FiEyeOff /> : <FiEye />}
                 </button>
               </div>
 
-              <button type="submit" className="btn btn-primary" disabled={loading}>
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={loading}
+              >
                 {loading ? "Ingresando..." : "Iniciar sesión"}
               </button>
+
             </form>
 
             <div className="divider">
               <hr /> <span>o</span> <hr />
             </div>
 
-            <button className="google-btn" onClick={handleGoogleLogin}>
+            <button
+              type="button"
+              className="google-btn"
+              onClick={handleGoogleLogin}
+            >
               <FcGoogle size={20} />
               Continuar con Google
             </button>
@@ -155,8 +168,10 @@ function Login() {
               </span>
               <Link to="/forgot-password">¿Olvidaste tu contraseña?</Link>
             </div>
+
           </div>
         </section>
+
       </div>
     </AuthLayout>
   );

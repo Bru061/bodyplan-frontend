@@ -4,6 +4,7 @@ import api from "../../services/axios";
 import AuthLayout from "../../layout/AuthLayout";
 import "../../styles/login.css";
 import { MdAssignmentInd } from "react-icons/md";
+import { FiArrowLeft } from "react-icons/fi";
 
 function VerifyEmail() {
 
@@ -11,9 +12,12 @@ function VerifyEmail() {
   const location = useLocation();
 
   const correo = location.state?.correo;
+  // ✅ MEJORA: Recibe el form de Register para poder restaurarlo al regresar
+  const formAnterior = location.state?.form;
 
   const [codigo, setCodigo] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleVerify = async (e) => {
@@ -28,6 +32,7 @@ function VerifyEmail() {
     try {
 
       setLoading(true);
+      setError("");
 
       const PLATFORM = "web";
 
@@ -37,9 +42,12 @@ function VerifyEmail() {
         plataforma: PLATFORM
       });
 
-      alert("Correo verificado correctamente");
+      // ✅ FIX: Mensaje inline en lugar de alert()
+      setSuccess("¡Correo verificado correctamente! Redirigiendo...");
 
-      navigate("/mis-gimnasios");
+      setTimeout(() => {
+        navigate("/mis-gimnasios");
+      }, 1500);
 
     } catch (err) {
 
@@ -55,52 +63,61 @@ function VerifyEmail() {
 
   };
 
+  const handleRegresar = () => {
+    // ✅ MEJORA: Devuelve el form a Register para restaurar los datos
+    navigate("/register", {
+      state: { form: formAnterior }
+    });
+  };
+
   return (
     <AuthLayout>
       <div className="login-container">
 
-        {/* PANEL IZQUIERDO */}
         <section className="login-side">
           <div className="login-side-content">
             <div className="login-avatar">
               <MdAssignmentInd size={70} color="white" />
             </div>
             <h2>BodyPlan</h2>
-            <h3>
-              Verifica tu correo electrónico.
-            </h3>
+            <h3>Verifica tu correo electrónico.</h3>
           </div>
         </section>
 
-        {/* FORMULARIO */}
         <section className="login-form">
-
           <div className="login-form-inner">
 
-            <h1 style={{
-              fontSize: "1.8rem",
-              fontWeight: "800",
-              letterSpacing: "1px",
-              marginBottom: "10px",
-              marginTop: "10px",
-              textAlign: "center",
-              color: "#071950"
-            }}>
-              Verificar correo
-            </h1>
+            {/* ✅ MEJORA: Flecha discreta para regresar al registro */}
+            <button
+              type="button"
+              className="back-button"
+              onClick={handleRegresar}
+              title="Volver al registro"
+              style={{ alignSelf: "flex-start", marginBottom: "8px" }}
+            >
+              <FiArrowLeft size={22} />
+            </button>
 
-            <p style={{
-              textAlign: "center",
-              marginBottom: "35px",
-              color: "#64748b",
-              fontSize: "0.95rem"
-            }}>
+            <h1 className="verify-title">Verificar correo</h1>
+
+            <p className="verify-subtitle">
               Hemos enviado un código de verificación a:
               <br />
               <strong>{correo}</strong>
             </p>
 
-            {error && <p style={{color:"red"}}>{error}</p>}
+            {error && (
+              <p style={{ color: "red", textAlign: "center", marginBottom: "10px" }}>
+                {error}
+              </p>
+            )}
+
+            {/* ✅ MEJORA: Mensaje de éxito inline */}
+            {success && (
+              <p style={{ color: "green", textAlign: "center", marginBottom: "10px" }}>
+                {success}
+              </p>
+            )}
 
             <form onSubmit={handleVerify} className="login-fields">
 
@@ -109,31 +126,25 @@ function VerifyEmail() {
                 placeholder="Código de verificación"
                 maxLength={6}
                 value={codigo}
-                onChange={(e)=>{
-
-                  const value = e.target.value.replace(/[^0-9]/g,"");
+                onChange={(e) => {
+                  setError("");
+                  const value = e.target.value.replace(/[^0-9]/g, "");
                   setCodigo(value);
-
                 }}
                 required
               />
 
-              <button className="btn btn-primary" disabled={loading}>
-                {loading ? "Verificando..." : "Verificar código"}
-              </button>
-
               <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={()=>navigate("/register")}
+                type="submit"
+                className="btn btn-primary"
+                disabled={loading || !!success}
               >
-                Cambiar correo
+                {loading ? "Verificando..." : "Verificar código"}
               </button>
 
             </form>
 
           </div>
-
         </section>
 
       </div>

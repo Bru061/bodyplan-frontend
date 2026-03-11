@@ -11,76 +11,84 @@ function Rutinas() {
   const [rutinas, setRutinas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showEditModal,setShowEditModal] = useState(false);
-  const [rutinaSeleccionada,setRutinaSeleccionada] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [rutinaSeleccionada, setRutinaSeleccionada] = useState(null);
+  const [gymError, setGymError] = useState("");
+
   const [stats, setStats] = useState({
     total: 0,
     asignadas: 0,
     sinAsignar: 0
   });
 
-  const [hasGym, setHasGym] = useState(true);
   const [vista, setVista] = useState("activas");
   const [clientesPorRutina, setClientesPorRutina] = useState({});
 
-  const checkGym = async () => {
+  // ✅ Helper reutilizable: filtra asignaciones activas (pendiente o iniciada)
+  const contarAsignacionesActivas = (asignaciones) =>
+    asignaciones.filter(
+      a => a.estado === "pendiente" || a.estado === "iniciada"
+    ).length;
 
+  // ✅ FIX: Solo cuenta asignaciones con estado activo
+  const fetchClientesPorRutina = async (rutinas) => {
     try {
+      const conteo = {};
+      for (const r of rutinas) {
+        const res = await api.get(`/rutinas/${r.id_rutina}/clientes`);
+        const asignaciones = res.data?.clientes || [];
+        conteo[r.id_rutina] = contarAsignacionesActivas(asignaciones);
+      }
+      setClientesPorRutina(conteo);
+    } catch (err) {
+      console.error("Error obteniendo clientes por rutina", err);
+    }
+  };
 
-      const res = await api.get("/gym");
+  // Stats siempre desde rutinas activas, con conteo filtrado
+  const fetchStats = async () => {
+    try {
+      const res = await api.get("/rutinas");
+      const activas = res.data.rutinas || [];
 
-      if (!res.data.gimnasios || res.data.gimnasios.length === 0) {
-        setHasGym(false);
-      } else {
-        setHasGym(true);
+      const conteo = {};
+      for (const r of activas) {
+        const clientesRes = await api.get(`/rutinas/${r.id_rutina}/clientes`);
+        const asignaciones = clientesRes.data?.clientes || [];
+        conteo[r.id_rutina] = contarAsignacionesActivas(asignaciones);
       }
 
-    } catch (err) {
-      console.error(err);
-    }
+      const asignadas = activas.filter(r => (conteo[r.id_rutina] || 0) > 0).length;
 
+      setStats({
+        total: activas.length,
+        asignadas,
+        sinAsignar: activas.length - asignadas
+      });
+
+    } catch (err) {
+      console.error("Error obteniendo stats", err);
+    }
   };
 
   const fetchRutinas = async () => {
-
     try {
-
-      const endpoint =
-        vista === "activas"
-          ? "/rutinas"
-          : "/rutinas/desactivadas";
-
+      setLoading(true);
+      const endpoint = vista === "activas" ? "/rutinas" : "/rutinas/desactivadas";
       const res = await api.get(endpoint);
-
-      const data = res.data.rutinas;
-
+      const data = res.data.rutinas || [];
       setRutinas(data);
-
       fetchClientesPorRutina(data);
-
-      setStats({
-        total: data.length,
-        asignadas: 0,
-        sinAsignar: data.length
-      });
-
-    } catch(err) {
-
+    } catch (err) {
       console.error(err);
-
     } finally {
-
       setLoading(false);
-
     }
-
   };
 
   useEffect(() => {
-
     fetchRutinas();
-    checkGym();
-
+    fetchStats();
   }, [vista]);
 
   const handleEdit = (rutina) => {
@@ -88,30 +96,19 @@ function Rutinas() {
     setShowEditModal(true);
   };
 
-  const fetchClientesPorRutina = async (rutinas) => {
-
+  const handleCrearRutina = async () => {
+    setGymError("");
     try {
-
-      const conteo = {};
-
-      for (const r of rutinas) {
-
-        const res = await api.get(`/rutinas/${r.id_rutina}/clientes`);
-
-        const clientes = res.data?.clientes || [];
-
-        conteo[r.id_rutina] = clientes.length;
-
+      const res = await api.get("/gym");
+      if (!res.data.gimnasios || res.data.gimnasios.length === 0) {
+        setGymError("Debes registrar al menos un gimnasio antes de crear rutinas.");
+        return;
       }
-
-      setClientesPorRutina(conteo);
-
+      setShowCreateModal(true);
     } catch (err) {
-
-      console.error("Error obteniendo clientes por rutina", err);
-
+      console.error(err);
+      setGymError("No se pudo verificar tus gimnasios. Intenta de nuevo.");
     }
-
   };
 
   return (
@@ -119,7 +116,6 @@ function Rutinas() {
     <DashboardLayout>
 
       <section className="page-header">
-
         <div>
           <p className="eyebrow">Gestión de rutinas</p>
           <h1>Rutinas de gimnasio</h1>
@@ -127,102 +123,83 @@ function Rutinas() {
             Crea y administra rutinas para asignarlas a clientes.
           </p>
         </div>
-
         <button
           className="btn btn-primary"
-          onClick={async () => {
-          try {
-            const res = await api.get("/gym");
-            if (!res.data.gimnasios || res.data.gimnasios.length === 0) {
-              alert("Debes registrar al menos un gimnasio antes de crear rutinas.");
-              return;
-            }
-            setShowCreateModal(true);
-          } catch (err) {
-            console.error(err);
-            alert("No se pudo verificar tus gimnasios.");
-          }
-
-        }}
+          onClick={handleCrearRutina}
         >
           Crear rutina
         </button>
-
       </section>
 
-      {/* STATS */}
+      {gymError && (
+        <div className="bg-red-100 text-red-700 px-4 py-3 rounded-xl text-sm mb-4">
+          {gymError}
+          <button
+            className="ml-3 text-red-500 font-bold hover:text-red-700"
+            onClick={() => setGymError("")}
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       <section className="stats-grid">
-
         <article className="stat-card">
-          <p className="stat-label">Rutinas creadas</p>
+          <p className="stat-label">Rutinas activas</p>
           <p className="stat-value">{stats.total}</p>
         </article>
-
         <article className="stat-card">
           <p className="stat-label">Asignadas</p>
           <p className="stat-value">{stats.asignadas}</p>
         </article>
-
         <article className="stat-card">
           <p className="stat-label">Sin asignar</p>
           <p className="stat-value">{stats.sinAsignar}</p>
         </article>
-
       </section>
 
-      {/* LISTA */}
-
       <div className="tabs">
-
         <button
-        className={vista === "activas" ? "tab active" : "tab"}
-        onClick={() => setVista("activas")}
+          className={vista === "activas" ? "tab active" : "tab"}
+          onClick={() => setVista("activas")}
         >
-        Rutinas activas
+          Rutinas activas
         </button>
-
         <button
-        className={vista === "desactivadas" ? "tab active" : "tab"}
-        onClick={() => setVista("desactivadas")}
+          className={vista === "desactivadas" ? "tab active" : "tab"}
+          onClick={() => setVista("desactivadas")}
         >
-        Rutinas desactivadas
+          Rutinas desactivadas
         </button>
-
       </div>
 
       <section className="panel">
-
         {loading ? (
-
           <h2 className="loading">Cargando rutinas...</h2>
-
         ) : rutinas.length === 0 ? (
-
           <h2 className="empty-state">
-            No hay rutinas registradas
+            {vista === "activas"
+              ? "No hay rutinas activas"
+              : "No hay rutinas desactivadas"}
           </h2>
-
         ) : (
-
           rutinas.map(rutina => (
             <RutinaCard
               key={rutina.id_rutina}
               rutina={rutina}
               refresh={fetchRutinas}
+              refreshStats={fetchStats}
               onEdit={handleEdit}
               clientesCount={clientesPorRutina[rutina.id_rutina] || 0}
             />
           ))
-
         )}
-
       </section>
 
       {showCreateModal && (
         <CreateRutinaModal
           onClose={() => setShowCreateModal(false)}
-          onCreated={fetchRutinas}
+          onCreated={() => { fetchRutinas(); fetchStats(); }}
         />
       )}
 

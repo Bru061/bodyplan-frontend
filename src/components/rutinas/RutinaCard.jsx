@@ -1,74 +1,106 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import api from "../../services/axios";
 
-function RutinaCard({ rutina, onEdit, clientesCount }){
+function RutinaCard({ rutina, onEdit, clientesCount, refresh, refreshStats }) {
 
-  const handleDesactivar = async () => {
+  const [modal, setModal] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [loading, setLoading] = useState(false);
 
-    const confirmar = confirm("¿Deseas desactivar esta rutina?");
+  const esActiva = rutina.activo;
 
-    if (!confirmar) return;
+  const tieneAsignacionesActivas = esActiva && clientesCount > 0;
+
+  const handleIntentarDesactivar = () => {
+    setErrorMsg("");
+
+    if (tieneAsignacionesActivas) {
+      setErrorMsg(
+        `No puedes desactivar esta rutina porque tiene ${clientesCount} cliente${clientesCount > 1 ? "s" : ""} con asignación activa.`
+      );
+      return;
+    }
+
+    setModal(true);
+  };
+
+  const handleToggle = async () => {
+    setModal(false);
+    setErrorMsg("");
+    setLoading(true);
 
     try {
 
-      await api.put(`/rutinas/${rutina.id_rutina}/desactivar`);
-
-      alert("Rutina desactivada correctamente");
+      if (esActiva) {
+        await api.put(`/rutinas/${rutina.id_rutina}/desactivar`);
+      } else {
+        await api.put(`/rutinas/${rutina.id_rutina}/activar`);
+      }
 
       refresh();
+      refreshStats();
 
     } catch (error) {
 
-      console.error("Error desactivando rutina", error);
-      alert("No se pudo desactivar la rutina");
+      console.error("Error cambiando estado de rutina", error);
 
+      const msg =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        (esActiva
+          ? "No se pudo desactivar la rutina"
+          : "No se pudo activar la rutina");
+
+      setErrorMsg(msg);
+
+    } finally {
+      setLoading(false);
     }
-
   };
 
-  useEffect(()=>{
-
-    const fetchClientes = async () =>{
-
-      try{
-
-        const res = await api.get(`/rutinas/${rutina.id_rutina}/clientes`);
-
-        const clientes =
-          res.data.clientes ||
-          res.data.data ||
-          res.data ||
-          [];
-
-      }catch(err){
-
-        console.error("Error cargando clientes de rutina",err);
-
-      }
-
-    };
-
-    fetchClientes();
-
-  },[]);
-
-  return(
+  return (
 
     <div className="routine-item">
 
-      <div>
+      {modal && (
+        <div className="modal-overlay">
+          <div className="modal-box">
+            <h3 className="modal-title">
+              {esActiva ? "Desactivar rutina" : "Activar rutina"}
+            </h3>
+            <p className="modal-body">
+              {esActiva
+                ? `¿Deseas desactivar "${rutina.nombre}"? No podrá asignarse a nuevos clientes.`
+                : `¿Deseas activar "${rutina.nombre}"?`}
+            </p>
+            <div className="modal-actions">
+              <button
+                className="btn btn-secondary"
+                onClick={() => setModal(false)}
+              >
+                Cancelar
+              </button>
+              <button
+                className={esActiva ? "btn btn-danger" : "btn btn-success"}
+                onClick={handleToggle}
+              >
+                {esActiva ? "Desactivar" : "Activar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
+      <div>
         <h2>{rutina.nombre}</h2>
 
-        <p>
-          {rutina.descripcion}
-        </p>
+        <p>{rutina.descripcion}</p>
 
         <p>
           Nivel: {rutina.nivel || "N/A"} ·
           Duración: {rutina.duracion_min || 0} min ·
           Tipo: {rutina.tipo_rutina} ·
-          Categoría: {rutina.categoria} 
+          Categoría: {rutina.categoria}
         </p>
 
         <p>
@@ -76,9 +108,14 @@ function RutinaCard({ rutina, onEdit, clientesCount }){
         </p>
 
         <p className="routine-meta">
-        Clientes usando esta rutina: <strong>{clientesCount}</strong>
+          Clientes con asignación activa: <strong>{clientesCount}</strong>
         </p>
 
+        {errorMsg && (
+          <p className="error-text" style={{ marginTop: 8 }}>
+            {errorMsg}
+          </p>
+        )}
       </div>
 
       <div className="routine-actions">
@@ -86,15 +123,19 @@ function RutinaCard({ rutina, onEdit, clientesCount }){
         <button
           className="btn btn-ghost"
           onClick={() => onEdit(rutina)}
+          disabled={loading}
         >
           Editar
         </button>
 
         <button
-        className="btn btn-danger"
-        onClick={handleDesactivar}
+          className={esActiva ? "btn btn-danger" : "btn btn-success"}
+          onClick={esActiva ? handleIntentarDesactivar : () => setModal(true)}
+          disabled={loading}
         >
-        Desactivar
+          {loading
+            ? "Procesando..."
+            : esActiva ? "Desactivar" : "Activar"}
         </button>
 
       </div>

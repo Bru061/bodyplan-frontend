@@ -1,5 +1,5 @@
 import AuthLayout from "../../layout/AuthLayout";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { MdAssignmentInd } from "react-icons/md";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import "../../styles/login.css";
@@ -10,46 +10,40 @@ import { FcGoogle } from "react-icons/fc";
 
 function Register() {
   const navigate = useNavigate();
-  const { signUp } = useAuth();
+  const location = useLocation();
+  const { signUp, signInWithGoogle } = useAuth();
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  const [form, setForm] = useState({
-    nombre: "",
-    apellido_paterno: "",
-    apellido_materno: "",
-    correo: "",
-    password: "",
-    confirmPassword: "",
-  });
-
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { signInWithGoogle } = useAuth();
+
+  const [form, setForm] = useState(
+    location.state?.form || {
+      nombre: "",
+      apellido_paterno: "",
+      apellido_materno: "",
+      correo: "",
+      password: "",
+      confirmPassword: "",
+    }
+  );
 
   const handleChange = (e) => {
     let { name, value } = e.target;
-
     setError("");
-    // NOMBRE → solo letras y espacios
+
     if (name === "nombre") {
       value = value.replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g, "");
     }
-
-    // APELLIDOS → solo letras sin espacios
     if (name === "apellido_paterno" || name === "apellido_materno") {
       value = value.replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ]/g, "");
     }
-
-    // PASSWORD → sin espacios
     if (name === "password" || name === "confirmPassword") {
       value = value.replace(/\s/g, "");
     }
 
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
@@ -60,12 +54,10 @@ function Register() {
       setError("La contraseña debe tener al menos 8 caracteres");
       return;
     }
-
     if (form.password !== form.confirmPassword) {
       setError("Las contraseñas deben ser iguales");
       return;
     }
-
     if (/\s/.test(form.password)) {
       setError("La contraseña no debe contener espacios");
       return;
@@ -74,7 +66,7 @@ function Register() {
     setLoading(true);
 
     try {
-      const result = await signUp({
+      await signUp({
         nombre: form.nombre,
         apellido_paterno: form.apellido_paterno,
         apellido_materno: form.apellido_materno,
@@ -83,9 +75,7 @@ function Register() {
       });
 
       navigate("/verify-email", {
-        state: {
-          correo: form.correo
-        }
+        state: { correo: form.correo, form }
       });
 
     } catch (err) {
@@ -93,9 +83,7 @@ function Register() {
         err?.response?.data?.error ||
         err?.response?.data?.message ||
         "Error al registrar usuario";
-
       setError(msg);
-      console.log(msg);
     } finally {
       setLoading(false);
     }
@@ -104,14 +92,10 @@ function Register() {
   const handleGoogleLogin = async () => {
     try {
       setError("");
-
       const result = await signInWithPopup(auth, provider);
       const idToken = await result.user.getIdToken();
-
-      const response = await signInWithGoogle(idToken);
-
+      await signInWithGoogle(idToken);
       navigate("/mis-gimnasios");
-
     } catch (error) {
       console.error(error);
       setError("Error al iniciar sesión con Google");
@@ -121,6 +105,7 @@ function Register() {
   return (
     <AuthLayout>
       <div className="login-container">
+
         <section className="login-side">
           <div className="login-side-content">
             <div className="login-avatar">
@@ -137,106 +122,131 @@ function Register() {
             <h2>BODYPLAN</h2>
             <p className="subtitle">Regístrate para continuar.</p>
 
-            {error && <p style={{ color: "red", textAlign: "center" }}>{error}</p>}
+            {error && (
+              <p style={{ color: "red", textAlign: "center" }}>{error}</p>
+            )}
 
             <form className="login-fields" onSubmit={handleSubmit}>
-              
-              <div>
-                <label htmlFor="nombre">Nombre *</label>
-              <input
-                type="text"
-                name="nombre"
-                className="full-width"
-                value={form.nombre}
-                onChange={handleChange}
-                required
-              />
-              </div>
 
-              <div>
-              <label htmlFor="apellido_paterno">Apellido paterno *</label>
-              <input
-                type="text"
-                name="apellido_paterno"
-                className="full-width"
-                value={form.apellido_paterno}
-                onChange={handleChange}
-                required
-              />
-              </div>
-
-              <div>
-              <label htmlFor="apellido_materno">Apellido materno *</label>
-              <input
-                type="text"
-                name="apellido_materno"
-                className="full-width"
-                value={form.apellido_materno}
-                onChange={handleChange}
-                required
-              />
-              </div>
-
-              <div>
-              <label htmlFor="correo">Correo electrónico *</label>
-              <input
-                type="email"
-                name="correo"
-                className="full-width"
-                value={form.correo}
-                onChange={handleChange}
-                required
-              />
-              </div>
-
-              <div>
-              <label htmlFor="password">Contraseña *</label>
-              <div className="password-field">
+              {/* ── Nombre ── */}
+              <div className="float-field">
                 <input
+                  id="nombre"
+                  type="text"
+                  name="nombre"
+                  placeholder=" "
+                  value={form.nombre}
+                  onChange={handleChange}
+                  required
+                />
+                <label htmlFor="nombre">Nombre *</label>
+              </div>
+
+              {/* ── Apellido paterno ── */}
+              <div className="float-field">
+                <input
+                  id="apellido_paterno"
+                  type="text"
+                  name="apellido_paterno"
+                  placeholder=" "
+                  value={form.apellido_paterno}
+                  onChange={handleChange}
+                  required
+                />
+                <label htmlFor="apellido_paterno">Apellido paterno *</label>
+              </div>
+
+              {/* ── Apellido materno ── */}
+              <div className="float-field">
+                <input
+                  id="apellido_materno"
+                  type="text"
+                  name="apellido_materno"
+                  placeholder=" "
+                  value={form.apellido_materno}
+                  onChange={handleChange}
+                  required
+                />
+                <label htmlFor="apellido_materno">Apellido materno *</label>
+              </div>
+
+              {/* ── Correo ── */}
+              <div className="float-field">
+                <input
+                  id="correo"
+                  type="email"
+                  name="correo"
+                  placeholder=" "
+                  value={form.correo}
+                  onChange={handleChange}
+                  required
+                />
+                <label htmlFor="correo">Correo electrónico *</label>
+              </div>
+
+              {/* ── Contraseña ──
+                  ✅ FIX: eye-btn dentro del float-field, sin wrapper password-field
+                  Así input y label son hermanos directos → selector CSS funciona */}
+              <div className="float-field">
+                <input
+                  id="password"
                   type={showPassword ? "text" : "password"}
                   name="password"
-                  className="full-width"
+                  placeholder=" "
                   value={form.password}
                   onChange={handleChange}
                   required
                 />
-                <button type="button" className="eye-btn" onClick={() => setShowPassword(!showPassword)}>
+                <label htmlFor="password">Contraseña *</label>
+                <button
+                  type="button"
+                  className="eye-btn"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
                   {showPassword ? <FiEyeOff /> : <FiEye />}
                 </button>
               </div>
-              </div>
 
-              <div>
-              <label htmlFor="confirmPassword">Confirmar contraseña *</label>
-              <div className="password-field">
+              {/* ── Confirmar contraseña ── */}
+              <div className="float-field">
                 <input
+                  id="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
                   name="confirmPassword"
-                  className="full-width"
+                  placeholder=" "
                   value={form.confirmPassword}
                   onChange={handleChange}
                   required
                 />
-                <button type="button" className="eye-btn" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+                <label htmlFor="confirmPassword">Confirmar contraseña *</label>
+                <button
+                  type="button"
+                  className="eye-btn"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
                   {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
                 </button>
-              </div>
               </div>
 
               {form.confirmPassword && form.password !== form.confirmPassword && (
                 <p style={{
                   color: "red",
                   fontSize: "0.85rem",
-                  marginTop: "5px",
-                  marginBottom: "5px"
+                  marginTop: "-8px",
+                  marginBottom: "0"
                 }}>
                   Las contraseñas deben coincidir
                 </p>
               )}
 
-              <button type="submit" className="btn btn-primary" disabled={loading}>
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={loading}
+              >
                 {loading ? "Registrando..." : "Registrarse"}
               </button>
+
             </form>
 
             <div className="divider">
@@ -253,8 +263,10 @@ function Register() {
                 ¿Ya tienes cuenta? <Link to="/login">Inicia sesión</Link>
               </span>
             </div>
+
           </div>
         </section>
+
       </div>
     </AuthLayout>
   );
