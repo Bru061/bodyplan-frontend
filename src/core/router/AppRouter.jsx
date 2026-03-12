@@ -6,6 +6,7 @@ import ForgotPassword from "../../modules/auth/ForgotPassword";
 import ResetPassword from "../../modules/auth/ResetPassword";
 import VerifyEmail from "../../modules/auth/VerifyEmail";
 import Dashboard from "../../modules/dashboard/Dashboard";
+import Resenas from "../../modules/dashboard/Resenas";
 import Clientes from "../../modules/clientes/Clientes";
 import DetalleCliente from "../../modules/clientes/detalleCliente"
 import MiGimnasio from "../../modules/gym/MiGimnasio";
@@ -41,6 +42,7 @@ function AppRouter(){
         <Route element={<RoleRoute allowedRoles={["proveedor"]} />}>
           <Route path="/crear-gimnasio" element={<CreateGym />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/resenas" element={<Resenas />} />
           <Route path="/clientes" element={<Clientes />} />
           <Route path="/detalle-cliente/:id" element={<DetalleCliente />} />
           <Route path="/mis-gimnasios" element={<MisGimnasios />} />

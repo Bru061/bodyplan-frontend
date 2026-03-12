@@ -445,3 +445,84 @@ border-bottom:1px solid #eee;
     min-width: 140px;
   }
 }
+
+/* ── Agregar al final de clientes.css ── */
+
+/* Toolbar en una sola fila */
+.table-toolbar {
+  flex-wrap: nowrap;
+  align-items: center;
+}
+
+.toolbar-actions {
+  flex-wrap: nowrap;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.toolbar-actions select {
+  height: 38px;
+  padding: 0 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+  font-size: 0.88rem;
+  color: var(--text-main);
+  outline: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.2s;
+}
+
+.toolbar-actions select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Botón WhatsApp */
+.icon-btn-whatsapp {
+  color: #25d366 !important;
+  border-color: #d1fae5 !important;
+}
+
+.icon-btn-whatsapp:hover {
+  background: #f0fdf4 !important;
+  border-color: #25d366 !important;
+  color: #16a34a !important;
+}
+
+/* Botón deshabilitado (sin teléfono) */
+.icon-btn-disabled {
+  color: #cbd5e1 !important;
+  border-color: #e2e8f0 !important;
+  cursor: not-allowed !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .table-toolbar {
+    flex-wrap: wrap;
+  }
+
+  .search-field {
+    min-width: 100%;
+  }
+
+  .toolbar-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .toolbar-actions select {
+    flex: 1;
+    min-width: 140px;
+  }
+}

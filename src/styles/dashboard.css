@@ -298,3 +298,22 @@
 .quick-actions .btn{
   flex:0 0 auto;
 }
+
+/* Métrica destacada — clientes nuevos */
+.metric-card-highlight {
+  border-left: 3px solid var(--primary);
+}
+
+/* Métrica de advertencia — membresías por vencer */
+.metric-card-warning {
+  border-left: 3px solid #f59e0b;
+}
+.metric-card-warning .metric-value {
+  color: #f59e0b;
+}
+
+/* Valor pequeño para texto largo (gimnasio top) */
+.metric-value-sm {
+  font-size: 1.1rem !important;
+  word-break: break-word;
+}

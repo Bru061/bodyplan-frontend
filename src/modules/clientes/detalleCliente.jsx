@@ -1,370 +1,358 @@
 import DashboardLayout from "../../layout/DashboardLayout";
 import "../../styles/clientes.css";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import api from "../../services/axios";
 import LoadingScreen from "../../components/ui/LoadingScreen";
 import AssignRutinaModal from "./AssignRutinaModal";
-import { useNavigate } from "react-router-dom";
 
 function DetalleCliente() {
 
-    const { id } = useParams();
+  const { id } = useParams();
+  const navigate = useNavigate();
 
-    const [cliente, setCliente] = useState(null);
-    const [rutinas, setRutinas] = useState([]);
-    const [historial, setHistorial] = useState([]);
-    const [showAssignModal, setShowAssignModal] = useState(false);
-    const navigate = useNavigate();
+  const [cliente, setCliente] = useState(null);
+  const [rutinas, setRutinas] = useState([]);
+  const [historial, setHistorial] = useState([]);
+  const [showAssignModal, setShowAssignModal] = useState(false);
 
-    const fetchRutinasCliente = async () => {
+  // ── Modal confirmación cancelar ──
+  const [confirmModal, setConfirmModal] = useState(null); // { id_asignacion, nombre }
+  const [cancelando, setCancelando] = useState(false);
+  const [cancelError, setCancelError] = useState("");
+  const [gymError, setGymError] = useState("");
+
+  const fetchRutinasCliente = async () => {
 
     try {
 
-        const res = await api.get("/rutinas");
-        const todasRutinas = res.data.rutinas || [];
+      const res = await api.get("/rutinas");
+      const todasRutinas = res.data.rutinas || [];
+      const rutinasCliente = [];
 
-        const rutinasCliente = [];
-
-        for (const rutina of todasRutinas) {
+      for (const rutina of todasRutinas) {
 
         try {
 
-            const r = await api.get(`/rutinas/${rutina.id_rutina}/clientes`);
+          const r = await api.get(`/rutinas/${rutina.id_rutina}/clientes`);
+          const asignaciones = r.data.clientes || r.data || [];
 
-            const clientes = r.data.clientes || r.data || [];
+          const pertenece = asignaciones.find(a =>
+            a.id_usuario === cliente?.id ||
+            a.Usuario?.id_usuario === cliente?.id
+          );
 
-            console.log("CLIENTES RUTINA:", rutina.id_rutina, clientes);
-
-            const pertenece = clientes.find(c =>
-            c.id_usuario === cliente?.id ||
-            c.Usuario?.id_usuario === cliente?.id
-            );
-
-            if (pertenece) {
-
+          if (pertenece) {
             rutinasCliente.push({
-                ...rutina,
-                estado: pertenece.estado
+              ...rutina,
+              estado: pertenece.estado,
+              // ✅ Capturar id de la asignación para poder cancelarla
+              id_asignacion: pertenece.id_usuario_rutina
             });
-
-            }
+          }
 
         } catch (err) {
-
-            console.error("Error obteniendo clientes de rutina", err);
-
+          console.error("Error obteniendo clientes de rutina", err);
         }
 
-        }
+      }
 
-        console.log("RUTINAS DEL CLIENTE:", rutinasCliente);
-
-        setRutinas(rutinasCliente);
+      setRutinas(rutinasCliente);
 
     } catch (err) {
-
-        console.error("Error cargando rutinas del cliente", err);
-
+      console.error("Error cargando rutinas del cliente", err);
     }
+
+  };
+
+  useEffect(() => {
+
+    const cargarCliente = async () => {
+
+      try {
+
+        const res = await api.get(`/clientes/${id}`);
+        const data = res.data.cliente;
+        const usuario = data.usuario;
+
+        const suscripcion = data.suscripciones?.find(s => s.estado === "activa");
+
+        setHistorial(data.suscripciones || []);
+
+        setCliente({
+          id: usuario.id_usuario,
+          id_gimnasio: suscripcion?.gimnasio?.id_gimnasio,
+          nombre: usuario.nombre,
+          email: usuario.correo,
+          telefono: usuario.telefono,
+          gimnasio: suscripcion?.gimnasio?.nombre || "Sin gimnasio",
+          fechaRegistro: suscripcion
+            ? new Date(suscripcion.fecha_inicio).toLocaleDateString()
+            : "Sin registro",
+          membresia: suscripcion?.membresia?.nombre || "Sin membresía",
+          estado: suscripcion?.estado === "activa" ? "Activo" : "Inactivo"
+        });
+
+      } catch (error) {
+        console.error("Error cargando cliente", error);
+      }
 
     };
 
-    useEffect(() => {
+    cargarCliente();
 
-        const cargarCliente = async () => {
+  }, [id]);
 
-            try {
+  useEffect(() => {
+    if (cliente) fetchRutinasCliente();
+  }, [cliente]);
 
-                const res = await api.get(`/clientes/${id}`);
+  // ── Cancelar asignación ──
+  const handleCancelar = async () => {
 
-                const data = res.data.cliente;
+    if (!confirmModal) return;
 
-                const usuario = data.usuario;
-                const suscripcion = data.suscripciones?.find(
-                    s => s.estado === "activa"
-                );
+    try {
 
-                setHistorial(data.suscripciones || []);
+      setCancelando(true);
+      setCancelError("");
 
-                const clienteFormateado = {
+      await api.delete(`/rutinas/asignacion/${confirmModal.id_asignacion}`);
 
-                    id: usuario.id_usuario,
-                    id_gimnasio: suscripcion?.gimnasio?.id_gimnasio,
-                    nombre: usuario.nombre,
-                    email: usuario.correo,
-                    telefono: usuario.telefono,
+      setConfirmModal(null);
+      await fetchRutinasCliente();
 
-                    gimnasio: suscripcion?.gimnasio?.nombre || "Sin gimnasio",
-
-                    fechaRegistro: suscripcion
-                        ? new Date(suscripcion.fecha_inicio).toLocaleDateString()
-                        : "Sin registro",
-
-                    membresia: suscripcion?.membresia?.nombre || "Sin membresía",
-
-                    estado: suscripcion?.estado === "activa"
-                        ? "Activo"
-                        : "Inactivo"
-
-                };
-
-                setCliente(clienteFormateado);
-
-            } catch (error) {
-
-                console.error("Error cargando cliente", error);
-
-            }
-
-        };
-
-        cargarCliente();
-
-    }, [id]);
-
-    useEffect(() => {
-
-        if (cliente) {
-            fetchRutinasCliente();
-        }
-
-    }, [cliente]);
-
-
-    if (!cliente) {
-        return <LoadingScreen message="Cargando información del cliente..." />;
+    } catch (err) {
+      setCancelError(
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        "Error cancelando la rutina"
+      );
+    } finally {
+      setCancelando(false);
     }
 
-    const rutinasCompletadas = rutinas.filter(
-    r => r.estado === "completada"
-    ).length;
+  };
 
-    return (
+  if (!cliente) {
+    return <LoadingScreen message="Cargando información del cliente..." />;
+  }
 
-        <DashboardLayout>
+  const rutinasCompletadas = rutinas.filter(r => r.estado === "completada").length;
 
-            <section className="page-header">
+  return (
 
-                <div className="page-header-row">
+    <DashboardLayout>
 
-                <button
-                className="back-button"
-                onClick={() => navigate(-1)}
-                >
-                ←
-                </button>
+      <section className="page-header">
+        <div className="page-header-row">
+          <button className="back-button" onClick={() => navigate(-1)}>←</button>
+          <div>
+            <p className="eyebrow">Detalle de cliente</p>
+            <h1>{cliente.nombre}</h1>
+            <p className="subtitle">
+              Información general, membresía y rutinas asignadas.
+            </p>
+          </div>
+        </div>
+      </section>
 
-                <div>
-                    <p className="eyebrow">Detalle de cliente</p>
-                    <h1>{cliente.nombre}</h1>
-                    <p className="subtitle">
-                        Información general, membresía y rutinas asignadas.
-                    </p>
-                </div>
+      <section className="client-grid">
 
-                </div>
+        <article className="panel client-info">
+          <h2>Información del cliente</h2>
+          <div className="info-row">
+            <span>Correo</span>
+            <span>{cliente.email}</span>
+          </div>
+          <div className="info-row">
+            <span>Teléfono</span>
+            <span>{cliente.telefono || "No registrado"}</span>
+          </div>
+          <div className="info-row">
+            <span>Gimnasio</span>
+            <span>{cliente.gimnasio}</span>
+          </div>
+          <div className="info-row">
+            <span>Miembro desde</span>
+            <span>{cliente.fechaRegistro}</span>
+          </div>
+          <div className="info-row">
+            <span>Membresía</span>
+            <span>{cliente.membresia}</span>
+          </div>
+          <div className="info-row">
+            <span>Estado</span>
+            <span className={`badge ${
+              cliente.estado === "Activo" ? "badge-success" : "badge-danger"
+            }`}>
+              {cliente.estado}
+            </span>
+          </div>
+        </article>
 
-            </section>
+        <article className="panel client-stats">
+          <h2>Actividad</h2>
+          <div className="stat-box">
+            <p className="stat-number">{rutinas.length}</p>
+            <span>Rutinas asignadas</span>
+          </div>
+          <div className="stat-box">
+            <p className="stat-number">{rutinasCompletadas}</p>
+            <span>Rutinas completadas</span>
+          </div>
+        </article>
 
-            <section className="client-grid">
+      </section>
 
-                <article className="panel client-info">
+      <section className="panel">
+        <h2>Historial de suscripciones</h2>
 
-                    <h2>Información del cliente</h2>
-
-                    <div className="info-row">
-                        <span>Correo</span>
-                        <span>{cliente.email}</span>
-                    </div>
-
-                    <div className="info-row">
-                        <span>Teléfono</span>
-                        <span>{cliente.telefono || "No registrado"}</span>
-                    </div>
-
-                    <div className="info-row">
-                        <span>Gimnasio</span>
-                        <span>{cliente.gimnasio}</span>
-                    </div>
-
-                    <div className="info-row">
-                        <span>Miembro desde</span>
-                        <span>{cliente.fechaRegistro}</span>
-                    </div>
-
-                    <div className="info-row">
-                        <span>Membresía</span>
-                        <span>{cliente.membresia}</span>
-                    </div>
-
-                    <div className="info-row">
-
-                        <span>Estado</span>
-
-                        <span className={`badge ${
-                            cliente.estado === "Activo"
-                                ? "badge-success"
-                                : "badge-danger"
-                        }`}>
-                            {cliente.estado}
-                        </span>
-
-                    </div>
-
-                </article>
-
-                <article className="panel client-stats">
-
-                    <h2>Actividad</h2>
-
-                    <div className="stat-box">
-                        <p className="stat-number">{rutinas.length}</p>
-                        <span>Rutinas asignadas</span>
-                    </div>
-
-                    <div className="stat-box">
-                    <p className="stat-number">{rutinasCompletadas}</p>
-                    <span>Rutinas completadas</span>
-                    </div>
-
-                </article>
-
-            </section>
-
-                <section className="panel">
-
-                <h2>Historial de suscripciones</h2>
-
-                {historial.length === 0 ? (
-
-                <p className="empty-state">
-                Este cliente no tiene suscripciones registradas.
-                </p>
-
-                ) : (
-
-                historial.map((s, index) => (
-
-                <div className="row-item" key={index}>
-
-                <div>
-
+        {historial.length === 0 ? (
+          <p className="empty-state">Este cliente no tiene suscripciones registradas.</p>
+        ) : (
+          historial.map((s, index) => (
+            <div className="row-item" key={index}>
+              <div>
                 <strong>{s.gimnasio.nombre} - </strong>
-
-                <span>
-                {s.membresia?.nombre || "Sin membresía"}
-                </span>
-
-                <p>
-                Inicio: {new Date(s.fecha_inicio).toLocaleDateString()}
-                </p>
-
-                </div>
-
-                <span className={`badge ${
-                s.estado === "activa"
-                ? "badge-success"
-                : "badge-danger"
-                }`}>
-
+                <span>{s.membresia?.nombre || "Sin membresía"}</span>
+                <p>Inicio: {new Date(s.fecha_inicio).toLocaleDateString()}</p>
+              </div>
+              <span className={`badge ${
+                s.estado === "activa" ? "badge-success" : "badge-danger"
+              }`}>
                 {s.estado}
+              </span>
+            </div>
+          ))
+        )}
+      </section>
 
-                </span>
+      <section className="panel routines-panel">
 
-                </div>
+        <div className="panel-head">
+          <h2>Rutinas asignadas</h2>
+          <button
+            className="btn btn-primary"
+            onClick={() => {
+              if (!cliente.id_gimnasio) {
+                setGymError("El cliente no tiene gimnasio activo");
+                return;
+              }
+              setGymError("");
+              setShowAssignModal(true);
+            }}
+          >
+            Asignar Rutina
+          </button>
+        </div>
 
-                ))
+        {gymError && (
+          <div className="modal-error" style={{ marginBottom: "12px" }}>
+            {gymError}
+          </div>
+        )}
 
-                )}
+        {rutinas.length === 0 ? (
+          <p className="empty-state">Este cliente aún no tiene rutinas asignadas.</p>
+        ) : (
+          rutinas.map((rutina) => (
+            <div className="routine-card" key={rutina.id_rutina}>
 
-                </section>
+              <div>
+                <h2>{rutina.nombre}</h2>
+                <p>{rutina.descripcion}</p>
+                <p>
+                  Nivel: {rutina.nivel || "N/A"} ·
+                  Duración: {rutina.duracion_min || 0} min ·
+                  Tipo: {rutina.tipo_rutina} ·
+                  Categoría: {rutina.categoria}
+                </p>
+                <p>Instrucciones: {rutina.instrucciones}</p>
+              </div>
 
-            <section className="panel routines-panel">
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "8px" }}>
 
-                <div className="panel-head">
+                <span className="badge">{rutina.estado}</span>
 
-                    <h2>Rutinas asignadas</h2>
-
-                    <button
-                    className="btn btn-primary"
+                {/* ✅ Botón cancelar — solo si pendiente o iniciada */}
+                {(rutina.estado === "pendiente" || rutina.estado === "iniciada") && (
+                  <button
+                    className="btn-danger"
                     onClick={() => {
-
-                        if(!cliente.id_gimnasio){
-                        alert("El cliente no tiene gimnasio activo");
-                        return;
-                        }
-
-                        setShowAssignModal(true);
-
+                      setCancelError("");
+                      setConfirmModal({
+                        id_asignacion: rutina.id_asignacion,
+                        nombre: rutina.nombre
+                      });
                     }}
-                    >
-                    Asignar Rutina
-                    </button>
-
-                </div>
-
-                {rutinas.length === 0 ? (
-
-                    <p className="empty-state">
-                        Este cliente aún no tiene rutinas asignadas.
-                    </p>
-
-                ) : (
-
-                    rutinas.map((rutina) => (
-
-                        <div
-                            className="routine-card"
-                            key={rutina.id_rutina}
-                        >
-
-                            <div>
-
-                                <h2>{rutina.nombre}</h2>
-
-                                <p>
-                                {rutina.descripcion}
-                                </p>
-
-                                <p>
-                                Nivel: {rutina.nivel || "N/A"} ·
-                                Duración: {rutina.duracion_min || 0} min ·
-                                Tipo: {rutina.tipo_rutina} ·
-                                Categoría: {rutina.categoria} 
-                                </p>
-
-                                <p>
-                                Instrucciones: {rutina.instrucciones}
-                                </p>
-
-                            </div>
-
-                            <span className="badge">
-                                {rutina.estado}
-                            </span>
-
-                        </div>
-
-                    ))
-
+                  >
+                    Cancelar rutina
+                  </button>
                 )}
 
-            </section>
+              </div>
 
-            {showAssignModal && (
+            </div>
+          ))
+        )}
 
-                <AssignRutinaModal
-                    cliente={cliente}
-                    onClose={() => setShowAssignModal(false)}
-                    onAssigned={fetchRutinasCliente}
-                />
+      </section>
 
+      {/* ── Modal asignar rutina ── */}
+      {showAssignModal && (
+        <AssignRutinaModal
+          cliente={cliente}
+          onClose={() => setShowAssignModal(false)}
+          onAssigned={fetchRutinasCliente}
+        />
+      )}
+
+      {/* ── Modal confirmar cancelación ── */}
+      {confirmModal && (
+        <div className="modal-overlay">
+          <div className="modal-box">
+
+            <h3 className="modal-title">Cancelar rutina</h3>
+            <p className="modal-body">
+              ¿Estás seguro de que deseas cancelar la rutina
+              <strong> {confirmModal.nombre}</strong> para este cliente?
+              Esta acción no se puede deshacer.
+            </p>
+
+            {cancelError && (
+              <div className="modal-error" style={{ marginBottom: "12px" }}>
+                {cancelError}
+              </div>
             )}
 
-        </DashboardLayout>
+            <div className="modal-actions">
+              <button
+                className="btn-ghost"
+                onClick={() => {
+                  setConfirmModal(null);
+                  setCancelError("");
+                }}
+                disabled={cancelando}
+              >
+                Volver
+              </button>
+              <button
+                className="btn-danger"
+                onClick={handleCancelar}
+                disabled={cancelando}
+              >
+                {cancelando ? "Cancelando..." : "Sí, cancelar"}
+              </button>
+            </div>
 
-    );
+          </div>
+        </div>
+      )}
+
+    </DashboardLayout>
+
+  );
 
 }
 
