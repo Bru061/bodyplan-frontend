@@ -119,7 +119,6 @@ function DetalleCliente() {
   return (
     <DashboardLayout>
 
-      {/* ── Header ── */}
       <section className="page-header">
         <div className="page-header-row">
           <button className="back-button" onClick={() => navigate(-1)}>←</button>
@@ -133,7 +132,6 @@ function DetalleCliente() {
         </div>
       </section>
 
-      {/* ── Info + Actividad ── */}
       <section className="client-grid">
 
         <article className="panel client-info">
@@ -182,7 +180,6 @@ function DetalleCliente() {
 
       </section>
 
-      {/* ── Historial suscripciones ── */}
       <article className="panel">
         <h2>Historial de suscripciones</h2>
 
@@ -205,7 +202,6 @@ function DetalleCliente() {
         )}
       </article>
 
-      {/* ── Rutinas asignadas ── */}
       <article className="panel routines-panel">
         <div className="panel-head">
           <h2>Rutinas asignadas</h2>
@@ -269,7 +265,6 @@ function DetalleCliente() {
         )}
       </article>
 
-      {/* ── Modal asignar rutina ── */}
       {showAssignModal && (
         <AssignRutinaModal
           cliente={cliente}
@@ -278,7 +273,6 @@ function DetalleCliente() {
         />
       )}
 
-      {/* ── Modal confirmar cancelación ── */}
       {confirmModal && (
         <div className="modal-overlay">
           <div className="modal-box">

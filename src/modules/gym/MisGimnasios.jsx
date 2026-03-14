@@ -79,7 +79,6 @@ function MisGimnasios() {
   return (
     <DashboardLayout>
 
-      {/* ── Modal confirmación ── */}
       {modal && (
         <div className="modal-overlay">
           <div className="modal-box">
@@ -106,7 +105,6 @@ function MisGimnasios() {
         </div>
       )}
 
-      {/* ── Header ── */}
       <section className="page-header">
         <div>
           <p className="eyebrow">Panel principal</p>
@@ -118,7 +116,6 @@ function MisGimnasios() {
         </button>
       </section>
 
-      {/* ── Error inline ── */}
       {errorMsg && (
         <div className="modal-error gym-error">
           {errorMsg}
@@ -126,7 +123,6 @@ function MisGimnasios() {
         </div>
       )}
 
-      {/* ── Tabs ── */}
       <div className="gym-tabs">
         <button
           className={`tab-btn ${tab === "activos" ? "active" : ""}`}
@@ -142,7 +138,6 @@ function MisGimnasios() {
         </button>
       </div>
 
-      {/* ── Lista ── */}
       <section className="service-list">
 
         {gimnasios.length === 0 && (

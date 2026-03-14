@@ -56,7 +56,6 @@ function StepFotosHorarios({ fotos, setFotos, horarios, setHorarios, errors, set
   return (
     <div className="step-form">
 
-      {/* ── Fotos ── */}
       <h2 className="step-section-title">Fotos del gimnasio</h2>
 
       <div className="fotos-upload-area">
@@ -96,7 +95,6 @@ function StepFotosHorarios({ fotos, setFotos, horarios, setHorarios, errors, set
 
       {errors.fotos && <span className="field-error-msg">{errors.fotos}</span>}
 
-      {/* ── Horarios ── */}
       <h2 className="step-section-title" style={{ marginTop: "1.5rem" }}>Horarios</h2>
 
       {errors.horarios && <span className="field-error-msg">{errors.horarios}</span>}

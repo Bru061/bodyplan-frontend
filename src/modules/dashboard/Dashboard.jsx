@@ -5,6 +5,8 @@ import { useEffect, useRef, useState } from "react";
 import { getMyGym } from "../../services/gymService";
 import { useAuth } from "../../core/context/AuthContext";
 import Chart from "chart.js/auto";
+import { Link } from "react-router-dom";
+
 
 function Dashboard() {
 
@@ -26,7 +28,6 @@ function Dashboard() {
     checkGym();
   }, [user]);
 
-  // ── Gráfica de líneas ──
   useEffect(() => {
     if (loading || !chartRef.current) return;
 
@@ -102,69 +103,66 @@ function Dashboard() {
   return (
     <DashboardLayout>
 
-      {/* ── Métricas principales */}
       <section className="metrics-grid" aria-label="Indicadores">
 
-        <article className="metric-card">
+        <Link to="/clientes?estado=activa" className="metric-card metric-card-link">
           <p className="metric-title">Clientes activos</p>
           <p className="metric-value">{loading ? "..." : dashboard.metrics.clientesActivos}</p>
           <p className="metric-sub">Con membresía vigente</p>
-        </article>
+        </Link>
 
-        <article className="metric-card">
+        <Link to="/clientes?estado=inactiva" className="metric-card metric-card-link">
           <p className="metric-title">Clientes inactivos</p>
           <p className="metric-value">{loading ? "..." : dashboard.metrics.clientesInactivos}</p>
           <p className="metric-sub">Sin membresía activa</p>
-        </article>
+        </Link>
 
-        <article className="metric-card">
+        <Link to="/clientes?estado=activa" className="metric-card metric-card-link">
           <p className="metric-title">Membresías activas</p>
           <p className="metric-value">{loading ? "..." : dashboard.metrics.membresiasActivas}</p>
           <p className="metric-sub">Membresías vigentes</p>
-        </article>
+        </Link>
 
-        <article className="metric-card">
+        <Link to="/rutinas" className="metric-card metric-card-link">
           <p className="metric-title">Rutinas creadas</p>
           <p className="metric-value">{loading ? "..." : dashboard.metrics.rutinas}</p>
           <p className="metric-sub">Rutinas registradas</p>
-        </article>
+        </Link>
 
-        <article className="metric-card">
+        <Link to="/mis-gimnasios" className="metric-card metric-card-link">
           <p className="metric-title">Gimnasios</p>
           <p className="metric-value">{loading ? "..." : dashboard.metrics.gimnasios}</p>
           <p className="metric-sub">Gimnasios activos</p>
-        </article>
+        </Link>
 
       </section>
 
-      {/* ── Métricas secundarias */}
       <section className="metrics-grid metrics-grid-3" aria-label="Indicadores adicionales">
 
-        <article className="metric-card metric-card-highlight">
+        <Link to="/clientes" className="metric-card metric-card-highlight metric-card-link">
           <p className="metric-title">Nuevos este mes</p>
           <p className="metric-value">{loading ? "..." : dashboard.metrics.clientesNuevosMes}</p>
           <p className="metric-sub">Inscritos en el mes actual</p>
-        </article>
+        </Link>
 
-        <article className={`metric-card ${
+        <Link to="/clientes?estado=activa" className={`metric-card metric-card-link ${
           !loading && dashboard.metrics.membresiasPorVencer > 0 ? "metric-card-warning" : ""
         }`}>
           <p className="metric-title">Por vencer</p>
           <p className="metric-value">{loading ? "..." : dashboard.metrics.membresiasPorVencer}</p>
           <p className="metric-sub">Vencen en 15 días</p>
-        </article>
+        </Link>
 
-        <article className="metric-card">
+        <Link to="/mis-gimnasios" className="metric-card metric-card-link">
           <p className="metric-title">Gym más activo</p>
           <p className="metric-value metric-value-sm">
             {loading ? "..." : dashboard.metrics.gimnasioTop}
           </p>
           <p className="metric-sub">Más clientes registrados</p>
-        </article>
+        </Link>
 
       </section>
 
-      {/* ── Gráfica ── */}
       <section className="content-grid">
         <article className="panel chart-panel" style={{ gridColumn: "1 / -1" }}>
           <div className="panel-header">

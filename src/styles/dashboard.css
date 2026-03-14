@@ -24,6 +24,17 @@
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
 }
 
+.metric-card-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.metric-card-link:hover {
+  border-color: #bfdbfe;
+}
+
 .metric-title {
   margin: 0 0 0.4rem;
   font-size: 0.82rem;
@@ -47,7 +58,6 @@
   font-size: 0.8rem;
 }
 
-/* Variantes */
 .metric-card-highlight {
   border-left: 3px solid var(--primary);
 }
@@ -144,6 +154,10 @@
   }
 }
 
+.chart-panel canvas {
+  max-width: 100%;
+}
+
 @media (max-width: 640px) {
   .metrics-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -155,5 +169,20 @@
 
   .metric-value {
     font-size: 1.5rem;
+  }
+
+  .chart-panel {
+    min-height: auto;
+    overflow-x: hidden;
+  }
+
+  .panel-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .chart-period-selector {
+    width: 100%;
+    justify-content: center;
   }
 }

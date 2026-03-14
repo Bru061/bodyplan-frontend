@@ -39,7 +39,6 @@ function MiGimnasio() {
     fetchGym();
   }, [id]);
 
-  // ── Auto-avance del slider ──
   useEffect(() => {
     if (!gym?.fotos || gym.fotos.length <= 1) return;
     const interval = setInterval(() => {
@@ -48,7 +47,6 @@ function MiGimnasio() {
     return () => clearInterval(interval);
   }, [gym?.fotos]);
 
-  // ── Resetear índice si las fotos cambian ──
   useEffect(() => {
     if (!gym?.fotos) return;
     if (imgIndex >= gym.fotos.length) setImgIndex(0);
@@ -71,7 +69,6 @@ function MiGimnasio() {
   return (
     <DashboardLayout>
 
-      {/* ── Header ── */}
       <section className="page-header">
         <div className="page-header-row">
           <button
@@ -88,11 +85,9 @@ function MiGimnasio() {
         </div>
       </section>
 
-      {/* ── Card principal ── */}
       <section className="service-list">
         <article className="service-profile-card">
 
-          {/* ── Portada con slider ── */}
           <section className="cover-card">
             <button className="icon-edit" onClick={() => setOpenFotos(true)}>
               <Pencil size={20} color="#fff" />
@@ -136,10 +131,8 @@ function MiGimnasio() {
             )}
           </section>
 
-          {/* ── Info layout ── */}
           <section className="gym-info-layout">
 
-            {/* Descripción */}
             <div className="info-block full">
               <button className="icon-edit-btn" onClick={() => setOpenEdit(true)}>
                 <Pencil size={16} />
@@ -148,7 +141,6 @@ function MiGimnasio() {
               <p>{gym.descripcion}</p>
             </div>
 
-            {/* Contacto */}
             <div className="info-block full">
               <h3>Información de contacto</h3>
               <div className="contact-list">
@@ -159,7 +151,6 @@ function MiGimnasio() {
               </div>
             </div>
 
-            {/* Horarios */}
             <div className="info-block">
               <button className="icon-edit-btn" onClick={() => setOpenHorarios(true)}>
                 <Pencil size={16} />
@@ -180,7 +171,6 @@ function MiGimnasio() {
               }
             </div>
 
-            {/* Membresías */}
             <div className="info-block">
               <button className="icon-edit-btn" onClick={() => setOpenMembresias(true)}>
                 <Pencil size={16} />
@@ -211,7 +201,6 @@ function MiGimnasio() {
         </article>
       </section>
 
-      {/* ── Modales ── */}
       {openEdit && (
         <EditGymModal
           gym={gym}

@@ -278,7 +278,6 @@
 }
 
 /* FLOATING LABELS */
-
 .float-field {
   position: relative;
   width: 100%;
@@ -375,11 +374,7 @@
   color: #ef4444;
 }
 
-
-/* ============================= */
 /* RESPONSIVE LOGIN BODYPLAN */
-/* ============================= */
-
 @media (max-width: 768px){
 
   .login-container{
@@ -391,7 +386,7 @@
   .login-side{
     width:100%;
     min-height:auto;
-    height:160px; /* altura tipo navbar */
+    height:160px;
     padding:20px;
     display:flex;
     align-items:center;
@@ -410,7 +405,7 @@
   }
 
   .login-side p{
-    display:none; /* opcional: oculta texto largo en móvil */
+    display:none;
   }
 
   .login-avatar{

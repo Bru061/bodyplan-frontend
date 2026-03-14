@@ -49,7 +49,6 @@ function EditFotosModal({ gym, onClose, onUpdated }) {
     <>
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-      {/* ── Modal confirmación eliminar foto ── */}
       {confirmarId && (
         <div className="modal-overlay" style={{ zIndex: 10000 }}>
           <div className="modal-box">

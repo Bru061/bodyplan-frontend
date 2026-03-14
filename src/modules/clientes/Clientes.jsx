@@ -1,5 +1,5 @@
 import DashboardLayout from "../../layout/DashboardLayout";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { FiDownload, FiSearch, FiMail, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { FaWhatsapp } from "react-icons/fa";
 import { FiPlus } from "react-icons/fi";
@@ -13,13 +13,19 @@ const LIMIT = 10;
 
 function Clientes() {
 
+  const [searchParams] = useSearchParams();
+
   const [clientes, setClientes] = useState([]);
   const [search, setSearch] = useState("");
   const [gymError, setGymError] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [gimnasios, setGimnasios] = useState([]);
   const [membresias, setMembresias] = useState([]);
-  const [filtroEstado, setFiltroEstado] = useState("");
+
+  const estadoParam = searchParams.get("estado") || "";
+  const [filtroEstado, setFiltroEstado] = useState(
+    ["activa", "inactiva"].includes(estadoParam) ? estadoParam : ""
+  );
   const [filtroGym, setFiltroGym] = useState("");
 
   const [page, setPage] = useState(1);

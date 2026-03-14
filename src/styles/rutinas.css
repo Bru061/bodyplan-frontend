@@ -1,4 +1,50 @@
-/* TABS */
+/* ASSIGN RUTINA — PESTAÑAS */
+.assign-tabs {
+  display: flex;
+  gap: 4px;
+  margin: 1rem 0 0;
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 0;
+}
+
+.assign-tab {
+  padding: 0.5rem 1rem;
+  border: none;
+  background: none;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.assign-tab:hover {
+  color: var(--primary);
+}
+
+.assign-tab.active {
+  color: var(--primary);
+  font-weight: 700;
+  border-bottom-color: var(--primary);
+}
+
+/* FORMULARIO PERSONALIZADO */
+.personal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.field-hint {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin-top: 3px;
+  display: block;
+}
+
 .tabs {
   display: flex;
   gap: 8px;

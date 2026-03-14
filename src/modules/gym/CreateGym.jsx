@@ -42,7 +42,6 @@ function CreateGym() {
   const [horarios, setHorarios] = useState([]);
   const [membresias, setMembresias] = useState([]);
 
-  // ── Sanitización de campos ──
   const handleChange = (e) => {
     let { name, value } = e.target;
 
@@ -65,7 +64,6 @@ function CreateGym() {
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: "" }));
   };
 
-  // ── Validación por paso ──
   const validateStep = (index) => {
     const e = {};
 
@@ -207,13 +205,11 @@ function CreateGym() {
       <div className="gym-wizard">
         <div className="gym-wizard-card">
 
-          {/* ── Título ── */}
           <div className="gym-wizard-title">
             <h1>Registrar gimnasio</h1>
             <p>Completa la información para activar tu panel en BodyPlan.</p>
           </div>
 
-          {/* ── Stepper ── */}
           <div className="stepper">
             {STEPS.map((s, i) => (
               <div
@@ -230,7 +226,6 @@ function CreateGym() {
             ))}
           </div>
 
-          {/* ── Error global ── */}
           {error && (
             <div className="modal-error" style={{ marginBottom: "1rem" }}>
               {error}
@@ -241,7 +236,6 @@ function CreateGym() {
             </div>
           )}
 
-          {/* ── Paso activo ── */}
           {step === 0 && (
             <StepBasico form={form} errors={errors} onChange={handleChange} />
           )}
@@ -263,7 +257,6 @@ function CreateGym() {
             />
           )}
 
-          {/* ── Acciones ── */}
           <div className="wizard-actions">
             <button type="button" className="btn btn-ghost" onClick={handleCancel}>
               Cancelar
@@ -289,7 +282,6 @@ function CreateGym() {
         </div>
       </div>
 
-      {/* ── Modal cancelar ── */}
       {showCancelModal && (
         <div className="cancel-confirm-overlay">
           <div className="cancel-confirm-box">
