@@ -51,7 +51,6 @@ const handleSave = async () => {
   let newErrors = {};
   setError("");
 
-  // Obligatorios
   if (!form.nombre.trim())
     newErrors.nombre = "El nombre del gimnasio es obligatorio";
 
@@ -114,7 +113,6 @@ return (
 
     <div className="modal-card">
 
-      {/* HEADER */}
       <div className="modal-header">
         <h2>Editar gimnasio</h2>
         <p>Actualiza la información principal de tu negocio</p>
@@ -124,7 +122,6 @@ return (
         <div className="modal-error">{error}</div>
       )}
 
-      {/* FORM */}
       <div className="modal-form">
 
         <label>Nombre del gimnasio *</label>
@@ -317,7 +314,6 @@ return (
 
       </div>
 
-      {/* FOOTER */}
       <div className="modal-actions">
         <button className="btn-ghost" onClick={onClose}>
           Cancelar

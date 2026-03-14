@@ -195,9 +195,6 @@ function CreateGym() {
 
     }
 
-    // ✅ FIX: Eliminado el bloque con `files` y `e` que no existían en este scope
-    // La validación de fotos ya se maneja arriba con `fotos.length === 0`
-
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
@@ -318,17 +315,14 @@ function CreateGym() {
     }
   };
 
-  // ✅ MEJORA: Función para eliminar horario por índice
   const handleRemoveHorario = (index) => {
     setHorarios(prev => prev.filter((_, i) => i !== index));
   };
 
-  // ✅ MEJORA: Función para eliminar membresía por índice
   const handleRemoveMembresia = (index) => {
     setMembresias(prev => prev.filter((_, i) => i !== index));
   };
 
-  // ✅ MEJORA: Actualización inmutable de horarios
   const handleHorarioChange = (index, field, value) => {
     setHorarios(prev =>
       prev.map((h, i) => i === index ? { ...h, [field]: value } : h)
@@ -338,7 +332,6 @@ function CreateGym() {
     }
   };
 
-  // ✅ MEJORA: Actualización inmutable de membresías
   const handleMembresiaChange = (index, field, value) => {
     setMembresias(prev =>
       prev.map((m, i) => i === index ? { ...m, [field]: value } : m)
@@ -369,7 +362,6 @@ function CreateGym() {
             </div>
           )}
 
-          {/* ── Información básica ── */}
           <div className="mb-8">
             <h2 className="font-semibold text-lg mb-4 text-blue-900">
               Información básica
@@ -439,7 +431,6 @@ function CreateGym() {
             </div>
           </div>
 
-          {/* ── Ubicación ── */}
           <div className="mb-8">
             <h2 className="font-semibold text-lg mb-4 text-blue-900">
               Ubicación
@@ -554,7 +545,6 @@ function CreateGym() {
             </div>
           </div>
 
-          {/* ── Fotos ── */}
           <div id="fotos" className="mb-8">
             <h2 className="font-semibold text-lg mb-3 text-blue-900">
               Fotos del gimnasio
@@ -571,7 +561,6 @@ function CreateGym() {
 
                 if (files.length === 0) return;
 
-                // ✅ FIX: Validación correcta usando state `fotos` actual
                 if (fotos.length + files.length > 5) {
                   setError("Máximo 5 imágenes permitidas");
                   e.target.value = "";
@@ -635,7 +624,6 @@ function CreateGym() {
             )}
           </div>
 
-          {/* ── Horarios ── */}
           <div id="horarios" className="mb-8">
             <div className="flex justify-between items-center mb-3">
               <h2 className="font-semibold text-lg text-blue-900">
@@ -664,7 +652,6 @@ function CreateGym() {
 
                   <div>
                     <label htmlFor={`dia-${i}`}>Día *</label>
-                    {/* ✅ FIX: id único por fila, value controlado */}
                     <select
                       id={`dia-${i}`}
                       className="w-full bg-slate-100 rounded-xl px-3 py-2"
@@ -684,7 +671,6 @@ function CreateGym() {
 
                   <div>
                     <label htmlFor={`apertura-${i}`}>Apertura *</label>
-                    {/* ✅ FIX: value controlado */}
                     <input
                       id={`apertura-${i}`}
                       type="time"
@@ -696,7 +682,6 @@ function CreateGym() {
 
                   <div>
                     <label htmlFor={`cierre-${i}`}>Cierre *</label>
-                    {/* ✅ FIX: value controlado */}
                     <input
                       id={`cierre-${i}`}
                       type="time"
@@ -706,7 +691,6 @@ function CreateGym() {
                     />
                   </div>
 
-                  {/* ✅ MEJORA: Botón para eliminar horario */}
                   <div>
                     <button
                       type="button"
@@ -722,7 +706,6 @@ function CreateGym() {
             </div>
           </div>
 
-          {/* ── Membresías ── */}
           <div id="membresias" className="mb-10">
             <div className="flex justify-between items-center mb-3">
               <h2 className="font-semibold text-lg text-blue-900">
@@ -754,7 +737,6 @@ function CreateGym() {
               {membresias.map((m, i) => (
                 <div key={i} className="bg-slate-50 p-4 rounded-xl space-y-3">
 
-                  {/* ✅ MEJORA: Encabezado con botón eliminar */}
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium text-slate-600">
                       Membresía {i + 1}
@@ -772,7 +754,6 @@ function CreateGym() {
 
                     <div>
                       <label htmlFor={`mem-nombre-${i}`}>Nombre *</label>
-                      {/* ✅ FIX: id único, value controlado, actualización inmutable */}
                       <input
                         id={`mem-nombre-${i}`}
                         type="text"

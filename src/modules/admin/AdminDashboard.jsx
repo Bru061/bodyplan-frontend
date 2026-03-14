@@ -27,10 +27,6 @@ function AdminDashboard() {
 
   useEffect(() => {
 
-    // Aquí se conectará el backend después
-    // ejemplo futuro:
-    // api.get("/admin/dashboard")
-
     setLoading(false);
 
   }, []);
@@ -68,8 +64,6 @@ function AdminDashboard() {
         </div>
       </section>
 
-      {/* STATS */}
-
       <section className="stats-grid">
 
         <article className="stat-card">
@@ -94,11 +88,7 @@ function AdminDashboard() {
 
       </section>
 
-      {/* CONTENT */}
-
       <section className="content-grid">
-
-        {/* FINANZAS */}
 
         <article className="panel">
           <div className="panel-header">
@@ -127,8 +117,6 @@ function AdminDashboard() {
 
         </article>
 
-        {/* ACTIVIDAD */}
-
         <article className="panel">
           <div className="panel-header">
             <h2>Actividad reciente</h2>
@@ -156,8 +144,6 @@ function AdminDashboard() {
         </article>
 
       </section>
-
-      {/* ALERTAS */}
 
       <section className="panel table-panel">
 

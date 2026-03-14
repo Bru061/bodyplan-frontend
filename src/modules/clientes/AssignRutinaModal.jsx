@@ -10,7 +10,6 @@ function AssignRutinaModal({ cliente, onClose, onAssigned }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // ── Límites de fecha ──
   const hoy = new Date().toISOString().split("T")[0];
   const maxFecha = (() => {
     const d = new Date();
@@ -43,7 +42,6 @@ function AssignRutinaModal({ cliente, onClose, onAssigned }) {
       return;
     }
 
-    // ✅ Validación: fecha no mayor a 3 meses
     if (fechaLimite > maxFecha) {
       setError("La fecha límite no puede ser mayor a 3 meses");
       return;
@@ -101,7 +99,6 @@ function AssignRutinaModal({ cliente, onClose, onAssigned }) {
 
         <form onSubmit={handleSubmit}>
 
-          {/* ✅ 2 columnas: rutina y fecha lado a lado */}
           <div className="modal-grid" style={{ marginTop: "16px" }}>
 
             <div>

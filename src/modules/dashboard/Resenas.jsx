@@ -5,7 +5,6 @@ import { FiArrowLeft } from "react-icons/fi";
 import api from "../../services/axios";
 import "../../styles/clientes.css";
 
-// ── Componente de estrellas ──
 function Estrellas({ calificacion, size = 16 }) {
   return (
     <span style={{ display: "inline-flex", gap: "2px" }}>
@@ -34,7 +33,6 @@ function Resenas() {
   const [loadingGyms, setLoadingGyms] = useState(true);
   const [error, setError] = useState("");
 
-  // ── Cargar gimnasios del proveedor ──
   useEffect(() => {
     const fetchGimnasios = async () => {
       try {
@@ -42,7 +40,6 @@ function Resenas() {
         const gyms = res.data.gimnasios || [];
         setGimnasios(gyms);
 
-        // Si solo hay un gimnasio, seleccionarlo automáticamente
         if (gyms.length === 1) {
           setGimnasioSeleccionado(gyms[0].id_gimnasio);
         }
@@ -57,7 +54,6 @@ function Resenas() {
     fetchGimnasios();
   }, []);
 
-  // ── Cargar reseñas al cambiar gimnasio ──
   useEffect(() => {
     if (gimnasioSeleccionado === null) {
       setResenas([]);
@@ -81,12 +77,10 @@ function Resenas() {
     fetchResenas();
   }, [gimnasioSeleccionado]);
 
-  // ── Promedio calculado en frontend ──
   const promedio = resenas.length
     ? (resenas.reduce((acc, r) => acc + r.calificacion, 0) / resenas.length).toFixed(1)
     : null;
 
-  // ── Distribución de estrellas ──
   const distribucion = [5, 4, 3, 2, 1].map((n) => ({
     estrellas: n,
     cantidad: resenas.filter((r) => r.calificacion === n).length,
@@ -99,7 +93,6 @@ function Resenas() {
     <DashboardLayout>
       <div className="dashboard-container">
 
-        {/* ── Header ── */}
         <section className="page-header">
           <div className="page-header-row">
             <button className="back-button" onClick={() => navigate("/dashboard")}>
@@ -114,7 +107,6 @@ function Resenas() {
             </div>
           </div>
 
-          {/* Selector solo si hay más de un gimnasio */}
           {!loadingGyms && gimnasios.length > 1 && (
             <div className="header-actions">
               <select
@@ -151,17 +143,14 @@ function Resenas() {
           </div>
         )}
 
-        {/* ── Sin gimnasio seleccionado ── */}
         {gimnasioSeleccionado === null && !loadingGyms && (
           <div className="table-panel" style={{ padding: "2rem", textAlign: "center", color: "var(--text-secondary)" }}>
             Selecciona un gimnasio para ver sus reseñas.
           </div>
         )}
 
-        {/* ── Contenido principal ── */}
         {gimnasioSeleccionado !== null && (
           <>
-            {/* ── Resumen de calificación ── */}
             {!loading && resenas.length > 0 && (
               <section style={{
                 display: "grid",
@@ -175,7 +164,6 @@ function Resenas() {
                 alignItems: "center"
               }}>
 
-                {/* Promedio */}
                 <div style={{ textAlign: "center" }}>
                   <p style={{
                     fontSize: "3.5rem",
@@ -191,7 +179,6 @@ function Resenas() {
                   </p>
                 </div>
 
-                {/* Distribución por estrellas */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                   {distribucion.map((d) => (
                     <div key={d.estrellas} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -223,7 +210,6 @@ function Resenas() {
               </section>
             )}
 
-            {/* ── Lista de reseñas ── */}
             <section className="table-panel">
 
               <div style={{ padding: "1rem 1rem 0" }}>

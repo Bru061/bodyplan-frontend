@@ -13,19 +13,12 @@ function MisGimnasios() {
   const [tab, setTab] = useState("activos");
   const navigate = useNavigate();
   const [changingId, setChangingId] = useState(null);
-
-  // ✅ MEJORA: Estado para modal de confirmación propio (reemplaza window.confirm)
   const [modal, setModal] = useState(null);
-  // modal = { gym, accion: "archivar" | "activar" }
-
-  // ✅ MEJORA: Estado para errores inline (reemplaza alert genérico)
   const [errorMsg, setErrorMsg] = useState("");
 
   const activos = gimnasios.filter(g => g.activo);
   const archivados = gimnasios.filter(g => !g.activo);
   const listaMostrar = tab === "activos" ? activos : archivados;
-
-  // ✅ FIX: Eliminada variable `gimnasiosOrdenados` que se calculaba pero nunca se usaba
 
   const fetchGyms = async () => {
     try {
@@ -52,7 +45,6 @@ function MisGimnasios() {
     return <LoadingScreen message="Cargando Gimnasios" />;
   }
 
-  // ✅ MEJORA: Abre modal de confirmación en lugar de window.confirm
   const confirmarToggle = (gym) => {
     setErrorMsg("");
     setModal({
@@ -61,7 +53,6 @@ function MisGimnasios() {
     });
   };
 
-  // ✅ FIX: toggleActivo ahora captura y muestra el error del backend correctamente
   const toggleActivo = async () => {
     if (!modal) return;
     const { gym } = modal;
@@ -83,7 +74,6 @@ function MisGimnasios() {
     } catch (err) {
       console.error(err);
 
-      // ✅ FIX: Captura el mensaje del backend y lo muestra de forma clara
       const backendError =
         err?.response?.data?.error ||
         err?.response?.data?.message ||
@@ -108,7 +98,6 @@ function MisGimnasios() {
   return (
     <DashboardLayout>
 
-      {/* ✅ MEJORA: Modal de confirmación propio */}
       {modal && (
         <div className="modal-overlay">
           <div className="modal-box">
@@ -156,7 +145,6 @@ function MisGimnasios() {
         </button>
       </section>
 
-      {/* ✅ MEJORA: Error inline visible bajo el header */}
       {errorMsg && (
         <div className="bg-red-100 text-red-700 px-4 py-3 rounded-xl text-sm mb-4">
           {errorMsg}
@@ -187,7 +175,6 @@ function MisGimnasios() {
 
       <section className="service-list">
 
-        {/* ✅ FIX: Empty state distingue entre sin gimnasios globales vs sin gimnasios en esta pestaña */}
         {gimnasios.length === 0 && (
           <div className="info-card">
             <h3>No tienes gimnasios aún</h3>
@@ -235,7 +222,7 @@ function MisGimnasios() {
                   {g.activo ? "🟢 Activo" : "🔴 Archivado"}
                 </span>
                 <h3>
-                  {g.Ubicacion?.municipio}, {g.Ubicacion?.estado}
+                  {g.Ubicacion?.direccion}, {g.Ubicacion?.municipio}, {g.Ubicacion?.estado}
                 </h3>
               </div>
             </div>
@@ -251,7 +238,6 @@ function MisGimnasios() {
                 onClick={(e) => {
                   e.stopPropagation();
                   if (!g.activo) {
-                    // ✅ FIX: Typo "Acriva" corregido + usa errorMsg en lugar de alert
                     setErrorMsg("Activa el gimnasio para poder administrarlo.");
                     return;
                   }
@@ -266,7 +252,6 @@ function MisGimnasios() {
                 className={g.activo ? "btn btn-danger" : "btn btn-success"}
                 onClick={(e) => {
                   e.stopPropagation();
-                  // ✅ MEJORA: Abre modal en lugar de window.confirm
                   confirmarToggle(g);
                 }}
               >

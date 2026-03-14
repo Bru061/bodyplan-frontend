@@ -16,8 +16,7 @@ function DetalleCliente() {
   const [historial, setHistorial] = useState([]);
   const [showAssignModal, setShowAssignModal] = useState(false);
 
-  // ── Modal confirmación cancelar ──
-  const [confirmModal, setConfirmModal] = useState(null); // { id_asignacion, nombre }
+  const [confirmModal, setConfirmModal] = useState(null);
   const [cancelando, setCancelando] = useState(false);
   const [cancelError, setCancelError] = useState("");
   const [gymError, setGymError] = useState("");
@@ -46,7 +45,6 @@ function DetalleCliente() {
             rutinasCliente.push({
               ...rutina,
               estado: pertenece.estado,
-              // ✅ Capturar id de la asignación para poder cancelarla
               id_asignacion: pertenece.id_usuario_rutina
             });
           }
@@ -107,7 +105,6 @@ function DetalleCliente() {
     if (cliente) fetchRutinasCliente();
   }, [cliente]);
 
-  // ── Cancelar asignación ──
   const handleCancelar = async () => {
 
     if (!confirmModal) return;
@@ -275,7 +272,6 @@ function DetalleCliente() {
 
                 <span className="badge">{rutina.estado}</span>
 
-                {/* ✅ Botón cancelar — solo si pendiente o iniciada */}
                 {(rutina.estado === "pendiente" || rutina.estado === "iniciada") && (
                   <button
                     className="btn-danger"
@@ -299,7 +295,6 @@ function DetalleCliente() {
 
       </section>
 
-      {/* ── Modal asignar rutina ── */}
       {showAssignModal && (
         <AssignRutinaModal
           cliente={cliente}
@@ -308,7 +303,6 @@ function DetalleCliente() {
         />
       )}
 
-      {/* ── Modal confirmar cancelación ── */}
       {confirmModal && (
         <div className="modal-overlay">
           <div className="modal-box">

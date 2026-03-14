@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import api from "../../../services/axios";
 
-export const useDashboardData = () => {
+const labelMes = (date) =>
+  date.toLocaleDateString("es-MX", { month: "short", year: "numeric" });
+
+export const useDashboardData = (meses = 6) => {
 
   const [dashboard, setDashboard] = useState({
     metrics: {
@@ -16,7 +19,8 @@ export const useDashboardData = () => {
     },
     chartData: {
       labels: [],
-      values: []
+      membresiasIniciadas: [],
+      membresiasActivas: []
     }
   });
 
@@ -25,7 +29,6 @@ export const useDashboardData = () => {
   useEffect(() => {
 
     const fetchData = async () => {
-
       try {
 
         const [clientesRes, gymRes, rutinasRes] = await Promise.all([
@@ -34,23 +37,20 @@ export const useDashboardData = () => {
           api.get("/rutinas")
         ]);
 
-        const stats      = clientesRes.data.estadisticas || {};
-        const clientes   = clientesRes.data.clientes || [];
-        const gimnasios  = gymRes.data.gimnasios || [];
-        const rutinas    = rutinasRes.data.rutinas || [];
+        const stats     = clientesRes.data.estadisticas || {};
+        const clientes  = clientesRes.data.clientes || [];
+        const gimnasios = gymRes.data.gimnasios || [];
+        const rutinas   = rutinasRes.data.rutinas || [];
 
-        // ── Clientes nuevos este mes ──
-        const ahora   = new Date();
-        const mesActual = ahora.getMonth();
+        const ahora      = new Date();
+        const mesActual  = ahora.getMonth();
         const anioActual = ahora.getFullYear();
 
         const clientesNuevosMes = clientes.filter(c => {
-          const fecha = new Date(c.fecha_inicio);
-          return fecha.getMonth() === mesActual &&
-                 fecha.getFullYear() === anioActual;
+          const f = new Date(c.fecha_inicio);
+          return f.getMonth() === mesActual && f.getFullYear() === anioActual;
         }).length;
 
-        // ── Membresías por vencer en los próximos 15 días ──
         const en15Dias = new Date();
         en15Dias.setDate(en15Dias.getDate() + 15);
 
@@ -60,7 +60,6 @@ export const useDashboardData = () => {
           return fechaFin >= ahora && fechaFin <= en15Dias;
         }).length;
 
-        // ── Gimnasio con más clientes ──
         const conteoPorGym = {};
         clientes.forEach(c => {
           if (!c.gimnasio?.id_gimnasio) return;
@@ -71,40 +70,50 @@ export const useDashboardData = () => {
           };
         });
 
-        const gimnasioTop = Object.values(conteoPorGym).sort(
-          (a, b) => b.count - a.count
-        )[0]?.nombre || "Sin datos";
+        const gimnasioTop = Object.values(conteoPorGym)
+          .sort((a, b) => b.count - a.count)[0]?.nombre || "Sin datos";
 
-        // ── Datos para la gráfica ──
-        const chartData = {
-          labels: [
-            "Clientes activos",
-            "Clientes inactivos",
-            "Membresías activas",
-            "Rutinas creadas",
-            "Gimnasios"
-          ],
-          values: [
-            stats.clientes_activos || 0,
-            stats.clientes_inactivos || 0,
-            stats.membresias_activas || 0,
-            rutinas.length,
-            gimnasios.length
-          ]
-        };
+        const periodos = Array.from({ length: meses }, (_, i) => {
+          const d = new Date(anioActual, mesActual - (meses - 1 - i), 1);
+          return { anio: d.getFullYear(), mes: d.getMonth(), label: labelMes(d) };
+        });
+
+        const membresiasIniciadas = periodos.map(({ anio, mes }) =>
+          clientes.filter(c => {
+            const f = new Date(c.fecha_inicio);
+            return f.getFullYear() === anio && f.getMonth() === mes;
+          }).length
+        );
+
+        const membresiasActivasSerie = periodos.map(({ anio, mes }) => {
+          const inicioMes = new Date(anio, mes, 1);
+          const finMes    = new Date(anio, mes + 1, 0, 23, 59, 59);
+
+          return clientes.filter(c => {
+            const inicio = new Date(c.fecha_inicio);
+            if (inicio > finMes) return false;
+            if (!c.fecha_fin) return true;
+            const fin = new Date(c.fecha_fin);
+            return fin >= inicioMes;
+          }).length;
+        });
 
         setDashboard({
           metrics: {
-            clientesActivos:      stats.clientes_activos || 0,
-            clientesInactivos:    stats.clientes_inactivos || 0,
-            membresiasActivas:    stats.membresias_activas || 0,
-            rutinas:              rutinas.length,
-            gimnasios:            gimnasios.length,
+            clientesActivos:   stats.clientes_activos   || 0,
+            clientesInactivos: stats.clientes_inactivos || 0,
+            membresiasActivas: stats.membresias_activas || 0,
+            rutinas:           rutinas.length,
+            gimnasios:         gimnasios.length,
             clientesNuevosMes,
             membresiasPorVencer,
             gimnasioTop
           },
-          chartData
+          chartData: {
+            labels:               periodos.map(p => p.label),
+            membresiasIniciadas,
+            membresiasActivas:    membresiasActivasSerie
+          }
         });
 
       } catch (err) {
@@ -112,13 +121,11 @@ export const useDashboardData = () => {
       } finally {
         setLoading(false);
       }
-
     };
 
     fetchData();
 
-  }, []);
+  }, [meses]);
 
   return { dashboard, loading };
-
 };

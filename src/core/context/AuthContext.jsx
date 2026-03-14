@@ -90,7 +90,6 @@ export function AuthProvider({ children }) {
       role
     });
 
-    // NO crear sesión todavía
     return data;
 
   };

@@ -63,6 +63,12 @@
   border-radius: var(--radius);
   box-shadow: var(--shadow-sm);
   padding: 1rem;
+  transition:.4s;
+}
+
+.metric-card:hover{
+  transform:translateY(-5px);
+  box-shadow:0 20px 40px rgba(0,0,0,.12);
 }
 
 .metric-title {
@@ -316,4 +322,33 @@
 .metric-value-sm {
   font-size: 1.1rem !important;
   word-break: break-word;
+}
+
+/* ── Selector de período ── */
+.chart-period-selector {
+  display: flex;
+  gap: 6px;
+}
+
+.period-btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.period-btn:hover {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: var(--primary);
+}
+
+.period-btn-active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
 }

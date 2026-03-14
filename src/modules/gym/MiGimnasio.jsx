@@ -140,7 +140,6 @@ function MiGimnasio() {
 
         <article className="service-profile-card">
 
-          {/* PORTADA */}
         <section className="cover-card">
 
           <button
@@ -157,7 +156,6 @@ function MiGimnasio() {
                 className="cover-image"
               />
 
-              {/* flechas */}
               {gym.fotos.length > 1 && (
                 <>
                   <button
@@ -184,7 +182,6 @@ function MiGimnasio() {
                 </>
               )}
 
-              {/* dots */}
               <div className="slider-dots">
                 {gym.fotos.map((_, i) => (
                   <span
@@ -200,10 +197,8 @@ function MiGimnasio() {
 
         </section>
 
-          {/* INFORMACIÓN */}
         <section className="gym-info-layout">
 
-          {/* DESCRIPCIÓN */}
           <div className="info-block full">
             <button
               className="icon-edit-btn"
@@ -215,7 +210,6 @@ function MiGimnasio() {
             <p>{gym.descripcion}</p>
           </div>
 
-          {/* CONTACTO */}
           <div className="info-block full">
             <h3>Información de contacto</h3>
 
@@ -227,7 +221,6 @@ function MiGimnasio() {
             </div>
           </div>
 
-          {/* HORARIOS */}
           <div className="info-block">
             <button
               className="icon-edit-btn"
@@ -249,7 +242,6 @@ function MiGimnasio() {
             </div>
           </div>
 
-          {/* MEMBRESÍAS */}
           <div className="info-block">
             <button
               className="icon-edit-btn"

@@ -128,7 +128,6 @@ function Register() {
 
             <form className="login-fields" onSubmit={handleSubmit}>
 
-              {/* ── Nombre ── */}
               <div className="float-field">
                 <input
                   id="nombre"
@@ -142,7 +141,6 @@ function Register() {
                 <label htmlFor="nombre">Nombre *</label>
               </div>
 
-              {/* ── Apellido paterno ── */}
               <div className="float-field">
                 <input
                   id="apellido_paterno"
@@ -156,7 +154,6 @@ function Register() {
                 <label htmlFor="apellido_paterno">Apellido paterno *</label>
               </div>
 
-              {/* ── Apellido materno ── */}
               <div className="float-field">
                 <input
                   id="apellido_materno"
@@ -170,7 +167,6 @@ function Register() {
                 <label htmlFor="apellido_materno">Apellido materno *</label>
               </div>
 
-              {/* ── Correo ── */}
               <div className="float-field">
                 <input
                   id="correo"
@@ -184,9 +180,6 @@ function Register() {
                 <label htmlFor="correo">Correo electrónico *</label>
               </div>
 
-              {/* ── Contraseña ──
-                  ✅ FIX: eye-btn dentro del float-field, sin wrapper password-field
-                  Así input y label son hermanos directos → selector CSS funciona */}
               <div className="float-field">
                 <input
                   id="password"
@@ -207,7 +200,6 @@ function Register() {
                 </button>
               </div>
 
-              {/* ── Confirmar contraseña ── */}
               <div className="float-field">
                 <input
                   id="confirmPassword"

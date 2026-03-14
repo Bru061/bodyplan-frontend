@@ -12,7 +12,6 @@ function VerifyEmail() {
   const location = useLocation();
 
   const correo = location.state?.correo;
-  // ✅ MEJORA: Recibe el form de Register para poder restaurarlo al regresar
   const formAnterior = location.state?.form;
 
   const [codigo, setCodigo] = useState("");
@@ -42,7 +41,6 @@ function VerifyEmail() {
         plataforma: PLATFORM
       });
 
-      // ✅ FIX: Mensaje inline en lugar de alert()
       setSuccess("¡Correo verificado correctamente! Redirigiendo...");
 
       setTimeout(() => {
@@ -64,7 +62,6 @@ function VerifyEmail() {
   };
 
   const handleRegresar = () => {
-    // ✅ MEJORA: Devuelve el form a Register para restaurar los datos
     navigate("/register", {
       state: { form: formAnterior }
     });
@@ -87,7 +84,6 @@ function VerifyEmail() {
         <section className="login-form">
           <div className="login-form-inner">
 
-            {/* ✅ MEJORA: Flecha discreta para regresar al registro */}
             <button
               type="button"
               className="back-button"
@@ -112,7 +108,6 @@ function VerifyEmail() {
               </p>
             )}
 
-            {/* ✅ MEJORA: Mensaje de éxito inline */}
             {success && (
               <p style={{ color: "green", textAlign: "center", marginBottom: "10px" }}>
                 {success}

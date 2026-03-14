@@ -778,3 +778,16 @@
   .actions-bar .btn,
   .page-header .btn { min-width: 100%; }
 }
+
+.toast-success {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.toast {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 9999;
+}

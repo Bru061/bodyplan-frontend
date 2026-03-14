@@ -12,9 +12,6 @@ function AdminGimnasios(){
 
   useEffect(()=>{
 
-    // futura llamada API
-    // api.get("/admin/gimnasios")
-
     setLoading(false);
 
   },[]);
@@ -45,8 +42,6 @@ function AdminGimnasios(){
 
       <main className="gyms-container">
 
-      {/* HEADER */}
-
       <section className="page-header">
 
         <div>
@@ -68,9 +63,6 @@ function AdminGimnasios(){
         </div>
 
       </section>
-
-
-      {/* TOOLBAR */}
 
       <section className="toolbar">
 
@@ -116,9 +108,6 @@ function AdminGimnasios(){
         </div>
 
       </section>
-
-
-      {/* TABLE */}
 
       <section className="panel table-panel">
 

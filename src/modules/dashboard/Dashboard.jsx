@@ -2,7 +2,7 @@ import DashboardLayout from "../../layout/DashboardLayout";
 import '../../styles/dashboard.css';
 import { Link } from "react-router-dom";
 import { useDashboardData } from "./hooks/useDashboardData";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getMyGym } from "../../services/gymService";
 import { useAuth } from "../../core/context/AuthContext";
@@ -10,7 +10,8 @@ import Chart from "chart.js/auto";
 
 function Dashboard() {
 
-  const { dashboard, loading } = useDashboardData();
+  const [meses, setMeses] = useState(6);
+  const { dashboard, loading } = useDashboardData(meses);
   const { user } = useAuth();
   const navigate = useNavigate();
   const chartRef = useRef(null);
@@ -28,12 +29,9 @@ function Dashboard() {
     checkGym();
   }, [user]);
 
-  // ── Gráfica de barras ──
   useEffect(() => {
-
     if (loading || !chartRef.current) return;
 
-    // Destruir instancia anterior si existe
     if (chartInstanceRef.current) {
       chartInstanceRef.current.destroy();
     }
@@ -41,39 +39,53 @@ function Dashboard() {
     const ctx = chartRef.current.getContext("2d");
 
     chartInstanceRef.current = new Chart(ctx, {
-      type: "bar",
+      type: "line",
       data: {
         labels: dashboard.chartData.labels,
         datasets: [
           {
-            label: "Total",
-            data: dashboard.chartData.values,
-            backgroundColor: [
-              "rgba(37, 99, 235, 0.7)",
-              "rgba(239, 68, 68, 0.7)",
-              "rgba(16, 185, 129, 0.7)",
-              "rgba(139, 92, 246, 0.7)",
-              "rgba(245, 158, 11, 0.7)"
-            ],
-            borderColor: [
-              "rgba(37, 99, 235, 1)",
-              "rgba(239, 68, 68, 1)",
-              "rgba(16, 185, 129, 1)",
-              "rgba(139, 92, 246, 1)",
-              "rgba(245, 158, 11, 1)"
-            ],
-            borderWidth: 1,
-            borderRadius: 6
+            label: "Membresías iniciadas",
+            data: dashboard.chartData.membresiasIniciadas,
+            borderColor: "rgba(37, 99, 235, 1)",
+            backgroundColor: "rgba(37, 99, 235, 0.08)",
+            borderWidth: 2,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            tension: 0.3,
+            fill: true
+          },
+          {
+            label: "Membresías activas",
+            data: dashboard.chartData.membresiasActivas,
+            borderColor: "rgba(16, 185, 129, 1)",
+            backgroundColor: "rgba(16, 185, 129, 0.08)",
+            borderWidth: 2,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            tension: 0.3,
+            fill: true
           }
         ]
       },
       options: {
         responsive: true,
+        interaction: {
+          mode: "index",
+          intersect: false
+        },
         plugins: {
-          legend: { display: false },
+          legend: {
+            display: true,
+            position: "top",
+            labels: {
+              usePointStyle: true,
+              boxWidth: 8,
+              font: { size: 12 }
+            }
+          },
           tooltip: {
             callbacks: {
-              label: (ctx) => ` ${ctx.parsed.y}`
+              label: (ctx) => ` ${ctx.dataset.label}: ${ctx.parsed.y}`
             }
           }
         },
@@ -111,12 +123,10 @@ function Dashboard() {
             </p>
           </div>
           <div className="quick-actions">
-            {/* ✅ Botón "Crear rutina" eliminado */}
             <Link className="btn btn-primary" to="/resenas">Ver reseñas</Link>
           </div>
         </section>
 
-        {/* ── Métricas principales ── */}
         <section className="metrics-grid" aria-label="Indicadores">
 
           <article className="metric-card">
@@ -161,7 +171,6 @@ function Dashboard() {
 
         </section>
 
-        {/* ── Métricas adicionales ── */}
         <section className="metrics-grid" aria-label="Indicadores adicionales">
 
           <article className="metric-card metric-card-highlight">
@@ -174,8 +183,7 @@ function Dashboard() {
 
           <article className={`metric-card ${
             !loading && dashboard.metrics.membresiasPorVencer > 0
-              ? "metric-card-warning"
-              : ""
+              ? "metric-card-warning" : ""
           }`}>
             <p className="metric-title">Membresías por vencer</p>
             <p className="metric-value">
@@ -194,15 +202,27 @@ function Dashboard() {
 
         </section>
 
-        {/* ── Gráfica ── */}
         <section className="content-grid">
           <article className="panel chart-panel" style={{ gridColumn: "1 / -1" }}>
             <div className="panel-header">
               <div>
-                <h2>Resumen general</h2>
-                <p>Vista gráfica de los indicadores del gimnasio.</p>
+                <h2>Evolución de membresías</h2>
+                <p>Membresías iniciadas y activas por mes.</p>
+              </div>
+
+              <div className="chart-period-selector">
+                {[3, 6, 12].map(n => (
+                  <button
+                    key={n}
+                    className={`period-btn ${meses === n ? "period-btn-active" : ""}`}
+                    onClick={() => setMeses(n)}
+                  >
+                    {n} meses
+                  </button>
+                ))}
               </div>
             </div>
+
             {loading ? (
               <p style={{ padding: "2rem", color: "var(--text-secondary)" }}>
                 Cargando datos...

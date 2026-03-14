@@ -22,7 +22,6 @@ function AddClienteModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // ── Filtros de input ──
   const onlyLetters = (value) =>
     value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "");
   const onlyLettersNoSpace = (value) =>

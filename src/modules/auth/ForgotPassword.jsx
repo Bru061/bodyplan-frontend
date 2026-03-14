@@ -21,7 +21,6 @@ function ForgotPassword() {
 
   const PLATFORM = "web";
 
-  // PASO 1 → pedir código
   const handleRequestCode = async (e) => {
     e.preventDefault();
     setError("");
@@ -39,7 +38,6 @@ function ForgotPassword() {
     }
   };
 
-  // PASO 2 → verificar código
   const handleVerifyCode = async (e) => {
     e.preventDefault();
     setError("");
@@ -57,7 +55,6 @@ function ForgotPassword() {
     }
   };
 
-  // PASO 3 → cambiar contraseña
   const handleChangePassword = async (e) => {
     e.preventDefault();
     setError("");

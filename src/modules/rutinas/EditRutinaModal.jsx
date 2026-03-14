@@ -6,7 +6,6 @@ function EditRutinaModal({ rutina, onClose, onUpdated }) {
 
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
-  // ✅ MEJORA: apiError state para mostrar errores del backend al usuario
   const [apiError, setApiError] = useState("");
 
   const [form, setForm] = useState({
@@ -42,7 +41,6 @@ function EditRutinaModal({ rutina, onClose, onUpdated }) {
   const handleChange = (e) => {
     let { name, value } = e.target;
 
-    // ✅ FIX: Solo números enteros positivos, sin símbolos (+, -, ., e)
     if (name === "duracion_min") {
       value = value.replace(/[^0-9]/g, "").slice(0, 3);
     }
@@ -99,7 +97,6 @@ function EditRutinaModal({ rutina, onClose, onUpdated }) {
       newErrors.equipamiento = "El equipamiento es obligatorio";
     }
 
-    // ✅ MEJORA: Validación completa de duración
     if (!form.duracion_min) {
       newErrors.duracion_min = "La duración es obligatoria";
     } else if (isNaN(Number(form.duracion_min))) {
@@ -110,7 +107,6 @@ function EditRutinaModal({ rutina, onClose, onUpdated }) {
       newErrors.duracion_min = "La duración máxima es 300 minutos";
     }
 
-    // ✅ MEJORA: Validación completa de calorías
     if (!form.calorias_estimadas) {
       newErrors.calorias_estimadas = "Las calorías son obligatorias";
     } else if (isNaN(Number(form.calorias_estimadas))) {
@@ -162,7 +158,6 @@ function EditRutinaModal({ rutina, onClose, onUpdated }) {
 
     } catch (err) {
 
-      // ✅ FIX: Error del backend ahora se muestra al usuario en lugar de solo loguearse
       console.error("Error al actualizar rutina:", err.response?.data || err);
 
       const msg =
@@ -187,7 +182,6 @@ function EditRutinaModal({ rutina, onClose, onUpdated }) {
 
         <h2>Editar rutina</h2>
 
-        {/* ✅ MEJORA: Error del backend visible al usuario */}
         {apiError && (
           <p className="error-text" style={{ marginBottom: "15px" }}>
             {apiError}
@@ -273,7 +267,6 @@ function EditRutinaModal({ rutina, onClose, onUpdated }) {
 
             <div className="form-group">
               <label>Duración (min) *</label>
-              {/* ✅ FIX: type="text" + replace en handleChange evita símbolos +, -, ., e */}
               <input
                 type="text"
                 inputMode="numeric"
@@ -295,10 +288,8 @@ function EditRutinaModal({ rutina, onClose, onUpdated }) {
               {errors.equipamiento && <p className="error-text">{errors.equipamiento}</p>}
             </div>
 
-            {/* ✅ FIX: className="form-group" estaba en el label en lugar del div contenedor */}
             <div className="form-group">
               <label>Calorías estimadas *</label>
-              {/* ✅ FIX: type="text" + replace en handleChange evita símbolos +, -, ., e */}
               <input
                 type="text"
                 inputMode="numeric"

@@ -1,6 +1,6 @@
 import DashboardLayout from "../../layout/DashboardLayout";
 import { Link } from "react-router-dom";
-import { FiDownload, FiSearch, FiMail } from "react-icons/fi";
+import { FiDownload, FiSearch, FiMail, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { FaWhatsapp } from "react-icons/fa";
 import { FiPlus } from "react-icons/fi";
 import { useState, useEffect } from "react";
@@ -9,19 +9,22 @@ import "../../styles/clientes.css";
 import AddClienteModal from "./AddClienteModal";
 import * as XLSX from "xlsx";
 
+const LIMIT = 10;
+
 function Clientes() {
 
   const [clientes, setClientes] = useState([]);
   const [search, setSearch] = useState("");
-  const [hasGym, setHasGym] = useState(true);
   const [gymError, setGymError] = useState("");
-
   const [showAddModal, setShowAddModal] = useState(false);
-
   const [gimnasios, setGimnasios] = useState([]);
   const [membresias, setMembresias] = useState([]);
   const [filtroEstado, setFiltroEstado] = useState("");
   const [filtroGym, setFiltroGym] = useState("");
+
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
 
   const [stats, setStats] = useState({
     activos: 0,
@@ -29,21 +32,14 @@ function Clientes() {
     conMembresia: 0
   });
 
-  const checkGym = async () => {
+  const cargarClientes = async (searchTerm = "", estado = "", pagina = 1) => {
     try {
-      const res = await api.get("/gym");
-      setHasGym(res.data.gimnasios?.length > 0);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+      const params = { limit: LIMIT, page: pagina };
 
-  const cargarClientes = async (searchTerm = "") => {
-    try {
-      const res = await api.get("/clientes", {
-        params: { search: searchTerm }
-      });
+      if (searchTerm) params.search = searchTerm;
+      if (estado === "activa") params.estado = "activa";
 
+      const res = await api.get("/clientes", { params });
       const data = res.data;
 
       const clientesFormateados = data.clientes.map(c => ({
@@ -59,6 +55,8 @@ function Clientes() {
       }));
 
       setClientes(clientesFormateados);
+      setTotalPages(data.totalPages || 1);
+      setTotal(data.total || 0);
 
       setStats({
         activos: data.estadisticas.clientes_activos,
@@ -73,17 +71,26 @@ function Clientes() {
 
   useEffect(() => {
     cargarClientes();
-    checkGym();
+    fetchGimnasios();
   }, []);
 
   useEffect(() => {
     const delay = setTimeout(() => {
-      cargarClientes(search);
+      setPage(1);
+      cargarClientes(search, filtroEstado, 1);
     }, 400);
     return () => clearTimeout(delay);
   }, [search]);
 
-  // ── Gimnasios ──
+  useEffect(() => {
+    setPage(1);
+    cargarClientes(search, filtroEstado, 1);
+  }, [filtroEstado]);
+
+  useEffect(() => {
+    cargarClientes(search, filtroEstado, page);
+  }, [page]);
+
   const fetchGimnasios = async () => {
     try {
       const res = await api.get("/gym");
@@ -93,11 +100,6 @@ function Clientes() {
     }
   };
 
-  useEffect(() => {
-    fetchGimnasios();
-  }, []);
-
-  // ── Membresías ──
   const fetchMembresias = async (id_gimnasio) => {
     try {
       const res = await api.get(`/gym/${id_gimnasio}`);
@@ -108,34 +110,38 @@ function Clientes() {
     }
   };
 
-  // ── Exportar ──
-  const exportClientes = () => {
-    if (clientes.length === 0) return;
+  const exportClientes = async () => {
+    try {
+      const res = await api.get("/clientes", { params: { limit: 9999 } });
+      const todos = res.data.clientes || [];
+      if (todos.length === 0) return;
 
-    const data = clientes.map(c => ({
-      Nombre: c.nombre,
-      Correo: c.correo,
-      Telefono: c.telefono || "-",
-      Gimnasio: c.gimnasio,
-      Estado: c.estado,
-      "Fecha inicio": c.fechaInicio,
-      Membresia: c.membresia
-    }));
+      const data = todos.map(c => ({
+        Nombre: c.nombre,
+        Correo: c.correo,
+        Telefono: c.telefono || "-",
+        Gimnasio: c.gimnasio?.nombre || "Sin gimnasio",
+        Estado: c.estado,
+        "Fecha inicio": new Date(c.fecha_inicio).toLocaleDateString(),
+        Membresia: c.membresia?.nombre || "Sin membresía"
+      }));
 
-    const worksheet = XLSX.utils.json_to_sheet(data);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Clientes");
-    XLSX.writeFile(workbook, "reporte_clientes_bodyplan.xlsx");
+      const worksheet = XLSX.utils.json_to_sheet(data);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Clientes");
+      XLSX.writeFile(workbook, "reporte_clientes_bodyplan.xlsx");
+    } catch (err) {
+      console.error("Error exportando", err);
+    }
   };
 
-  // ── Filtros ──
-  const clientesFiltrados = clientes.filter((c) => {
-    if (filtroEstado && c.estado !== filtroEstado) return false;
+  const clientesFiltrados = clientes.filter(c => {
+    if (search && !c.nombre.toLowerCase().includes(search.toLowerCase())) return false;
+    if (filtroEstado === "inactiva" && c.estado === "activa") return false;
     if (filtroGym && c.id_gimnasio !== Number(filtroGym)) return false;
     return true;
   });
 
-  // ── Abrir modal con verificación de gimnasio ──
   const handleAbrirModal = async () => {
     try {
       setGymError("");
@@ -174,7 +180,6 @@ function Clientes() {
         </div>
       </section>
 
-      {/* ✅ FIX: Error de gimnasio inline en lugar de alert */}
       {gymError && (
         <div className="modal-error" style={{ marginBottom: "1rem" }}>
           {gymError}
@@ -247,7 +252,6 @@ function Clientes() {
                 <th>Gimnasio</th>
                 <th>Estado</th>
                 <th>Suscripción</th>
-                {/* ✅ Nueva columna Contacto — Teléfono eliminado */}
                 <th>Contacto</th>
                 <th>Acciones</th>
               </tr>
@@ -279,9 +283,7 @@ function Clientes() {
 
                     <td>
                       <span className={`badge ${
-                        cliente.estado === "activa"
-                          ? "badge-success"
-                          : "badge-danger"
+                        cliente.estado === "activa" ? "badge-success" : "badge-danger"
                       }`}>
                         {cliente.estado}
                       </span>
@@ -293,11 +295,8 @@ function Clientes() {
                       </span>
                     </td>
 
-                    {/* ✅ Columna Contacto: correo y WhatsApp */}
                     <td>
                       <div className="row-actions">
-
-                        {/* Correo — siempre disponible */}
                         <a
                           href={`mailto:${cliente.correo}`}
                           className="icon-btn"
@@ -305,8 +304,6 @@ function Clientes() {
                         >
                           <FiMail size={15} />
                         </a>
-
-                        {/* WhatsApp — deshabilitado si no tiene teléfono */}
                         {cliente.telefono ? (
                           <a
                             href={`https://wa.me/52${cliente.telefono}`}
@@ -325,7 +322,6 @@ function Clientes() {
                             <FaWhatsapp size={15} />
                           </span>
                         )}
-
                       </div>
                     </td>
 
@@ -344,9 +340,42 @@ function Clientes() {
                 ))
               )}
             </tbody>
-
           </table>
         </div>
+
+        {totalPages > 1 && (
+          <div className="pagination">
+            <button
+              className="pagination-btn"
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+            >
+              <FiChevronLeft size={16} />
+            </button>
+
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
+              <button
+                key={n}
+                className={`pagination-btn ${page === n ? "pagination-active" : ""}`}
+                onClick={() => setPage(n)}
+              >
+                {n}
+              </button>
+            ))}
+
+            <button
+              className="pagination-btn"
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+            >
+              <FiChevronRight size={16} />
+            </button>
+
+            <span className="pagination-info">
+              {total} cliente{total !== 1 ? "s" : ""} en total
+            </span>
+          </div>
+        )}
 
       </section>
 
@@ -356,7 +385,7 @@ function Clientes() {
           membresias={membresias}
           fetchMembresias={fetchMembresias}
           onClose={() => setShowAddModal(false)}
-          onCreated={cargarClientes}
+          onCreated={() => cargarClientes(search, filtroEstado, page)}
         />
       )}
 

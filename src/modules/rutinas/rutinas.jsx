@@ -24,13 +24,11 @@ function Rutinas() {
   const [vista, setVista] = useState("activas");
   const [clientesPorRutina, setClientesPorRutina] = useState({});
 
-  // ✅ Helper reutilizable: filtra asignaciones activas (pendiente o iniciada)
   const contarAsignacionesActivas = (asignaciones) =>
     asignaciones.filter(
       a => a.estado === "pendiente" || a.estado === "iniciada"
     ).length;
 
-  // ✅ FIX: Solo cuenta asignaciones con estado activo
   const fetchClientesPorRutina = async (rutinas) => {
     try {
       const conteo = {};
@@ -45,7 +43,6 @@ function Rutinas() {
     }
   };
 
-  // Stats siempre desde rutinas activas, con conteo filtrado
   const fetchStats = async () => {
     try {
       const res = await api.get("/rutinas");

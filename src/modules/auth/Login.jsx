@@ -10,7 +10,6 @@ import { FcGoogle } from "react-icons/fc";
 import api from "../../services/axios";
 
 function Login() {
-  // ✅ FIX: signInWithGoogle unificado en el mismo useAuth, eliminado el duplicado
   const { signIn, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
@@ -101,10 +100,8 @@ function Login() {
               <p style={{ color: "red", textAlign: "center" }}>{error}</p>
             )}
 
-            {/* ✅ FIX: onSubmit simplificado — el doble e.preventDefault era innecesario */}
             <form className="login-fields" onSubmit={handleSubmit}>
 
-              {/* ── Correo ── */}
               <div className="float-field">
                 <input
                   id="correo"
@@ -118,7 +115,6 @@ function Login() {
                 <label htmlFor="correo">Correo electrónico</label>
               </div>
 
-              {/* ── Contraseña — eye-btn dentro del float-field sin wrapper intermedio ── */}
               <div className="float-field">
                 <input
                   id="password"

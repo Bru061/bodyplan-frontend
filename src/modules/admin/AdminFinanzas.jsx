@@ -23,9 +23,6 @@ function AdminFinanzas(){
 
   useEffect(()=>{
 
-    // futura llamada backend
-    // api.get("/admin/finanzas")
-
     setLoading(false);
 
   },[]);
@@ -44,8 +41,6 @@ function AdminFinanzas(){
     <AdminLayout>
 
       <main className="finance-container">
-
-      {/* HEADER */}
 
       <section className="page-header">
         <div>
@@ -68,9 +63,6 @@ function AdminFinanzas(){
           </button>
         </div>
       </section>
-
-
-      {/* STATS */}
 
       <section className="stats-grid">
 
@@ -95,9 +87,6 @@ function AdminFinanzas(){
         </article>
 
       </section>
-
-
-      {/* CONTENT */}
 
       <section className="content-grid">
 
@@ -155,9 +144,6 @@ function AdminFinanzas(){
         </article>
 
       </section>
-
-
-      {/* TABLA */}
 
       <section className="panel table-panel">
 

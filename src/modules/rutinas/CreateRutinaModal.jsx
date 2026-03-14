@@ -24,7 +24,6 @@ function CreateRutinaModal({ onClose, onCreated }) {
   const handleChange = (e) => {
     let { name, value } = e.target;
 
-    // ✅ FIX: Solo números enteros positivos, sin símbolos (+, -, ., e)
     if (name === "duracion_min") {
       value = value.replace(/[^0-9]/g, "").slice(0, 3);
     }
@@ -33,7 +32,6 @@ function CreateRutinaModal({ onClose, onCreated }) {
       value = value.replace(/[^0-9]/g, "").slice(0, 4);
     }
 
-    // ✅ FIX: cleanObjetivo integrado en handleChange de forma consistente
     if (name === "objetivo") {
       value = value.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]/g, "");
     }
@@ -82,7 +80,6 @@ function CreateRutinaModal({ onClose, onCreated }) {
       newErrors.categoria = "La categoría es obligatoria";
     }
 
-    // ✅ FIX: Antes validaba `form.tipo` que no existe — corregido a `form.tipo_rutina`
     if (!form.tipo_rutina) {
       newErrors.tipo_rutina = "El tipo es obligatorio";
     }
@@ -91,7 +88,6 @@ function CreateRutinaModal({ onClose, onCreated }) {
       newErrors.nivel = "El nivel es obligatorio";
     }
 
-    // ✅ MEJORA: Validación completa de duración
     if (!form.duracion_min) {
       newErrors.duracion_min = "La duración es obligatoria";
     } else if (isNaN(Number(form.duracion_min))) {
@@ -102,7 +98,6 @@ function CreateRutinaModal({ onClose, onCreated }) {
       newErrors.duracion_min = "La duración máxima es 300 minutos";
     }
 
-    // ✅ MEJORA: Validación completa de calorías
     if (!form.calorias_estimadas) {
       newErrors.calorias_estimadas = "Las calorías son obligatorias";
     } else if (isNaN(Number(form.calorias_estimadas))) {
@@ -121,7 +116,6 @@ function CreateRutinaModal({ onClose, onCreated }) {
 
     setErrors(newErrors);
 
-    // ✅ FIX: Flujo de validate() claro y correcto — siempre retorna boolean
     return Object.keys(newErrors).length === 0;
   };
 
@@ -285,7 +279,6 @@ function CreateRutinaModal({ onClose, onCreated }) {
 
             <div className="form-group">
               <label>Duración (min) *</label>
-              {/* ✅ FIX: type="text" + replace en handleChange evita símbolos +, -, ., e */}
               <input
                 type="text"
                 inputMode="numeric"
@@ -313,7 +306,6 @@ function CreateRutinaModal({ onClose, onCreated }) {
 
             <div className="form-group">
               <label>Calorías estimadas *</label>
-              {/* ✅ FIX: type="text" + replace en handleChange evita símbolos +, -, ., e */}
               <input
                 type="text"
                 inputMode="numeric"
