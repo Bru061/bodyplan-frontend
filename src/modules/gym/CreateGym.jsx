@@ -1,11 +1,29 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/axios";
 import OnboardingLayout from "../../layout/OnboardingLayout";
+import "../../styles/gym-wizard.css";
+import StepBasico from "./steps/StepBasico";
+import StepUbicacion from "./steps/StepUbicacion";
+import StepFotosHorarios from "./steps/StepFotosHorarios";
+import StepMembresias from "./steps/StepMembresias";
+
+const STEPS = [
+  { label: "Básico"     },
+  { label: "Ubicación"  },
+  { label: "Fotos"      },
+  { label: "Membresías" },
+];
 
 function CreateGym() {
 
   const navigate = useNavigate();
+
+  const [step, setStep] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [errors, setErrors] = useState({});
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
   const [form, setForm] = useState({
     nombre: "",
@@ -17,218 +35,152 @@ function CreateGym() {
     pais: "México",
     codigo_postal: "",
     localidad: "",
-    latitud: "",
-    longitud: "",
     url_map: ""
   });
 
   const [fotos, setFotos] = useState([]);
   const [horarios, setHorarios] = useState([]);
   const [membresias, setMembresias] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [errors, setErrors] = useState({});
 
-  useEffect(() => {
+  // ── Sanitización de campos ──
+  const handleChange = (e) => {
+    let { name, value } = e.target;
 
-    const keys = Object.keys(errors);
-    if (keys.length === 0) return;
+    if (name === "telefono")
+      value = value.replace(/[^0-9]/g, "").slice(0, 10);
+    if (name === "direccion")
+      value = value.replace(/[^A-Za-z0-9ÁÉÍÓÚáéíóúÑñ\s#.,]/g, "");
+    if (["municipio", "estado", "localidad"].includes(name))
+      value = value.replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g, "").slice(0, 20);
+    if (name === "codigo_postal")
+      value = value.replace(/[^0-9]/g, "").slice(0, 5);
+    if (name === "url_map")
+      value = value.replace(/\s/g, "");
+    if (name === "nombre")
+      value = value.replace(/[^A-Za-z0-9ÁÉÍÓÚáéíóúÑñ\s]/g, "").slice(0, 50);
+    if (name === "descripcion")
+      value = value.slice(0, 255);
 
-    let firstField = document.querySelector(`[name="${keys[0]}"]`);
-
-    if (!firstField) {
-      firstField = document.querySelector(`#${keys[0]}`);
-    }
-
-    if (!firstField) return;
-
-    const rect = firstField.getBoundingClientRect();
-    const offset = window.scrollY + rect.top - 120;
-
-    window.scrollTo({
-      top: offset,
-      behavior: "smooth"
-    });
-
-    firstField.focus?.();
-
-  }, [errors]);
-
-  const urlValida = (url) => {
-    try {
-      new URL(url);
-      return true;
-    } catch {
-      return false;
-    }
+    setForm(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: "" }));
   };
 
-  const horaEsValida = (apertura, cierre) => {
-    if (!apertura || !cierre) return false;
+  // ── Validación por paso ──
+  const validateStep = (index) => {
+    const e = {};
 
-    const [h1, m1] = apertura.split(":").map(Number);
-    const [h2, m2] = cierre.split(":").map(Number);
+    if (index === 0) {
+      if (!form.nombre.trim())       e.nombre = "El nombre es obligatorio";
+      if (!form.descripcion.trim())  e.descripcion = "La descripción es obligatoria";
+      if (!form.telefono.trim())     e.telefono = "El teléfono es obligatorio";
+      else if (form.telefono.length !== 10) e.telefono = "Debe tener 10 dígitos";
+    }
 
-    const minApertura = h1 * 60 + m1;
-    const minCierre = h2 * 60 + m2;
+    if (index === 1) {
+      if (!form.direccion.trim())     e.direccion = "La dirección es obligatoria";
+      if (!form.municipio.trim())     e.municipio = "El municipio es obligatorio";
+      if (!form.estado.trim())        e.estado = "El estado es obligatorio";
+      if (!form.codigo_postal.trim()) e.codigo_postal = "El código postal es obligatorio";
+      else if (form.codigo_postal.length !== 5) e.codigo_postal = "Debe tener 5 dígitos";
+      if (!form.url_map.trim()) {
+        e.url_map = "Agrega el link de Google Maps";
+      } else {
+        try { new URL(form.url_map); }
+        catch { e.url_map = "URL de Google Maps inválida"; }
+      }
+    }
 
-    return minCierre > minApertura;
+    if (index === 2) {
+      if (fotos.length === 0)
+        e.fotos = "Debes subir al menos una foto";
+
+      if (horarios.length === 0) {
+        e.horarios = "Debes agregar al menos un horario";
+      } else {
+        const dias = horarios.map(h => h.dia);
+        if (dias.filter((d, i) => dias.indexOf(d) !== i).length)
+          e.horarios = "No puede haber días repetidos";
+        else {
+          for (const h of horarios) {
+            if (!h.dia || !h.apertura || !h.cierre) {
+              e.horarios = "Completa todos los horarios"; break;
+            }
+            const [h1, m1] = h.apertura.split(":").map(Number);
+            const [h2, m2] = h.cierre.split(":").map(Number);
+            if ((h2 * 60 + m2) <= (h1 * 60 + m1)) {
+              e.horarios = "La hora de cierre debe ser mayor a la apertura"; break;
+            }
+          }
+        }
+      }
+    }
+
+    if (index === 3) {
+      if (membresias.length === 0) {
+        e.membresias = "Debes agregar al menos una membresía";
+      } else {
+        for (const m of membresias) {
+          if (!m.nombre.trim())                { e.membresias = "Todas las membresías deben tener nombre"; break; }
+          if (!m.precio || Number(m.precio) <= 0) { e.membresias = "El precio debe ser mayor a 0"; break; }
+          if (!m.duracion || Number(m.duracion) <= 0) { e.membresias = "La duración debe ser mayor a 0"; break; }
+          if (Number(m.duracion) > 3650)       { e.membresias = "Duración demasiado grande"; break; }
+          if (!m.descripcion?.trim())           { e.membresias = "La descripción de cada membresía es obligatoria"; break; }
+          if (m.descripcion.length > 200)       { e.membresias = "Máximo 200 caracteres en descripción"; break; }
+        }
+      }
+    }
+
+    return e;
   };
 
-  const handleCreateGym = async () => {
-
-    const newErrors = {};
-    setError("");
-
-    if (!form.nombre.trim()) {
-      newErrors.nombre = "El nombre del gimnasio es obligatorio";
-    }
-
-    if (!form.descripcion.trim()) {
-      newErrors.descripcion = "La descripción es obligatoria";
-    }
-
-    if (!form.telefono.trim()) {
-      newErrors.telefono = "El teléfono es obligatorio";
-    } else if (form.telefono.length !== 10) {
-      newErrors.telefono = "El teléfono debe tener 10 dígitos";
-    }
-
-    if (!form.direccion.trim()) {
-      newErrors.direccion = "La dirección es obligatoria";
-    }
-
-    if (!form.municipio.trim()) {
-      newErrors.municipio = "El municipio es obligatorio";
-    }
-
-    if (!form.estado.trim()) {
-      newErrors.estado = "El estado es obligatorio";
-    }
-
-    if (!form.codigo_postal.trim()) {
-      newErrors.codigo_postal = "El código postal es obligatorio";
-    } else if (form.codigo_postal.length !== 5) {
-      newErrors.codigo_postal = "Debe tener 5 dígitos";
-    }
-
-    if (!form.url_map.trim()) {
-      newErrors.url_map = "Agrega el link de Google Maps";
-    } else if (!urlValida(form.url_map)) {
-      newErrors.url_map = "URL de Google Maps inválida";
-    }
-
-    if (fotos.length === 0) {
-      newErrors.fotos = "Debes subir al menos una foto";
-    }
-
-    if (horarios.length === 0) {
-      newErrors.horarios = "Debes agregar al menos un horario";
-    } else {
-
-      const dias = horarios.map(h => h.dia);
-      const diasDuplicados = dias.filter((d, i) => dias.indexOf(d) !== i);
-
-      if (diasDuplicados.length) {
-        newErrors.horarios = "No puede haber días repetidos";
-      }
-
-      if (horarios.length > 7) {
-        newErrors.horarios = "Máximo 7 horarios";
-      }
-
-      for (const h of horarios) {
-        if (!h.dia || !h.apertura || !h.cierre) {
-          newErrors.horarios = "Completa todos los horarios";
-          break;
-        }
-
-        if (!horaEsValida(h.apertura, h.cierre)) {
-          newErrors.horarios = "La hora de cierre debe ser mayor";
-          break;
-        }
-      }
-
-    }
-
-    if (membresias.length === 0) {
-      newErrors.membresias = "Debes agregar al menos una membresía";
-    } else {
-
-      if (membresias.length > 10) {
-        newErrors.membresias = "Máximo 10 membresías";
-      }
-
-      for (const m of membresias) {
-
-        if (!m.nombre.trim()) {
-          newErrors.membresias = "Las membresías deben tener nombre";
-          break;
-        }
-
-        if (!m.precio || Number(m.precio) <= 0) {
-          newErrors.membresias = "El precio debe ser mayor a 0";
-          break;
-        }
-
-        if (!m.duracion || Number(m.duracion) <= 0) {
-          newErrors.membresias = "La duración debe ser mayor a 0";
-          break;
-        }
-
-        if (Number(m.duracion) > 3650) {
-          newErrors.membresias = "Duración demasiado grande";
-          break;
-        }
-
-        if (!m.descripcion || !m.descripcion.trim()) {
-          newErrors.membresias = "La descripción es obligatoria";
-          break;
-        }
-
-        if (m.descripcion && m.descripcion.length > 200) {
-          newErrors.membresias = "Máximo 200 caracteres";
-          break;
-        }
-
-      }
-
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-
+  const handleNext = () => {
+    const newErrors = validateStep(step);
+    if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
     setErrors({});
+    setError("");
+    setStep(prev => prev + 1);
+  };
+
+  const handleBack = () => {
+    setErrors({});
+    setError("");
+    setStep(prev => prev - 1);
+  };
+
+  const handleCancel = () => {
+    const hayCambios =
+      form.nombre || form.descripcion || form.telefono ||
+      fotos.length > 0 || horarios.length > 0 || membresias.length > 0;
+    if (!hayCambios) { navigate("/mis-gimnasios"); return; }
+    setShowCancelModal(true);
+  };
+
+  const handleSubmit = async () => {
+    const newErrors = validateStep(3);
+    if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
 
     try {
-
       setLoading(true);
+      setError("");
 
       const formData = new FormData();
-
-      formData.append("nombre", form.nombre);
+      formData.append("nombre",      form.nombre);
       formData.append("descripcion", form.descripcion);
-      formData.append("telefono", form.telefono);
-
-      const ubicacion = {
-        direccion: form.direccion,
-        municipio: form.municipio,
-        estado: form.estado,
-        pais: form.pais,
+      formData.append("telefono",    form.telefono);
+      formData.append("ubicacion", JSON.stringify({
+        direccion:     form.direccion,
+        municipio:     form.municipio,
+        estado:        form.estado,
+        pais:          form.pais,
         codigo_postal: form.codigo_postal,
-        localidad: form.localidad || "",
-        latitud: form.latitud || null,
-        longitud: form.longitud || null,
-        url_map: form.url_map
-      };
-
-      formData.append("ubicacion", JSON.stringify(ubicacion));
-      formData.append("horarios", JSON.stringify(horarios));
+        localidad:     form.localidad || "",
+        latitud:       null,
+        longitud:      null,
+        url_map:       form.url_map
+      }));
+      formData.append("horarios",   JSON.stringify(horarios));
       formData.append("membresias", JSON.stringify(membresias));
-
-      fotos.forEach((f) => formData.append("fotos", f));
+      fotos.forEach(f => formData.append("fotos", f));
 
       await api.post("/gym", formData, {
         headers: { "Content-Type": "multipart/form-data" }
@@ -237,617 +189,123 @@ function CreateGym() {
       navigate("/mis-gimnasios");
 
     } catch (err) {
-
-      console.log(err);
-
+      console.error(err);
       const backendError = err?.response?.data?.error;
-
       if (backendError?.toLowerCase().includes("url")) {
-        setErrors(prev => ({
-          ...prev,
-          url_map: backendError
-        }));
+        setErrors({ url_map: backendError });
+        setStep(1);
       } else {
-        setError(backendError || "Error al crear gimnasio");
+        setError(backendError || "Error al crear el gimnasio");
       }
-
     } finally {
-
       setLoading(false);
-
-    }
-
-  };
-
-  const handleChange = (e) => {
-    let { name, value } = e.target;
-
-    if (name === "telefono") {
-      value = value.replace(/[^0-9]/g, "").slice(0, 10);
-    }
-    if (name === "direccion") {
-      value = value.replace(/[^A-Za-z0-9ÁÉÍÓÚáéíóúÑñ\s#.,]/g, "");
-    }
-    if (name === "municipio" || name === "estado" || name === "localidad") {
-      value = value.replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g, "").slice(0, 20);
-    }
-    if (name === "codigo_postal") {
-      value = value.replace(/[^0-9]/g, "").slice(0, 5);
-    }
-    if (name === "url_map") {
-      value = value.replace(/\s/g, "");
-    }
-    if (name === "nombre") {
-      value = value.replace(/[^A-Za-z0-9ÁÉÍÓÚáéíóúÑñ\s]/g, "").slice(0, 50);
-    }
-    if (name === "descripcion") {
-      value = value.slice(0, 255);
-    }
-
-    setForm(prev => ({ ...prev, [name]: value }));
-
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: "" }));
-    }
-  };
-
-  const handleCancel = () => {
-
-    const hayCambios =
-      form.nombre ||
-      form.descripcion ||
-      form.telefono ||
-      fotos.length > 0 ||
-      horarios.length > 0 ||
-      membresias.length > 0;
-
-    if (!hayCambios) {
-      navigate("/mis-gimnasios");
-      return;
-    }
-
-    const confirm = window.confirm(
-      "Tienes cambios sin guardar. ¿Seguro que deseas salir?"
-    );
-
-    if (confirm) {
-      navigate("/mis-gimnasios");
-    }
-  };
-
-  const handleRemoveHorario = (index) => {
-    setHorarios(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const handleRemoveMembresia = (index) => {
-    setMembresias(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const handleHorarioChange = (index, field, value) => {
-    setHorarios(prev =>
-      prev.map((h, i) => i === index ? { ...h, [field]: value } : h)
-    );
-    if (errors.horarios) {
-      setErrors(prev => ({ ...prev, horarios: "" }));
-    }
-  };
-
-  const handleMembresiaChange = (index, field, value) => {
-    setMembresias(prev =>
-      prev.map((m, i) => i === index ? { ...m, [field]: value } : m)
-    );
-    if (errors.membresias) {
-      setErrors(prev => ({ ...prev, membresias: "" }));
     }
   };
 
   return (
     <OnboardingLayout>
+      <div className="gym-wizard">
+        <div className="gym-wizard-card">
 
-      <div className="min-h-screen bg-slate-50 py-12 px-6">
-        <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-10">
-
-          <div className="text-center mb-10">
-            <h1 className="text-3xl font-extrabold text-blue-900">
-              Registrar gimnasio
-            </h1>
-            <h3 className="text-slate-500 mt-2">
-              Completa la información para activar tu panel en BodyPlan.
-            </h3>
+          {/* ── Título ── */}
+          <div className="gym-wizard-title">
+            <h1>Registrar gimnasio</h1>
+            <p>Completa la información para activar tu panel en BodyPlan.</p>
           </div>
 
+          {/* ── Stepper ── */}
+          <div className="stepper">
+            {STEPS.map((s, i) => (
+              <div
+                key={i}
+                className={`stepper-step ${
+                  i === step ? "active" : i < step ? "completed" : ""
+                }`}
+              >
+                <div className="stepper-circle">
+                  {i < step ? "✓" : i + 1}
+                </div>
+                <span className="stepper-label">{s.label}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* ── Error global ── */}
           {error && (
-            <div className="bg-red-100 text-red-700 p-3 rounded-lg mb-6 text-sm">
+            <div className="modal-error" style={{ marginBottom: "1rem" }}>
               {error}
+              <button
+                onClick={() => setError("")}
+                style={{ marginLeft: 12, background: "none", border: "none", cursor: "pointer", fontWeight: 700 }}
+              >✕</button>
             </div>
           )}
 
-          <div className="mb-8">
-            <h2 className="font-semibold text-lg mb-4 text-blue-900">
-              Información básica
-            </h2>
-
-            <div className="space-y-4">
-
-              <div>
-                <label htmlFor="nombre">Nombre del gimnasio *</label>
-                <input
-                  id="nombre"
-                  maxLength={50}
-                  className={`w-full bg-slate-100 rounded-xl px-4 py-3 outline-none border
-                    ${errors.nombre
-                      ? "border-red-500 focus:ring-2 focus:ring-red-500 input-error"
-                      : "border-slate-300 focus:ring-2 focus:ring-blue-500"}`}
-                  name="nombre"
-                  value={form.nombre}
-                  onChange={handleChange}
-                />
-                {errors.nombre && (
-                  <p className="text-red-500 text-sm mt-1">{errors.nombre}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="descripcion">Descripción *</label>
-                <div className="textarea-wrapper">
-                  <textarea
-                    id="descripcion"
-                    maxLength={255}
-                    className={`w-full bg-slate-100 rounded-xl px-4 py-3 outline-none border
-                      ${errors.descripcion
-                        ? "border-red-500 focus:ring-2 focus:ring-red-500 input-error"
-                        : "border-slate-300 focus:ring-2 focus:ring-blue-500"}`}
-                    value={form.descripcion}
-                    onChange={handleChange}
-                    name="descripcion"
-                  />
-                  <span className="char-counter">
-                    {form.descripcion.length}/255
-                  </span>
-                </div>
-                {errors.descripcion && (
-                  <p className="text-red-500 text-sm mt-1">{errors.descripcion}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="telefono">Teléfono *</label>
-                <input
-                  id="telefono"
-                  maxLength={10}
-                  className={`w-full bg-slate-100 rounded-xl px-4 py-3 outline-none border
-                    ${errors.telefono
-                      ? "border-red-500 focus:ring-2 focus:ring-red-500 input-error"
-                      : "border-slate-300 focus:ring-2 focus:ring-blue-500"}`}
-                  name="telefono"
-                  value={form.telefono}
-                  onChange={handleChange}
-                />
-                {errors.telefono && (
-                  <p className="text-red-500 text-sm mt-1">{errors.telefono}</p>
-                )}
-              </div>
-
-            </div>
-          </div>
-
-          <div className="mb-8">
-            <h2 className="font-semibold text-lg mb-4 text-blue-900">
-              Ubicación
-            </h2>
-
-            <div className="grid md:grid-cols-2 gap-4">
-
-              <div>
-                <label htmlFor="direccion">Dirección *</label>
-                <input
-                  id="direccion"
-                  maxLength={50}
-                  className={`w-full bg-slate-100 rounded-xl px-4 py-3 outline-none border
-                    ${errors.direccion
-                      ? "border-red-500 focus:ring-2 focus:ring-red-500 input-error"
-                      : "border-slate-300 focus:ring-2 focus:ring-blue-500"}`}
-                  name="direccion"
-                  value={form.direccion}
-                  onChange={handleChange}
-                />
-                {errors.direccion && (
-                  <p className="text-red-500 text-sm mt-1">{errors.direccion}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="municipio">Municipio *</label>
-                <input
-                  id="municipio"
-                  maxLength={20}
-                  className={`w-full bg-slate-100 rounded-xl px-4 py-3 outline-none border
-                    ${errors.municipio
-                      ? "border-red-500 focus:ring-2 focus:ring-red-500 input-error"
-                      : "border-slate-300 focus:ring-2 focus:ring-blue-500"}`}
-                  name="municipio"
-                  value={form.municipio}
-                  onChange={handleChange}
-                />
-                {errors.municipio && (
-                  <p className="text-red-500 text-sm mt-1">{errors.municipio}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="estado">Estado *</label>
-                <input
-                  id="estado"
-                  maxLength={20}
-                  className={`w-full bg-slate-100 rounded-xl px-4 py-3 outline-none border
-                    ${errors.estado
-                      ? "border-red-500 focus:ring-2 focus:ring-red-500 input-error"
-                      : "border-slate-300 focus:ring-2 focus:ring-blue-500"}`}
-                  name="estado"
-                  value={form.estado}
-                  onChange={handleChange}
-                />
-                {errors.estado && (
-                  <p className="text-red-500 text-sm mt-1">{errors.estado}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="codigo_postal">Código postal *</label>
-                <input
-                  id="codigo_postal"
-                  maxLength={5}
-                  className={`w-full bg-slate-100 rounded-xl px-4 py-3 outline-none border
-                    ${errors.codigo_postal
-                      ? "border-red-500 focus:ring-2 focus:ring-red-500 input-error"
-                      : "border-slate-300 focus:ring-2 focus:ring-blue-500"}`}
-                  value={form.codigo_postal}
-                  onChange={handleChange}
-                  name="codigo_postal"
-                />
-                {errors.codigo_postal && (
-                  <p className="text-red-500 text-sm mt-1">{errors.codigo_postal}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="localidad">Localidad / colonia (opcional)</label>
-                <input
-                  id="localidad"
-                  maxLength={20}
-                  className={`w-full bg-slate-100 rounded-xl px-4 py-3 outline-none border
-                    ${errors.localidad
-                      ? "border-red-500 focus:ring-2 focus:ring-red-500"
-                      : "border-slate-300 focus:ring-2 focus:ring-blue-500"}`}
-                  name="localidad"
-                  value={form.localidad}
-                  onChange={handleChange}
-                />
-              </div>
-
-              <div>
-                <label htmlFor="url_map">URL de Google Maps *</label>
-                <input
-                  id="url_map"
-                  className={`w-full bg-slate-100 rounded-xl px-4 py-3 outline-none border
-                    ${errors.url_map
-                      ? "border-red-500 focus:ring-2 focus:ring-red-500 input-error"
-                      : "border-slate-300 focus:ring-2 focus:ring-blue-500"}`}
-                  name="url_map"
-                  value={form.url_map}
-                  onChange={handleChange}
-                />
-                {errors.url_map && (
-                  <p className="text-red-500 text-sm mt-1">{errors.url_map}</p>
-                )}
-              </div>
-
-            </div>
-          </div>
-
-          <div id="fotos" className="mb-8">
-            <h2 className="font-semibold text-lg mb-3 text-blue-900">
-              Fotos del gimnasio
-            </h2>
-
-            <input
-              type="file"
-              name="fotos"
-              multiple
-              accept="image/*"
-              onChange={(e) => {
-
-                const files = Array.from(e.target.files);
-
-                if (files.length === 0) return;
-
-                if (fotos.length + files.length > 5) {
-                  setError("Máximo 5 imágenes permitidas");
-                  e.target.value = "";
-                  return;
-                }
-
-                const validTypes = ["image/jpeg", "image/png"];
-                const maxSize = 5 * 1024 * 1024;
-
-                for (let file of files) {
-                  if (!validTypes.includes(file.type)) {
-                    setError("Solo JPG o PNG");
-                    e.target.value = "";
-                    return;
-                  }
-                  if (file.size > maxSize) {
-                    setError("Cada imagen debe pesar menos de 5MB");
-                    e.target.value = "";
-                    return;
-                  }
-                }
-
-                setError("");
-                if (errors.fotos) setErrors(prev => ({ ...prev, fotos: "" }));
-                setFotos(prev => [...prev, ...files].slice(0, 5));
-              }}
-              className={`block w-full text-sm text-slate-600
-                file:mr-4 file:py-2 file:px-4
-                file:rounded-lg file:border-0
-                file:bg-blue-800 file:text-white
-                hover:file:bg-blue-900
-                ${errors.fotos ? "input-error" : ""}`}
+          {/* ── Paso activo ── */}
+          {step === 0 && (
+            <StepBasico form={form} errors={errors} onChange={handleChange} />
+          )}
+          {step === 1 && (
+            <StepUbicacion form={form} errors={errors} onChange={handleChange} />
+          )}
+          {step === 2 && (
+            <StepFotosHorarios
+              fotos={fotos} setFotos={setFotos}
+              horarios={horarios} setHorarios={setHorarios}
+              errors={errors} setErrors={setErrors}
+              setError={setError}
             />
+          )}
+          {step === 3 && (
+            <StepMembresias
+              membresias={membresias} setMembresias={setMembresias}
+              errors={errors} setErrors={setErrors}
+            />
+          )}
 
-            {fotos.length > 0 && (
-              <ul className="mt-3 space-y-2">
-                {fotos.map((file, index) => (
-                  <li
-                    key={index}
-                    className="flex items-center justify-between bg-gray-100 px-3 py-2 rounded"
-                  >
-                    <span className="text-sm text-gray-700 truncate">
-                      {file.name}
-                    </span>
-                    <button
-                      type="button"
-                      className="text-red-500 text-sm hover:text-red-700"
-                      onClick={() =>
-                        setFotos(prev => prev.filter((_, i) => i !== index))
-                      }
-                    >
-                      Quitar
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            {errors.fotos && (
-              <p className="text-red-500 text-sm mt-1">{errors.fotos}</p>
-            )}
-          </div>
-
-          <div id="horarios" className="mb-8">
-            <div className="flex justify-between items-center mb-3">
-              <h2 className="font-semibold text-lg text-blue-900">
-                Horarios
-              </h2>
-
-              {errors.horarios && (
-                <p className="text-red-500 text-sm">{errors.horarios}</p>
-              )}
-
-              <button
-                type="button"
-                onClick={() => {
-                  if (horarios.length >= 7) return;
-                  setHorarios(prev => [...prev, { dia: "", apertura: "", cierre: "" }]);
-                }}
-                className="text-blue-800 font-semibold hover:underline"
-              >
-                + Agregar horario
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              {horarios.map((h, i) => (
-                <div key={i} className="grid md:grid-cols-4 gap-3 items-end">
-
-                  <div>
-                    <label htmlFor={`dia-${i}`}>Día *</label>
-                    <select
-                      id={`dia-${i}`}
-                      className="w-full bg-slate-100 rounded-xl px-3 py-2"
-                      value={h.dia}
-                      onChange={e => handleHorarioChange(i, "dia", e.target.value)}
-                    >
-                      <option value="">Seleccionar día</option>
-                      <option>Lunes</option>
-                      <option>Martes</option>
-                      <option>Miercoles</option>
-                      <option>Jueves</option>
-                      <option>Viernes</option>
-                      <option>Sabado</option>
-                      <option>Domingo</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label htmlFor={`apertura-${i}`}>Apertura *</label>
-                    <input
-                      id={`apertura-${i}`}
-                      type="time"
-                      className="w-full bg-slate-100 rounded-xl px-3 py-2"
-                      value={h.apertura}
-                      onChange={e => handleHorarioChange(i, "apertura", e.target.value)}
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor={`cierre-${i}`}>Cierre *</label>
-                    <input
-                      id={`cierre-${i}`}
-                      type="time"
-                      className="w-full bg-slate-100 rounded-xl px-3 py-2"
-                      value={h.cierre}
-                      onChange={e => handleHorarioChange(i, "cierre", e.target.value)}
-                    />
-                  </div>
-
-                  <div>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveHorario(i)}
-                      className="text-red-500 text-sm hover:text-red-700 font-medium"
-                    >
-                      Eliminar
-                    </button>
-                  </div>
-
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div id="membresias" className="mb-10">
-            <div className="flex justify-between items-center mb-3">
-              <h2 className="font-semibold text-lg text-blue-900">
-                Membresías
-              </h2>
-
-              {errors.membresias && (
-                <p className="text-red-500 text-sm">{errors.membresias}</p>
-              )}
-
-              <button
-                type="button"
-                onClick={() => {
-                  if (membresias.length >= 10) return;
-                  setMembresias(prev => [...prev, {
-                    nombre: "",
-                    precio: "",
-                    duracion: "",
-                    descripcion: ""
-                  }]);
-                }}
-                className="text-blue-800 font-semibold hover:underline"
-              >
-                + Agregar membresía
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              {membresias.map((m, i) => (
-                <div key={i} className="bg-slate-50 p-4 rounded-xl space-y-3">
-
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-slate-600">
-                      Membresía {i + 1}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveMembresia(i)}
-                      className="text-red-500 text-sm hover:text-red-700 font-medium"
-                    >
-                      Eliminar
-                    </button>
-                  </div>
-
-                  <div className="grid md:grid-cols-3 gap-3">
-
-                    <div>
-                      <label htmlFor={`mem-nombre-${i}`}>Nombre *</label>
-                      <input
-                        id={`mem-nombre-${i}`}
-                        type="text"
-                        maxLength={15}
-                        className="w-full bg-slate-100 rounded-xl px-3 py-2"
-                        value={m.nombre}
-                        onChange={e => {
-                          const v = e.target.value
-                            .replace(/[^A-Za-z0-9ÁÉÍÓÚáéíóúÑñ\s]/g, "")
-                            .slice(0, 15);
-                          handleMembresiaChange(i, "nombre", v);
-                        }}
-                      />
-                    </div>
-
-                    <div>
-                      <label htmlFor={`mem-precio-${i}`}>Precio *</label>
-                      <input
-                        id={`mem-precio-${i}`}
-                        type="number"
-                        min="1"
-                        className="w-full bg-slate-100 rounded-xl px-3 py-2"
-                        value={m.precio}
-                        onChange={e => {
-                          const v = e.target.value.replace(/[^0-9.]/g, "");
-                          handleMembresiaChange(i, "precio", v);
-                        }}
-                      />
-                    </div>
-
-                    <div>
-                      <label htmlFor={`mem-duracion-${i}`}>Duración días *</label>
-                      <input
-                        id={`mem-duracion-${i}`}
-                        type="number"
-                        min="1"
-                        className="w-full bg-slate-100 rounded-xl px-3 py-2"
-                        value={m.duracion}
-                        onChange={e => {
-                          const v = e.target.value.replace(/[^0-9]/g, "");
-                          handleMembresiaChange(i, "duracion", v);
-                        }}
-                      />
-                    </div>
-
-                  </div>
-
-                  <div>
-                    <label htmlFor={`mem-desc-${i}`}>Descripción *</label>
-                    <div className="textarea-wrapper">
-                      <textarea
-                        id={`mem-desc-${i}`}
-                        maxLength={200}
-                        className="w-full bg-white rounded-xl px-3 py-2"
-                        value={m.descripcion}
-                        onChange={e => {
-                          const v = e.target.value.slice(0, 200);
-                          handleMembresiaChange(i, "descripcion", v);
-                        }}
-                      />
-                      <span className="char-counter">
-                        {(m.descripcion || "").length}/200
-                      </span>
-                    </div>
-                  </div>
-
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex justify-center gap-6">
-
-            <button
-              type="button"
-              onClick={handleCancel}
-              className="bg-gray-600 hover:bg-gray-900 text-white px-6 py-2.5 rounded-xl font-semibold shadow-md transition-all"
-            >
+          {/* ── Acciones ── */}
+          <div className="wizard-actions">
+            <button type="button" className="btn btn-ghost" onClick={handleCancel}>
               Cancelar
             </button>
-
-            <button
-              type="button"
-              onClick={handleCreateGym}
-              disabled={loading}
-              className="bg-blue-800 hover:bg-blue-900 text-white px-6 py-2.5 rounded-xl font-semibold shadow-md transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {loading ? "Creando gimnasio..." : "Crear gimnasio"}
-            </button>
-
+            <div className="wizard-actions-right">
+              {step > 0 && (
+                <button type="button" className="btn btn-ghost" onClick={handleBack} disabled={loading}>
+                  ← Atrás
+                </button>
+              )}
+              {step < STEPS.length - 1 ? (
+                <button type="button" className="btn btn-primary" onClick={handleNext}>
+                  Siguiente →
+                </button>
+              ) : (
+                <button type="button" className="btn btn-primary" onClick={handleSubmit} disabled={loading}>
+                  {loading ? "Creando gimnasio..." : "Crear gimnasio"}
+                </button>
+              )}
+            </div>
           </div>
 
         </div>
       </div>
+
+      {/* ── Modal cancelar ── */}
+      {showCancelModal && (
+        <div className="cancel-confirm-overlay">
+          <div className="cancel-confirm-box">
+            <h3>¿Deseas salir?</h3>
+            <p>Tienes cambios sin guardar. Si sales ahora perderás la información ingresada.</p>
+            <div className="cancel-confirm-actions">
+              <button className="btn btn-ghost" onClick={() => setShowCancelModal(false)}>
+                Seguir editando
+              </button>
+              <button className="btn btn-danger" onClick={() => navigate("/mis-gimnasios")}>
+                Sí, salir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </OnboardingLayout>
   );

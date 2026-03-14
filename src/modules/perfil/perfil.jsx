@@ -2,31 +2,23 @@ import { useEffect, useState } from "react";
 import DashboardLayout from "../../layout/DashboardLayout";
 import "../../styles/perfil.css";
 import { Link } from "react-router-dom";
-import { FiLogOut, FiUser } from "react-icons/fi";
-import { useAuth } from "../../core/context/AuthContext";
+import { FiUser } from "react-icons/fi";
 import api from "../../services/axios";
 import LoadingScreen from "../../components/ui/LoadingScreen";
 
-function Perfil(){
+function Perfil() {
 
-  const { signOut } = useAuth();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const handleLogout = () => signOut();
-
-  // ===============================
-  // CARGAR PERFIL
-  // ===============================
   const fetchUser = async () => {
     try {
       const res = await api.get("/user/me");
-      console.log("RESPUESTA PERFIL:", res.data);
       setUser(res.data.usuario || res.data);
     } catch (err) {
       console.error("Error cargando perfil", err);
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -34,86 +26,57 @@ function Perfil(){
     fetchUser();
   }, []);
 
-  if (loading){
+  if (loading) {
     return <LoadingScreen message="Cargando perfil..." />;
   }
 
-  if (!user){
+  if (!user) {
     return (
       <DashboardLayout>
-        <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "60vh",
-          textAlign: "center"
-        }}
-      >
-        <h2
-          style={{
-            color: "#1e3a8a", // azul similar al usado en tu panel
-            fontSize: "28px",
-            fontWeight: "600"
-          }}
-        >
-          No se pudo cargar el perfil
-        </h2>
-      </div>
+        <div className="perfil-error">
+          <h2>No se pudo cargar el perfil</h2>
+        </div>
       </DashboardLayout>
     );
   }
 
-  return(
+  return (
     <DashboardLayout>
 
-      {/* HEADER */}
       <section className="page-header">
         <div>
-          <p className="eyebrow">Cuenta</p>
           <h1>Mi perfil</h1>
           <p className="subtitle">
             Consulta y administra tu información personal.
           </p>
         </div>
+      </section>
 
-        <button className="btn btn-logout" onClick={handleLogout}>
-          <FiLogOut/>
-          Cerrar sesión
-        </button>
-        
-        </section>
-
-      {/* GRID */}
       <section className="content-grid">
 
-        {/* INFO USUARIO */}
+        {/* ── Información personal ── */}
         <article className="panel">
-          <div className="panel-header">
-            <h2><FiUser style={{marginRight:8}}/> Información personal</h2>
-          </div>
+          <h2 className="panel-icon-title">
+            <FiUser size={18} /> Información personal
+          </h2>
 
           <div className="panel-body">
-
             <p>
-              <strong>Nombre:</strong>{" "}
+              <strong>Nombre: </strong>
               {user.nombre} {user.apellido_paterno} {user.apellido_materno}
             </p>
-
             <p>
-              <strong>Teléfono:</strong>{" "}
+              <strong>Teléfono: </strong>
               {user.telefono || "No registrado"}
             </p>
-
             <p>
-              <strong>Correo:</strong>{" "}
+              <strong>Correo: </strong>
               {user.correo}
             </p>
-
           </div>
         </article>
 
-        {/* HISTORIAL PAGOS */}
+        {/* ── Historial de planes y pagos ── */}
         <article className="panel">
           <div className="panel-header">
             <h2>Historial de planes y pagos</h2>
@@ -136,8 +99,7 @@ function Perfil(){
               </thead>
 
               <tbody>
-
-                {/* ⚠️ Esto luego vendrá de backend */}
+                {/* ⚠️ Datos de prueba — reemplazar con backend */}
                 <tr>
                   <td>Plan Pro</td>
                   <td>Ene 2026</td>
@@ -145,7 +107,6 @@ function Perfil(){
                   <td><span className="badge badge-success">Pagado</span></td>
                   <td>05 Ene 2026</td>
                 </tr>
-
                 <tr>
                   <td>Plan Pro</td>
                   <td>Dic 2025</td>
@@ -153,7 +114,6 @@ function Perfil(){
                   <td><span className="badge badge-success">Pagado</span></td>
                   <td>05 Dic 2025</td>
                 </tr>
-
                 <tr>
                   <td>Plan Pro</td>
                   <td>Nov 2025</td>
@@ -161,21 +121,19 @@ function Perfil(){
                   <td><span className="badge badge-pending">Pendiente</span></td>
                   <td>-</td>
                 </tr>
-
               </tbody>
             </table>
           </div>
 
           <Link to="/planes" className="inline-link">
-            Ir a gestión de planes
+            Ir a gestión de planes →
           </Link>
-
         </article>
 
       </section>
 
     </DashboardLayout>
-  )
+  );
 }
 
 export default Perfil;

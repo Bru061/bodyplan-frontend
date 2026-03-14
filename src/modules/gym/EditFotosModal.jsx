@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import api from "../../services/axios";
 import Toast from "../../components/ui/Toast";
+import ModalPortal from "../../components/ui/ModalPortal";
 
 function EditFotosModal({ gym, onClose, onUpdated }) {
 
@@ -8,17 +9,11 @@ function EditFotosModal({ gym, onClose, onUpdated }) {
   const [newFotos, setNewFotos] = useState([]);
   const [toast, setToast] = useState(null);
   const [confirmarId, setConfirmarId] = useState(null);
-  const fileRef = useRef(null); 
+  const fileRef = useRef(null);
 
   const showToast = (message, type = "error") => setToast({ message, type });
 
   const deleteFoto = async () => {
-    if ((gym.fotos?.length || 0) <= 1) {
-      showToast("El gimnasio debe tener al menos una foto.");
-      setConfirmarId(null);
-      return;
-    }
-
     try {
       setLoading(true);
       await api.delete(`/gym/fotos/${confirmarId}`);
@@ -33,11 +28,7 @@ function EditFotosModal({ gym, onClose, onUpdated }) {
   };
 
   const handleUpload = async () => {
-    if (!newFotos.length) {
-      showToast("Selecciona al menos una foto.");
-      return;
-    }
-
+    if (!newFotos.length) { showToast("Selecciona al menos una foto."); return; }
     try {
       setLoading(true);
       const formData = new FormData();
@@ -56,31 +47,19 @@ function EditFotosModal({ gym, onClose, onUpdated }) {
 
   return (
     <>
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
+      {/* ── Modal confirmación eliminar foto ── */}
       {confirmarId && (
         <div className="modal-overlay" style={{ zIndex: 10000 }}>
           <div className="modal-box">
             <h3 className="modal-title">Eliminar foto</h3>
             <p className="modal-body">¿Seguro que deseas eliminar esta foto?</p>
             <div className="modal-actions">
-              <button
-                className="btn btn-secondary"
-                onClick={() => setConfirmarId(null)}
-              >
+              <button className="btn btn-secondary" onClick={() => setConfirmarId(null)}>
                 Cancelar
               </button>
-              <button
-                className="btn btn-danger"
-                onClick={deleteFoto}
-                disabled={loading}
-              >
+              <button className="btn btn-danger" onClick={deleteFoto} disabled={loading}>
                 Eliminar
               </button>
             </div>
@@ -88,6 +67,7 @@ function EditFotosModal({ gym, onClose, onUpdated }) {
         </div>
       )}
 
+      <ModalPortal>
       <div className="modal-overlay">
         <div className="modal-card modal-lg">
 
@@ -100,21 +80,12 @@ function EditFotosModal({ gym, onClose, onUpdated }) {
               multiple
               accept="image/*"
               style={{ display: "none" }}
-              onChange={(e) => setNewFotos(Array.from(e.target.files))}
+              onChange={e => setNewFotos(Array.from(e.target.files))}
             />
-            <button
-              type="button"
-              className="btn-select"
-              onClick={() => fileRef.current.click()}
-            >
+            <button type="button" className="btn-select" onClick={() => fileRef.current.click()}>
               Seleccionar imágenes
             </button>
-            <button
-              type="button"
-              className="btn-primary"
-              onClick={handleUpload}
-              disabled={loading}
-            >
+            <button type="button" className="btn btn-primary" onClick={handleUpload} disabled={loading}>
               {loading ? "Subiendo..." : "Subir fotos"}
             </button>
           </div>
@@ -123,23 +94,19 @@ function EditFotosModal({ gym, onClose, onUpdated }) {
             <div className="selected-files">
               <p className="selected-title">Imágenes seleccionadas:</p>
               <ul>
-                {newFotos.map((f, i) => (
-                  <li key={i}>{f.name}</li>
-                ))}
+                {newFotos.map((f, i) => <li key={i}>{f.name}</li>)}
               </ul>
             </div>
           )}
 
           <div className="fotos-grid">
-            {gym.fotos?.map((f) => (
+            {gym.fotos?.map(f => (
               <div key={f.id_foto} className="foto-card">
-                <img
-                  src={`/uploads/gimnasios/${f.url_foto}`}
-                  alt="foto"
-                />
+                <img src={`/uploads/gimnasios/${f.url_foto}`} alt="foto" />
                 <div className="foto-actions">
                   <button
                     className="btn btn-danger"
+                    disabled={loading}
                     onClick={() => {
                       if ((gym.fotos?.length || 0) <= 1) {
                         showToast("El gimnasio debe tener al menos una foto.");
@@ -147,7 +114,6 @@ function EditFotosModal({ gym, onClose, onUpdated }) {
                       }
                       setConfirmarId(f.id_foto);
                     }}
-                    disabled={loading}
                   >
                     Eliminar
                   </button>
@@ -157,13 +123,12 @@ function EditFotosModal({ gym, onClose, onUpdated }) {
           </div>
 
           <div className="modal-actions">
-            <button className="btn-ghost" onClick={onClose}>
-              Cerrar
-            </button>
+            <button className="btn btn-ghost" onClick={onClose}>Cerrar</button>
           </div>
 
         </div>
       </div>
+      </ModalPortal>
     </>
   );
 }

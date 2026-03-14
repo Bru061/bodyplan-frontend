@@ -1,16 +1,14 @@
-import NavbarGym from '../components/NavbarGym'
-import Footer from '../components/Footer'
+import NavbarGym from "../components/NavbarGym";
 
 function OnboardingLayout({ children }) {
-    return (
-        <>
-            <NavbarGym />
-            <div className="main-content">
-                {children}
-            </div>
-            <Footer />
-        </>
-    )
+  return (
+    <>
+      <NavbarGym />
+      <div className="main-content">
+        {children}
+      </div>
+    </>
+  );
 }
 
-export default OnboardingLayout
+export default OnboardingLayout;

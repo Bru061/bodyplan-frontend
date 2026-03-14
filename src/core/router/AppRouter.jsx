@@ -6,7 +6,7 @@ import ForgotPassword from "../../modules/auth/ForgotPassword";
 import ResetPassword from "../../modules/auth/ResetPassword";
 import VerifyEmail from "../../modules/auth/VerifyEmail";
 import Dashboard from "../../modules/dashboard/Dashboard";
-import Resenas from "../../modules/dashboard/Resenas";
+import Resenas from "../../modules/resenas/Resenas";
 import Clientes from "../../modules/clientes/Clientes";
 import DetalleCliente from "../../modules/clientes/detalleCliente"
 import MiGimnasio from "../../modules/gym/MiGimnasio";

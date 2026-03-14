@@ -1,156 +1,100 @@
 import { useEffect, useState } from "react";
 import api from "../../services/axios";
 import Toast from "../../components/ui/Toast";
+import ModalPortal from "../../components/ui/ModalPortal";
 
 function EditHorariosModal({ gym, onClose, onUpdated }) {
 
   const [horarios, setHorarios] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [errors, setErrors] = useState({});
-  const [toast, setToast] = useState(null); 
+  const [toast, setToast] = useState(null);
 
   const showToast = (message, type = "error") => setToast({ message, type });
 
   useEffect(() => {
-    const keys = Object.keys(errors);
-    if (keys.length === 0) return;
-
-    const field = document.querySelector(`[name="${keys[0]}"]`);
-    if (!field) return;
-
-    const rect = field.getBoundingClientRect();
-    const offset = window.scrollY + rect.top - 120;
-    window.scrollTo({ top: offset, behavior: "smooth" });
-    field.focus?.();
-  }, [errors]);
-
-  useEffect(() => {
     if (!gym) return;
-
-    if (gym.horarios && gym.horarios.length > 0) {
-      setHorarios(
-        gym.horarios.map(h => ({
-          id_horario: h.id_horario,
-          dia: h.dia_semana,
-          apertura: h.hora_apertura?.slice(0, 5),
-          cierre: h.hora_cierre?.slice(0, 5)
-        }))
-      );
+    if (gym.horarios?.length > 0) {
+      setHorarios(gym.horarios.map(h => ({
+        id_horario: h.id_horario,
+        dia:        h.dia_semana,
+        apertura:   h.hora_apertura?.slice(0, 5),
+        cierre:     h.hora_cierre?.slice(0, 5)
+      })));
     } else {
-      setHorarios([{ dia: "", apertura: "", cierre: "" }]);
+      setHorarios([{ id_horario: null, dia: "", apertura: "", cierre: "" }]);
     }
   }, [gym]);
 
   const handleChange = (index, field, value) => {
-    const copia = [...horarios];
-    copia[index][field] = value;
-    setHorarios(copia);
-
+    setHorarios(prev => prev.map((h, i) => i === index ? { ...h, [field]: value } : h));
     const key = `${field}-${index}`;
-    if (errors[key]) {
-      setErrors(prev => ({ ...prev, [key]: "" }));
-    }
+    if (errors[key]) setErrors(prev => ({ ...prev, [key]: "" }));
   };
 
   const addHorario = () => {
-    setHorarios([
-      ...horarios,
-      { id_horario: null, dia: "Lunes", apertura: "06:00", cierre: "22:00", nuevo: true }
+    setHorarios(prev => [
+      ...prev,
+      { id_horario: null, dia: "Lunes", apertura: "06:00", cierre: "22:00" }
     ]);
   };
 
   const deleteHorario = async (index) => {
-    if (horarios.length === 1) {
-      showToast("Debe existir al menos un horario.");
-      return;
-    }
-
+    if (horarios.length === 1) { showToast("Debe existir al menos un horario."); return; }
     const h = horarios[index];
-
     if (h.id_horario) {
       try {
         await api.delete(`/gym/horarios/${h.id_horario}`);
       } catch (err) {
-        console.error("Error eliminando horario", err);
+        console.error(err);
         showToast("No se pudo eliminar el horario.");
         return;
       }
     }
-
-    setHorarios(horarios.filter((_, i) => i !== index));
+    setHorarios(prev => prev.filter((_, i) => i !== index));
   };
 
-  const horaEsValida = (apertura, cierre) => {
-    const [h1, m1] = apertura.split(":").map(Number);
-    const [h2, m2] = cierre.split(":").map(Number);
+  const horaEsValida = (a, c) => {
+    const [h1, m1] = a.split(":").map(Number);
+    const [h2, m2] = c.split(":").map(Number);
     return (h2 * 60 + m2) > (h1 * 60 + m1);
   };
 
   const handleSave = async () => {
-    let newErrors = {};
-    setError("");
+    const newErrors = {};
 
-    if (horarios.length === 0) {
-      showToast("Debe existir al menos un horario.");
-      return;
-    }
+    if (horarios.length === 0) { showToast("Debe existir al menos un horario."); return; }
 
     const diasUsados = new Set();
-
     horarios.forEach((h, i) => {
-      if (!h.dia)
-        newErrors[`dia-${i}`] = "Selecciona un día";
-
-      if (!h.apertura)
-        newErrors[`apertura-${i}`] = "Selecciona hora de apertura";
-
-      if (!h.cierre)
-        newErrors[`cierre-${i}`] = "Selecciona hora de cierre";
-
+      if (!h.dia)      newErrors[`dia-${i}`]      = "Selecciona un día";
+      if (!h.apertura) newErrors[`apertura-${i}`] = "Selecciona hora de apertura";
+      if (!h.cierre)   newErrors[`cierre-${i}`]   = "Selecciona hora de cierre";
       if (h.apertura && h.cierre && !horaEsValida(h.apertura, h.cierre))
         newErrors[`cierre-${i}`] = "La hora de cierre debe ser mayor";
-
       if (h.dia) {
-        if (diasUsados.has(h.dia))
-          newErrors[`dia-${i}`] = "Este día ya está registrado";
+        if (diasUsados.has(h.dia)) newErrors[`dia-${i}`] = "Este día ya está registrado";
         diasUsados.add(h.dia);
       }
     });
 
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
+    if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
 
     try {
       setLoading(true);
-
       for (const h of horarios) {
         const apertura = h.apertura.length === 5 ? h.apertura + ":00" : h.apertura;
-        const cierre = h.cierre.length === 5 ? h.cierre + ":00" : h.cierre;
-
+        const cierre   = h.cierre.length === 5   ? h.cierre   + ":00" : h.cierre;
         if (!h.id_horario) {
-          await api.post(`/gym/${gym.id_gimnasio}/horarios`, {
-            dia_semana: h.dia,
-            hora_apertura: apertura,
-            hora_cierre: cierre
-          });
+          await api.post(`/gym/${gym.id_gimnasio}/horarios`, { dia_semana: h.dia, hora_apertura: apertura, hora_cierre: cierre });
         } else {
-          await api.put(`/gym/${gym.id_gimnasio}/horarios/${h.id_horario}`, {
-            dia_semana: h.dia,
-            hora_apertura: apertura,
-            hora_cierre: cierre
-          });
+          await api.put(`/gym/${gym.id_gimnasio}/horarios/${h.id_horario}`, { dia_semana: h.dia, hora_apertura: apertura, hora_cierre: cierre });
         }
       }
-
       onUpdated();
       onClose();
-
     } catch (err) {
-      const backendError = err?.response?.data?.error;
-      showToast(backendError || "Error al guardar los horarios.");
+      showToast(err?.response?.data?.error || "Error al guardar los horarios.");
     } finally {
       setLoading(false);
     }
@@ -158,20 +102,13 @@ function EditHorariosModal({ gym, onClose, onUpdated }) {
 
   return (
     <>
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
+      <ModalPortal>
       <div className="modal-overlay">
         <div className="modal-card modal-lg">
 
           <h2 className="modal-title">Editar horarios</h2>
-
-          {error && <div className="modal-error">{error}</div>}
 
           <div className="horario-row">
             {horarios.map((h, index) => (
@@ -185,17 +122,11 @@ function EditHorariosModal({ gym, onClose, onUpdated }) {
                     onChange={e => handleChange(index, "dia", e.target.value)}
                   >
                     <option value="">Seleccionar día</option>
-                    <option>Lunes</option>
-                    <option>Martes</option>
-                    <option>Miercoles</option>
-                    <option>Jueves</option>
-                    <option>Viernes</option>
-                    <option>Sabado</option>
-                    <option>Domingo</option>
+                    {["Lunes","Martes","Miercoles","Jueves","Viernes","Sabado","Domingo"].map(d => (
+                      <option key={d}>{d}</option>
+                    ))}
                   </select>
-                  {errors[`dia-${index}`] && (
-                    <p className="text-red-500 text-sm">{errors[`dia-${index}`]}</p>
-                  )}
+                  {errors[`dia-${index}`] && <span className="field-error-msg">{errors[`dia-${index}`]}</span>}
                 </div>
 
                 <div className="field-group">
@@ -206,9 +137,7 @@ function EditHorariosModal({ gym, onClose, onUpdated }) {
                     value={h.apertura}
                     onChange={e => handleChange(index, "apertura", e.target.value)}
                   />
-                  {errors[`apertura-${index}`] && (
-                    <p className="text-red-500 text-sm">{errors[`apertura-${index}`]}</p>
-                  )}
+                  {errors[`apertura-${index}`] && <span className="field-error-msg">{errors[`apertura-${index}`]}</span>}
                 </div>
 
                 <div className="field-group">
@@ -219,16 +148,11 @@ function EditHorariosModal({ gym, onClose, onUpdated }) {
                     value={h.cierre}
                     onChange={e => handleChange(index, "cierre", e.target.value)}
                   />
-                  {errors[`cierre-${index}`] && (
-                    <p className="text-red-500 text-sm">{errors[`cierre-${index}`]}</p>
-                  )}
+                  {errors[`cierre-${index}`] && <span className="field-error-msg">{errors[`cierre-${index}`]}</span>}
                 </div>
 
                 <div className="delete-row">
-                  <button
-                    className="btn btn-danger"
-                    onClick={() => deleteHorario(index)}
-                  >
+                  <button className="btn btn-danger" onClick={() => deleteHorario(index)}>
                     Eliminar
                   </button>
                 </div>
@@ -237,25 +161,18 @@ function EditHorariosModal({ gym, onClose, onUpdated }) {
             ))}
           </div>
 
-          <button className="btn-link-add" onClick={addHorario}>
-            + Agregar horario
-          </button>
+          <button className="btn-link-add" onClick={addHorario}>+ Agregar horario</button>
 
           <div className="modal-actions">
-            <button className="btn-ghost" onClick={onClose}>
-              Cancelar
-            </button>
-            <button
-              className="btn-primary"
-              onClick={handleSave}
-              disabled={loading}
-            >
+            <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
+            <button className="btn btn-primary" onClick={handleSave} disabled={loading}>
               {loading ? "Guardando..." : "Guardar"}
             </button>
           </div>
 
         </div>
       </div>
+      </ModalPortal>
     </>
   );
 }

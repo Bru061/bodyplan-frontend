@@ -1,29 +1,53 @@
-import { MdNotifications, MdPerson } from 'react-icons/md'
-import logo from '../assets/logo.png'
-import { Link } from 'react-router-dom'
+import { MdNotifications, MdMenu } from "react-icons/md";
+import { Link, useLocation } from "react-router-dom";
+import logo from "../assets/logo.png";
 
-function Navbar() {
-    return (
-        <header className="navbar" aria-label="Navegación principal">
-        <div className="navbar-container">
-            <Link to="/dashboard" className="brand" aria-label="Inicio BodyPlan">
-            <img src={logo} alt="Logo de BodyPlan" className="brand-logo" />
-            <span className="brand-name">BodyPlan</span>
-            </Link>
+const PAGE_TITLES = {
+  "/dashboard":     "Dashboard",
+  "/clientes":      "Clientes",
+  "/rutinas":       "Rutinas",
+  "/mis-gimnasios": "Mis Gimnasios",
+  "/resenas":       "Reseñas",
+  "/perfil":        "Perfil",
+  "/notificaciones":"Notificaciones",
+};
 
-            <nav>
-            <ul className="menu">
-                <li><Link to="/dashboard" aria-label="Dashboard">Dashboard</Link></li>
-                <li><Link to="/clientes" aria-label="Clientes">Clientes</Link></li>
-                <li><Link to="/rutinas" aria-label="Rutinas">Rutinas</Link></li>
-                <li><Link to="/mis-gimnasios" aria-label="Mis Gimnasios">Mis Gimnasios</Link></li>
-                <li><Link to="/notificaciones" aria-label="Notificaciones size={24}"><MdNotifications /></Link></li>
-                <li><Link to="/perfil" aria-label="Perfil"><MdPerson size={24} /></Link></li>
-            </ul>
-            </nav>
+function Navbar({ onMenuToggle }) {
+  const location = useLocation();
+
+  const pageTitle = Object.entries(PAGE_TITLES).find(([path]) =>
+    location.pathname.startsWith(path)
+  )?.[1] || "BodyPlan";
+
+  return (
+    <header className="navbar" aria-label="Barra superior">
+      <div className="navbar-container">
+
+        <div className="navbar-left">
+          <button
+            className="navbar-menu-btn"
+            onClick={onMenuToggle}
+            aria-label="Abrir menú"
+          >
+            <MdMenu size={22} />
+          </button>
+
+          <Link to="/dashboard" className="navbar-mobile-brand" aria-label="Inicio">
+            <img src={logo} alt="BodyPlan" className="brand-logo" />
+          </Link>
+
+          <span className="navbar-page-title">{pageTitle}</span>
         </div>
-        </header>
-    )
+
+        <div className="navbar-right">
+          <Link to="/notificaciones" className="navbar-icon-btn" aria-label="Notificaciones">
+            <MdNotifications size={22} />
+          </Link>
+        </div>
+
+      </div>
+    </header>
+  );
 }
 
-export default Navbar
+export default Navbar;

@@ -62,7 +62,6 @@ function Rutinas() {
         asignadas,
         sinAsignar: activas.length - asignadas
       });
-
     } catch (err) {
       console.error("Error obteniendo stats", err);
     }
@@ -109,34 +108,24 @@ function Rutinas() {
   };
 
   return (
-
     <DashboardLayout>
 
       <section className="page-header">
         <div>
-          <p className="eyebrow">Gestión de rutinas</p>
           <h1>Rutinas de gimnasio</h1>
           <p className="subtitle">
             Crea y administra rutinas para asignarlas a clientes.
           </p>
         </div>
-        <button
-          className="btn btn-primary"
-          onClick={handleCrearRutina}
-        >
+        <button className="btn btn-primary" onClick={handleCrearRutina}>
           Crear rutina
         </button>
       </section>
 
       {gymError && (
-        <div className="bg-red-100 text-red-700 px-4 py-3 rounded-xl text-sm mb-4">
+        <div className="modal-error gym-error">
           {gymError}
-          <button
-            className="ml-3 text-red-500 font-bold hover:text-red-700"
-            onClick={() => setGymError("")}
-          >
-            ✕
-          </button>
+          <button className="gym-error-close" onClick={() => setGymError("")}>✕</button>
         </div>
       )}
 
@@ -170,15 +159,15 @@ function Rutinas() {
         </button>
       </div>
 
-      <section className="panel">
+      <article className="panel">
         {loading ? (
-          <h2 className="loading">Cargando rutinas...</h2>
+          <p className="empty-state">Cargando rutinas...</p>
         ) : rutinas.length === 0 ? (
-          <h2 className="empty-state">
+          <p className="empty-state">
             {vista === "activas"
-              ? "No hay rutinas activas"
-              : "No hay rutinas desactivadas"}
-          </h2>
+              ? "No hay rutinas activas."
+              : "No hay rutinas desactivadas."}
+          </p>
         ) : (
           rutinas.map(rutina => (
             <RutinaCard
@@ -191,7 +180,7 @@ function Rutinas() {
             />
           ))
         )}
-      </section>
+      </article>
 
       {showCreateModal && (
         <CreateRutinaModal
@@ -209,9 +198,7 @@ function Rutinas() {
       )}
 
     </DashboardLayout>
-
   );
-
 }
 
 export default Rutinas;

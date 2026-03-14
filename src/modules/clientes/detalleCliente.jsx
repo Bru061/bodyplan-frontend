@@ -22,17 +22,13 @@ function DetalleCliente() {
   const [gymError, setGymError] = useState("");
 
   const fetchRutinasCliente = async () => {
-
     try {
-
       const res = await api.get("/rutinas");
       const todasRutinas = res.data.rutinas || [];
       const rutinasCliente = [];
 
       for (const rutina of todasRutinas) {
-
         try {
-
           const r = await api.get(`/rutinas/${rutina.id_rutina}/clientes`);
           const asignaciones = r.data.clientes || r.data || [];
 
@@ -48,31 +44,23 @@ function DetalleCliente() {
               id_asignacion: pertenece.id_usuario_rutina
             });
           }
-
         } catch (err) {
           console.error("Error obteniendo clientes de rutina", err);
         }
-
       }
 
       setRutinas(rutinasCliente);
-
     } catch (err) {
       console.error("Error cargando rutinas del cliente", err);
     }
-
   };
 
   useEffect(() => {
-
     const cargarCliente = async () => {
-
       try {
-
         const res = await api.get(`/clientes/${id}`);
         const data = res.data.cliente;
         const usuario = data.usuario;
-
         const suscripcion = data.suscripciones?.find(s => s.estado === "activa");
 
         setHistorial(data.suscripciones || []);
@@ -90,15 +78,12 @@ function DetalleCliente() {
           membresia: suscripcion?.membresia?.nombre || "Sin membresía",
           estado: suscripcion?.estado === "activa" ? "Activo" : "Inactivo"
         });
-
       } catch (error) {
         console.error("Error cargando cliente", error);
       }
-
     };
 
     cargarCliente();
-
   }, [id]);
 
   useEffect(() => {
@@ -106,19 +91,14 @@ function DetalleCliente() {
   }, [cliente]);
 
   const handleCancelar = async () => {
-
     if (!confirmModal) return;
 
     try {
-
       setCancelando(true);
       setCancelError("");
-
       await api.delete(`/rutinas/asignacion/${confirmModal.id_asignacion}`);
-
       setConfirmModal(null);
       await fetchRutinasCliente();
-
     } catch (err) {
       setCancelError(
         err?.response?.data?.message ||
@@ -128,7 +108,6 @@ function DetalleCliente() {
     } finally {
       setCancelando(false);
     }
-
   };
 
   if (!cliente) {
@@ -138,9 +117,9 @@ function DetalleCliente() {
   const rutinasCompletadas = rutinas.filter(r => r.estado === "completada").length;
 
   return (
-
     <DashboardLayout>
 
+      {/* ── Header ── */}
       <section className="page-header">
         <div className="page-header-row">
           <button className="back-button" onClick={() => navigate(-1)}>←</button>
@@ -154,6 +133,7 @@ function DetalleCliente() {
         </div>
       </section>
 
+      {/* ── Info + Actividad ── */}
       <section className="client-grid">
 
         <article className="panel client-info">
@@ -202,7 +182,8 @@ function DetalleCliente() {
 
       </section>
 
-      <section className="panel">
+      {/* ── Historial suscripciones ── */}
+      <article className="panel">
         <h2>Historial de suscripciones</h2>
 
         {historial.length === 0 ? (
@@ -211,8 +192,7 @@ function DetalleCliente() {
           historial.map((s, index) => (
             <div className="row-item" key={index}>
               <div>
-                <strong>{s.gimnasio.nombre} - </strong>
-                <span>{s.membresia?.nombre || "Sin membresía"}</span>
+                <strong>{s.gimnasio.nombre}</strong> — {s.membresia?.nombre || "Sin membresía"}
                 <p>Inicio: {new Date(s.fecha_inicio).toLocaleDateString()}</p>
               </div>
               <span className={`badge ${
@@ -223,10 +203,10 @@ function DetalleCliente() {
             </div>
           ))
         )}
-      </section>
+      </article>
 
-      <section className="panel routines-panel">
-
+      {/* ── Rutinas asignadas ── */}
+      <article className="panel routines-panel">
         <div className="panel-head">
           <h2>Rutinas asignadas</h2>
           <button
@@ -240,7 +220,7 @@ function DetalleCliente() {
               setShowAssignModal(true);
             }}
           >
-            Asignar Rutina
+            Asignar rutina
           </button>
         </div>
 
@@ -255,7 +235,6 @@ function DetalleCliente() {
         ) : (
           rutinas.map((rutina) => (
             <div className="routine-card" key={rutina.id_rutina}>
-
               <div>
                 <h2>{rutina.nombre}</h2>
                 <p>{rutina.descripcion}</p>
@@ -268,13 +247,11 @@ function DetalleCliente() {
                 <p>Instrucciones: {rutina.instrucciones}</p>
               </div>
 
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "8px" }}>
-
-                <span className="badge">{rutina.estado}</span>
-
+              <div className="routine-card-actions">
+                <span className="badge badge-secondary">{rutina.estado}</span>
                 {(rutina.estado === "pendiente" || rutina.estado === "iniciada") && (
                   <button
-                    className="btn-danger"
+                    className="btn btn-danger"
                     onClick={() => {
                       setCancelError("");
                       setConfirmModal({
@@ -286,15 +263,13 @@ function DetalleCliente() {
                     Cancelar rutina
                   </button>
                 )}
-
               </div>
-
             </div>
           ))
         )}
+      </article>
 
-      </section>
-
+      {/* ── Modal asignar rutina ── */}
       {showAssignModal && (
         <AssignRutinaModal
           cliente={cliente}
@@ -303,10 +278,10 @@ function DetalleCliente() {
         />
       )}
 
+      {/* ── Modal confirmar cancelación ── */}
       {confirmModal && (
         <div className="modal-overlay">
           <div className="modal-box">
-
             <h3 className="modal-title">Cancelar rutina</h3>
             <p className="modal-body">
               ¿Estás seguro de que deseas cancelar la rutina
@@ -322,7 +297,7 @@ function DetalleCliente() {
 
             <div className="modal-actions">
               <button
-                className="btn-ghost"
+                className="btn btn-secondary"
                 onClick={() => {
                   setConfirmModal(null);
                   setCancelError("");
@@ -332,22 +307,19 @@ function DetalleCliente() {
                 Volver
               </button>
               <button
-                className="btn-danger"
+                className="btn btn-danger"
                 onClick={handleCancelar}
                 disabled={cancelando}
               >
                 {cancelando ? "Cancelando..." : "Sí, cancelar"}
               </button>
             </div>
-
           </div>
         </div>
       )}
 
     </DashboardLayout>
-
   );
-
 }
 
 export default DetalleCliente;

@@ -32,10 +32,23 @@ function Clientes() {
     conMembresia: 0
   });
 
+  const cargarStats = async () => {
+    try {
+      const res = await api.get("/clientes", { params: { limit: 9999 } });
+      const estadisticas = res.data.estadisticas || {};
+      setStats({
+        activos:      estadisticas.clientes_activos   || 0,
+        inactivos:    estadisticas.clientes_inactivos || 0,
+        conMembresia: estadisticas.membresias_activas || 0
+      });
+    } catch (error) {
+      console.error("Error cargando stats", error);
+    }
+  };
+
   const cargarClientes = async (searchTerm = "", estado = "", pagina = 1) => {
     try {
       const params = { limit: LIMIT, page: pagina };
-
       if (searchTerm) params.search = searchTerm;
       if (estado === "activa") params.estado = "activa";
 
@@ -58,18 +71,13 @@ function Clientes() {
       setTotalPages(data.totalPages || 1);
       setTotal(data.total || 0);
 
-      setStats({
-        activos: data.estadisticas.clientes_activos,
-        inactivos: data.estadisticas.clientes_inactivos,
-        conMembresia: data.estadisticas.membresias_activas
-      });
-
     } catch (error) {
       console.error("Error cargando clientes", error);
     }
   };
 
   useEffect(() => {
+    cargarStats();
     cargarClientes();
     fetchGimnasios();
   }, []);
@@ -163,12 +171,11 @@ function Clientes() {
       <section className="page-header">
         <div>
           <p className="eyebrow">Gestión de clientes</p>
-          <h1>Control de clientes del gimnasio</h1>
+          <h1>Control de clientes</h1>
           <p className="subtitle">
             Consulta estado, membresía y actividad para asignar rutinas y dar seguimiento rápidamente.
           </p>
         </div>
-
         <div className="header-actions">
           <button type="button" className="btn btn-primary" onClick={exportClientes}>
             <FiDownload />
@@ -181,12 +188,9 @@ function Clientes() {
       </section>
 
       {gymError && (
-        <div className="modal-error" style={{ marginBottom: "1rem" }}>
+        <div className="modal-error gym-error">
           {gymError}
-          <button
-            onClick={() => setGymError("")}
-            style={{ marginLeft: "12px", background: "none", border: "none", cursor: "pointer", fontWeight: 700 }}
-          >✕</button>
+          <button className="gym-error-close" onClick={() => setGymError("")}>✕</button>
         </div>
       )}
 
@@ -205,7 +209,7 @@ function Clientes() {
         </article>
       </section>
 
-      <section className="table-panel">
+      <article className="table-panel">
 
         <div className="table-toolbar">
           <div className="search-field">
@@ -377,7 +381,7 @@ function Clientes() {
           </div>
         )}
 
-      </section>
+      </article>
 
       {showAddModal && (
         <AddClienteModal
@@ -385,7 +389,10 @@ function Clientes() {
           membresias={membresias}
           fetchMembresias={fetchMembresias}
           onClose={() => setShowAddModal(false)}
-          onCreated={() => cargarClientes(search, filtroEstado, page)}
+          onCreated={() => {
+            cargarStats();
+            cargarClientes(search, filtroEstado, page);
+          }}
         />
       )}
 

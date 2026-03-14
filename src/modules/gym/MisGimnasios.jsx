@@ -16,20 +16,20 @@ function MisGimnasios() {
   const [modal, setModal] = useState(null);
   const [errorMsg, setErrorMsg] = useState("");
 
-  const activos = gimnasios.filter(g => g.activo);
-  const archivados = gimnasios.filter(g => !g.activo);
+  const activos      = gimnasios.filter(g => g.activo);
+  const archivados   = gimnasios.filter(g => !g.activo);
   const listaMostrar = tab === "activos" ? activos : archivados;
 
   const fetchGyms = async () => {
     try {
-      const resActivos = await api.get("/gym");
-      const resArchivados = await api.get("/gym/desactivados");
-
-      const activos = resActivos.data.gimnasios || [];
-      const archivados = resArchivados.data.gimnasios || [];
-
-      setGimnasios([...activos, ...archivados]);
-
+      const [resActivos, resArchivados] = await Promise.all([
+        api.get("/gym"),
+        api.get("/gym/desactivados")
+      ]);
+      setGimnasios([
+        ...(resActivos.data.gimnasios || []),
+        ...(resArchivados.data.gimnasios || [])
+      ]);
     } catch (err) {
       console.error("Error cargando gimnasios", err);
     } finally {
@@ -42,54 +42,35 @@ function MisGimnasios() {
   }, []);
 
   if (loading) {
-    return <LoadingScreen message="Cargando Gimnasios" />;
+    return <LoadingScreen message="Cargando gimnasios..." />;
   }
 
   const confirmarToggle = (gym) => {
     setErrorMsg("");
-    setModal({
-      gym,
-      accion: gym.activo ? "archivar" : "activar"
-    });
+    setModal({ gym, accion: gym.activo ? "archivar" : "activar" });
   };
 
   const toggleActivo = async () => {
     if (!modal) return;
     const { gym } = modal;
-
     setModal(null);
     setChangingId(gym.id_gimnasio);
     setErrorMsg("");
 
     try {
-
       if (gym.activo) {
         await api.put(`/gym/down/${gym.id_gimnasio}`);
       } else {
         await api.put(`/gym/up/${gym.id_gimnasio}`);
       }
-
       fetchGyms();
-
     } catch (err) {
       console.error(err);
-
-      const backendError =
+      setErrorMsg(
         err?.response?.data?.error ||
         err?.response?.data?.message ||
-        err?.response?.data?.msg ||
-        null;
-
-      if (backendError) {
-        setErrorMsg(backendError);
-      } else {
-        setErrorMsg(
-          gym.activo
-            ? "No se pudo archivar el gimnasio. Verifica que no tenga membresías activas en uso."
-            : "No se pudo activar el gimnasio. Intenta de nuevo."
-        );
-      }
-
+        (gym.activo ? "No se pudo archivar el gimnasio." : "No se pudo activar el gimnasio.")
+      );
     } finally {
       setChangingId(null);
     }
@@ -98,6 +79,7 @@ function MisGimnasios() {
   return (
     <DashboardLayout>
 
+      {/* ── Modal confirmación ── */}
       {modal && (
         <div className="modal-overlay">
           <div className="modal-box">
@@ -106,15 +88,11 @@ function MisGimnasios() {
             </h3>
             <p className="modal-body">
               {modal.accion === "archivar"
-                ? `¿Deseas archivar "${modal.gym.nombre}"? No podrá ser administrado hasta que lo actives nuevamente.`
-                : `¿Deseas activar "${modal.gym.nombre}"?`
-              }
+                ? `¿Deseas archivar "${modal.gym.nombre}"? No podrá administrarse hasta activarlo.`
+                : `¿Deseas activar "${modal.gym.nombre}"?`}
             </p>
             <div className="modal-actions">
-              <button
-                className="btn btn-secondary"
-                onClick={() => setModal(null)}
-              >
+              <button className="btn btn-secondary" onClick={() => setModal(null)}>
                 Cancelar
               </button>
               <button
@@ -128,35 +106,27 @@ function MisGimnasios() {
         </div>
       )}
 
+      {/* ── Header ── */}
       <section className="page-header">
         <div>
           <p className="eyebrow">Panel principal</p>
           <h1>Mis gimnasios</h1>
-          <p className="subtitle">
-            Administra tus gimnasios.
-          </p>
+          <p className="subtitle">Administra tus gimnasios.</p>
         </div>
-
-        <button
-          className="btn btn-primary"
-          onClick={() => navigate("/crear-gimnasio")}
-        >
+        <button className="btn btn-primary" onClick={() => navigate("/crear-gimnasio")}>
           <FiPlus /> Agregar gimnasio
         </button>
       </section>
 
+      {/* ── Error inline ── */}
       {errorMsg && (
-        <div className="bg-red-100 text-red-700 px-4 py-3 rounded-xl text-sm mb-4">
+        <div className="modal-error gym-error">
           {errorMsg}
-          <button
-            className="ml-3 text-red-500 font-bold hover:text-red-700"
-            onClick={() => setErrorMsg("")}
-          >
-            ✕
-          </button>
+          <button className="gym-error-close" onClick={() => setErrorMsg("")}>✕</button>
         </div>
       )}
 
+      {/* ── Tabs ── */}
       <div className="gym-tabs">
         <button
           className={`tab-btn ${tab === "activos" ? "active" : ""}`}
@@ -164,7 +134,6 @@ function MisGimnasios() {
         >
           Activos ({activos.length})
         </button>
-
         <button
           className={`tab-btn ${tab === "archivados" ? "active" : ""}`}
           onClick={() => setTab("archivados")}
@@ -173,6 +142,7 @@ function MisGimnasios() {
         </button>
       </div>
 
+      {/* ── Lista ── */}
       <section className="service-list">
 
         {gimnasios.length === 0 && (
@@ -197,7 +167,6 @@ function MisGimnasios() {
           <div
             key={g.id_gimnasio}
             className="service-profile-card"
-            style={{ cursor: "pointer" }}
             onClick={() => {
               if (!g.activo) {
                 setErrorMsg("Este gimnasio está archivado. Actívalo para administrarlo.");
@@ -206,8 +175,7 @@ function MisGimnasios() {
               navigate(`/gimnasio/${g.id_gimnasio}`);
             }}
           >
-
-            <div className="cover-card" style={{ height: 250 }}>
+            <div className="cover-card">
               {g.fotos?.[0] && (
                 <img
                   src={`/uploads/gimnasios/${g.fotos[0].url_foto}`}
@@ -217,7 +185,7 @@ function MisGimnasios() {
               )}
               <div className="cover-overlay" />
               <div className="cover-content">
-                <h2 style={{ fontSize: "1.4rem" }}>{g.nombre}</h2>
+                <h2>{g.nombre}</h2>
                 <span className={g.activo ? "badge-activo" : "badge-off"}>
                   {g.activo ? "🟢 Activo" : "🔴 Archivado"}
                 </span>
@@ -227,9 +195,7 @@ function MisGimnasios() {
               </div>
             </div>
 
-            <div style={{ padding: 20 }}>
-              <span>{g.descripcion}</span>
-            </div>
+            <div className="card-description">{g.descripcion}</div>
 
             <div className="actions-bar">
               <button
@@ -260,7 +226,6 @@ function MisGimnasios() {
                   : g.activo ? "Archivar" : "Activar"}
               </button>
             </div>
-
           </div>
         ))}
 

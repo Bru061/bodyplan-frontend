@@ -95,12 +95,8 @@ function Resenas() {
 
         <section className="page-header">
           <div className="page-header-row">
-            <button className="back-button" onClick={() => navigate("/dashboard")}>
-              <FiArrowLeft size={20} />
-            </button>
             <div>
-              <p className="eyebrow">Opiniones de clientes</p>
-              <h1>Reseñas</h1>
+              <h1>Reseñas de tus gimnasios</h1>
               <p className="subtitle">
                 Consulta lo que piensan tus clientes sobre tus gimnasios.
               </p>
