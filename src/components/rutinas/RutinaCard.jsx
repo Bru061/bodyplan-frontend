@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import api from "../../services/axios";
 import Toast from "../ui/Toast";
+import ModalPortal from "../ui/ModalPortal";
 
 function RutinaCard({ rutina, onEdit, clientesCount, refresh, refreshStats }) {
 
@@ -8,8 +9,36 @@ function RutinaCard({ rutina, onEdit, clientesCount, refresh, refreshStats }) {
   const [toast, setToast] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // ── Instructores únicos asignados a esta rutina ──
+  const [instructores, setInstructores] = useState([]);
+
   const esActiva = rutina.activo;
   const tieneAsignacionesActivas = esActiva && clientesCount > 0;
+
+  useEffect(() => {
+    const fetchInstructores = async () => {
+      try {
+        const res = await api.get(`/rutinas/${rutina.id_rutina}/clientes`);
+        const asignaciones = res.data?.clientes || [];
+
+        // Extraer instructores únicos
+        const mapa = {};
+        for (const a of asignaciones) {
+          if (a.encargado && !mapa[a.encargado.id_personal]) {
+            mapa[a.encargado.id_personal] = [
+              a.encargado.nombre,
+              a.encargado.apellido_paterno
+            ].filter(Boolean).join(" ");
+          }
+        }
+        setInstructores(Object.values(mapa));
+      } catch (err) {
+        // Silencioso — no es crítico
+      }
+    };
+
+    if (esActiva) fetchInstructores();
+  }, [rutina.id_rutina, esActiva]);
 
   const handleIntentarDesactivar = () => {
     if (tieneAsignacionesActivas) {
@@ -24,7 +53,6 @@ function RutinaCard({ rutina, onEdit, clientesCount, refresh, refreshStats }) {
   const handleToggle = async () => {
     setModal(false);
     setLoading(true);
-
     try {
       if (esActiva) {
         await api.put(`/rutinas/${rutina.id_rutina}/desactivar`);
@@ -34,7 +62,6 @@ function RutinaCard({ rutina, onEdit, clientesCount, refresh, refreshStats }) {
       refresh();
       refreshStats();
     } catch (error) {
-      console.error("Error cambiando estado de rutina", error);
       const msg =
         error?.response?.data?.message ||
         error?.response?.data?.error ||
@@ -52,29 +79,31 @@ function RutinaCard({ rutina, onEdit, clientesCount, refresh, refreshStats }) {
       <div className="routine-item">
 
         {modal && (
-          <div className="modal-overlay">
-            <div className="modal-box">
-              <h3 className="modal-title">
-                {esActiva ? "Desactivar rutina" : "Activar rutina"}
-              </h3>
-              <p className="modal-body">
-                {esActiva
-                  ? `¿Deseas desactivar "${rutina.nombre}"? No podrá asignarse a nuevos clientes.`
-                  : `¿Deseas activar "${rutina.nombre}"?`}
-              </p>
-              <div className="modal-actions">
-                <button className="btn btn-secondary" onClick={() => setModal(false)}>
-                  Cancelar
-                </button>
-                <button
-                  className={esActiva ? "btn btn-danger" : "btn btn-success"}
-                  onClick={handleToggle}
-                >
-                  {esActiva ? "Desactivar" : "Activar"}
-                </button>
+          <ModalPortal>
+            <div className="modal-overlay">
+              <div className="modal-box">
+                <h3 className="modal-title">
+                  {esActiva ? "Desactivar rutina" : "Activar rutina"}
+                </h3>
+                <p className="modal-body">
+                  {esActiva
+                    ? `¿Deseas desactivar "${rutina.nombre}"? No podrá asignarse a nuevos clientes.`
+                    : `¿Deseas activar "${rutina.nombre}"?`}
+                </p>
+                <div className="modal-actions">
+                  <button className="btn btn-secondary" onClick={() => setModal(false)}>
+                    Cancelar
+                  </button>
+                  <button
+                    className={esActiva ? "btn btn-danger" : "btn btn-success"}
+                    onClick={handleToggle}
+                  >
+                    {esActiva ? "Desactivar" : "Activar"}
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
+          </ModalPortal>
         )}
 
         <div>
@@ -87,17 +116,22 @@ function RutinaCard({ rutina, onEdit, clientesCount, refresh, refreshStats }) {
             Categoría: {rutina.categoria}
           </p>
           <p>Instrucciones: {rutina.instrucciones}</p>
+
           <p className="routine-meta">
             Clientes con asignación activa: <strong>{clientesCount}</strong>
           </p>
+
+          {/* ── Instructores encargados ── */}
+          {instructores.length > 0 && (
+            <p className="routine-instructor">
+              👤 {instructores.length === 1 ? "Instructor:" : "Instructores:"}{" "}
+              <strong>{instructores.join(", ")}</strong>
+            </p>
+          )}
         </div>
 
         <div className="routine-actions">
-          <button
-            className="btn btn-ghost"
-            onClick={() => onEdit(rutina)}
-            disabled={loading}
-          >
+          <button className="btn btn-ghost" onClick={() => onEdit(rutina)} disabled={loading}>
             Editar
           </button>
           <button

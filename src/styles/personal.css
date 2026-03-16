@@ -1,0 +1,311 @@
+/* ═══════════════════════════════════════════
+   LAYOUT PERSONAL — split panel
+═══════════════════════════════════════════ */
+
+.personal-layout {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+/* ═══════════════════════════════════════════
+   LISTA DE INSTRUCTORES
+═══════════════════════════════════════════ */
+
+.personal-list {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.personal-list-header {
+  padding: 1rem 1.1rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.personal-list-header h2 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--primary-hover);
+}
+
+.personal-items {
+  display: flex;
+  flex-direction: column;
+}
+
+.personal-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1.1rem;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.18s;
+}
+
+.personal-item:last-child {
+  border-bottom: none;
+}
+
+.personal-item:hover {
+  background: #f8fbff;
+}
+
+.personal-item.selected {
+  background: #eff6ff;
+  border-left: 3px solid var(--primary);
+}
+
+.personal-item-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 0.85rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.personal-item.selected .personal-item-avatar {
+  background: var(--primary);
+  color: #fff;
+}
+
+.personal-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.personal-item-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.personal-item-gyms {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin: 2px 0 0;
+}
+
+.personal-item-badge {
+  flex-shrink: 0;
+}
+
+.personal-empty {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+/* ═══════════════════════════════════════════
+   PANEL DETALLE
+═══════════════════════════════════════════ */
+
+.personal-detail {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  min-height: 400px;
+}
+
+.personal-detail-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  color: var(--text-secondary);
+  gap: 0.5rem;
+}
+
+.personal-detail-empty p {
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.personal-detail-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.personal-detail-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.personal-detail-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.personal-detail-name {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin: 0 0 2px;
+}
+
+.personal-detail-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.personal-detail-body {
+  padding: 1.25rem 1.5rem;
+}
+
+/* ── Horarios por gimnasio ── */
+
+.personal-gym-section {
+  margin-bottom: 1.5rem;
+}
+
+.personal-gym-section:last-child {
+  margin-bottom: 0;
+}
+
+.personal-gym-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--primary-hover);
+  margin: 0 0 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.personal-gym-title button {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.personal-gym-title button:hover {
+  color: var(--primary-hover);
+  text-decoration: underline;
+}
+
+.personal-horario-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  background: #f8fafc;
+  margin-bottom: 6px;
+  font-size: 0.88rem;
+}
+
+.personal-horario-row:last-child {
+  margin-bottom: 0;
+}
+
+.personal-horario-dia {
+  font-weight: 600;
+  color: var(--text-main);
+  width: 90px;
+}
+
+.personal-horario-horas {
+  color: var(--text-secondary);
+  flex: 1;
+}
+
+.personal-horario-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.personal-no-gyms {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  padding: 0.5rem 0;
+}
+
+/* ═══════════════════════════════════════════
+   TABS
+═══════════════════════════════════════════ */
+
+.personal-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 0.75rem 1.1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.personal-tab {
+  padding: 5px 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-secondary);
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.personal-tab:hover {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: var(--primary);
+}
+
+.personal-tab.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════ */
+
+@media (max-width: 900px) {
+  .personal-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .personal-detail {
+    min-height: auto;
+  }
+}

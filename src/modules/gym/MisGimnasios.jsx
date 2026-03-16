@@ -5,6 +5,7 @@ import api from "../../services/axios";
 import "../../styles/gimnasio.css";
 import { FiPlus } from "react-icons/fi";
 import LoadingScreen from "../../components/ui/LoadingScreen";
+import ModalPortal from "../../components/ui/ModalPortal";
 
 function MisGimnasios() {
 
@@ -45,8 +46,28 @@ function MisGimnasios() {
     return <LoadingScreen message="Cargando gimnasios..." />;
   }
 
-  const confirmarToggle = (gym) => {
+  const confirmarToggle = async (gym) => {
     setErrorMsg("");
+
+    // ── Solo validar al archivar ──
+    if (gym.activo) {
+      try {
+        const res = await api.get(`/clientes?estado=activa&limit=999`);
+        const todos = res.data.clientes || [];
+        const activos = todos.filter(c => c.id_gimnasio === gym.id_gimnasio || c.gimnasio?.id_gimnasio === gym.id_gimnasio);
+
+        if (activos.length > 0) {
+          setErrorMsg(
+            `No puedes archivar "${gym.nombre}" porque tiene ${activos.length} cliente${activos.length > 1 ? "s" : ""} con membresía activa.`
+          );
+          return;
+        }
+      } catch (err) {
+        console.error("Error verificando clientes", err);
+        // Si falla la verificación dejamos continuar al usuario
+      }
+    }
+
     setModal({ gym, accion: gym.activo ? "archivar" : "activar" });
   };
 
@@ -79,32 +100,36 @@ function MisGimnasios() {
   return (
     <DashboardLayout>
 
+      {/* ── Modal confirmación ── */}
       {modal && (
-        <div className="modal-overlay">
-          <div className="modal-box">
-            <h3 className="modal-title">
-              {modal.accion === "archivar" ? "Archivar gimnasio" : "Activar gimnasio"}
-            </h3>
-            <p className="modal-body">
-              {modal.accion === "archivar"
-                ? `¿Deseas archivar "${modal.gym.nombre}"? No podrá administrarse hasta activarlo.`
-                : `¿Deseas activar "${modal.gym.nombre}"?`}
-            </p>
-            <div className="modal-actions">
-              <button className="btn btn-secondary" onClick={() => setModal(null)}>
-                Cancelar
-              </button>
-              <button
-                className={modal.accion === "archivar" ? "btn btn-danger" : "btn btn-success"}
-                onClick={toggleActivo}
-              >
-                {modal.accion === "archivar" ? "Archivar" : "Activar"}
-              </button>
+        <ModalPortal>
+          <div className="modal-overlay">
+            <div className="modal-box">
+              <h3 className="modal-title">
+                {modal.accion === "archivar" ? "Archivar gimnasio" : "Activar gimnasio"}
+              </h3>
+              <p className="modal-body">
+                {modal.accion === "archivar"
+                  ? `¿Deseas archivar "${modal.gym.nombre}"? No podrá administrarse hasta activarlo.`
+                  : `¿Deseas activar "${modal.gym.nombre}"?`}
+              </p>
+              <div className="modal-actions">
+                <button className="btn btn-secondary" onClick={() => setModal(null)}>
+                  Cancelar
+                </button>
+                <button
+                  className={modal.accion === "archivar" ? "btn btn-danger" : "btn btn-success"}
+                  onClick={toggleActivo}
+                >
+                  {modal.accion === "archivar" ? "Archivar" : "Activar"}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        </ModalPortal>
       )}
 
+      {/* ── Header ── */}
       <section className="page-header">
         <div>
           <p className="eyebrow">Panel principal</p>
@@ -116,6 +141,7 @@ function MisGimnasios() {
         </button>
       </section>
 
+      {/* ── Error inline ── */}
       {errorMsg && (
         <div className="modal-error gym-error">
           {errorMsg}
@@ -123,6 +149,7 @@ function MisGimnasios() {
         </div>
       )}
 
+      {/* ── Tabs ── */}
       <div className="gym-tabs">
         <button
           className={`tab-btn ${tab === "activos" ? "active" : ""}`}
@@ -138,6 +165,7 @@ function MisGimnasios() {
         </button>
       </div>
 
+      {/* ── Lista ── */}
       <section className="service-list">
 
         {gimnasios.length === 0 && (

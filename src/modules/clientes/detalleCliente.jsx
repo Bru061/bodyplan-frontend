@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import api from "../../services/axios";
 import LoadingScreen from "../../components/ui/LoadingScreen";
+import ModalPortal from "../../components/ui/ModalPortal";
 import AssignRutinaModal from "./AssignRutinaModal";
 
 function DetalleCliente() {
@@ -30,7 +31,7 @@ function DetalleCliente() {
       for (const rutina of todasRutinas) {
         try {
           const r = await api.get(`/rutinas/${rutina.id_rutina}/clientes`);
-          const asignaciones = r.data.clientes || r.data || [];
+          const asignaciones = r.data.clientes || [];
 
           const pertenece = asignaciones.find(a =>
             a.id_usuario === cliente?.id ||
@@ -38,10 +39,17 @@ function DetalleCliente() {
           );
 
           if (pertenece) {
+            // Construir nombre del encargado si existe
+            const enc = pertenece.encargado;
+            const encargadoNombre = enc
+              ? [enc.nombre, enc.apellido_paterno].filter(Boolean).join(" ")
+              : null;
+
             rutinasCliente.push({
               ...rutina,
-              estado: pertenece.estado,
-              id_asignacion: pertenece.id_usuario_rutina
+              estado:          pertenece.estado,
+              id_asignacion:   pertenece.id_usuario_rutina,
+              encargadoNombre
             });
           }
         } catch (err) {
@@ -64,25 +72,23 @@ function DetalleCliente() {
         const suscripcion = data.suscripciones?.find(s => s.estado === "activa");
 
         setHistorial(data.suscripciones || []);
-
         setCliente({
-          id: usuario.id_usuario,
-          id_gimnasio: suscripcion?.gimnasio?.id_gimnasio,
-          nombre: usuario.nombre,
-          email: usuario.correo,
-          telefono: usuario.telefono,
-          gimnasio: suscripcion?.gimnasio?.nombre || "Sin gimnasio",
+          id:            usuario.id_usuario,
+          id_gimnasio:   suscripcion?.gimnasio?.id_gimnasio,
+          nombre:        usuario.nombre,
+          email:         usuario.correo,
+          telefono:      usuario.telefono,
+          gimnasio:      suscripcion?.gimnasio?.nombre || "Sin gimnasio",
           fechaRegistro: suscripcion
             ? new Date(suscripcion.fecha_inicio).toLocaleDateString()
             : "Sin registro",
           membresia: suscripcion?.membresia?.nombre || "Sin membresía",
-          estado: suscripcion?.estado === "activa" ? "Activo" : "Inactivo"
+          estado:    suscripcion?.estado === "activa" ? "Activo" : "Inactivo"
         });
       } catch (error) {
         console.error("Error cargando cliente", error);
       }
     };
-
     cargarCliente();
   }, [id]);
 
@@ -92,7 +98,6 @@ function DetalleCliente() {
 
   const handleCancelar = async () => {
     if (!confirmModal) return;
-
     try {
       setCancelando(true);
       setCancelError("");
@@ -110,9 +115,7 @@ function DetalleCliente() {
     }
   };
 
-  if (!cliente) {
-    return <LoadingScreen message="Cargando información del cliente..." />;
-  }
+  if (!cliente) return <LoadingScreen message="Cargando información del cliente..." />;
 
   const rutinasCompletadas = rutinas.filter(r => r.estado === "completada").length;
 
@@ -125,9 +128,7 @@ function DetalleCliente() {
           <div>
             <p className="eyebrow">Detalle de cliente</p>
             <h1>{cliente.nombre}</h1>
-            <p className="subtitle">
-              Información general, membresía y rutinas asignadas.
-            </p>
+            <p className="subtitle">Información general, membresía y rutinas asignadas.</p>
           </div>
         </div>
       </section>
@@ -136,31 +137,14 @@ function DetalleCliente() {
 
         <article className="panel client-info">
           <h2>Información del cliente</h2>
-          <div className="info-row">
-            <span>Correo</span>
-            <span>{cliente.email}</span>
-          </div>
-          <div className="info-row">
-            <span>Teléfono</span>
-            <span>{cliente.telefono || "No registrado"}</span>
-          </div>
-          <div className="info-row">
-            <span>Gimnasio</span>
-            <span>{cliente.gimnasio}</span>
-          </div>
-          <div className="info-row">
-            <span>Miembro desde</span>
-            <span>{cliente.fechaRegistro}</span>
-          </div>
-          <div className="info-row">
-            <span>Membresía</span>
-            <span>{cliente.membresia}</span>
-          </div>
+          <div className="info-row"><span>Correo</span><span>{cliente.email}</span></div>
+          <div className="info-row"><span>Teléfono</span><span>{cliente.telefono || "No registrado"}</span></div>
+          <div className="info-row"><span>Gimnasio</span><span>{cliente.gimnasio}</span></div>
+          <div className="info-row"><span>Miembro desde</span><span>{cliente.fechaRegistro}</span></div>
+          <div className="info-row"><span>Membresía</span><span>{cliente.membresia}</span></div>
           <div className="info-row">
             <span>Estado</span>
-            <span className={`badge ${
-              cliente.estado === "Activo" ? "badge-success" : "badge-danger"
-            }`}>
+            <span className={`badge ${cliente.estado === "Activo" ? "badge-success" : "badge-danger"}`}>
               {cliente.estado}
             </span>
           </div>
@@ -180,9 +164,9 @@ function DetalleCliente() {
 
       </section>
 
+      {/* ── Historial suscripciones ── */}
       <article className="panel">
         <h2>Historial de suscripciones</h2>
-
         {historial.length === 0 ? (
           <p className="empty-state">Este cliente no tiene suscripciones registradas.</p>
         ) : (
@@ -192,9 +176,7 @@ function DetalleCliente() {
                 <strong>{s.gimnasio.nombre}</strong> — {s.membresia?.nombre || "Sin membresía"}
                 <p>Inicio: {new Date(s.fecha_inicio).toLocaleDateString()}</p>
               </div>
-              <span className={`badge ${
-                s.estado === "activa" ? "badge-success" : "badge-danger"
-              }`}>
+              <span className={`badge ${s.estado === "activa" ? "badge-success" : "badge-danger"}`}>
                 {s.estado}
               </span>
             </div>
@@ -202,6 +184,7 @@ function DetalleCliente() {
         )}
       </article>
 
+      {/* ── Rutinas asignadas ── */}
       <article className="panel routines-panel">
         <div className="panel-head">
           <h2>Rutinas asignadas</h2>
@@ -221,16 +204,14 @@ function DetalleCliente() {
         </div>
 
         {gymError && (
-          <div className="modal-error" style={{ marginBottom: "12px" }}>
-            {gymError}
-          </div>
+          <div className="modal-error" style={{ marginBottom: "12px" }}>{gymError}</div>
         )}
 
         {rutinas.length === 0 ? (
           <p className="empty-state">Este cliente aún no tiene rutinas asignadas.</p>
         ) : (
-          rutinas.map((rutina) => (
-            <div className="routine-card" key={rutina.id_rutina}>
+          rutinas.map(rutina => (
+            <div className="routine-card" key={rutina.id_asignacion ?? rutina.id_rutina}>
               <div>
                 <h2>{rutina.nombre}</h2>
                 <p>{rutina.descripcion}</p>
@@ -241,6 +222,13 @@ function DetalleCliente() {
                   Categoría: {rutina.categoria}
                 </p>
                 <p>Instrucciones: {rutina.instrucciones}</p>
+
+                {/* ── Instructor encargado ── */}
+                {rutina.encargadoNombre && (
+                  <p className="routine-instructor">
+                    👤 Instructor: <strong>{rutina.encargadoNombre}</strong>
+                  </p>
+                )}
               </div>
 
               <div className="routine-card-actions">
@@ -250,10 +238,7 @@ function DetalleCliente() {
                     className="btn btn-danger"
                     onClick={() => {
                       setCancelError("");
-                      setConfirmModal({
-                        id_asignacion: rutina.id_asignacion,
-                        nombre: rutina.nombre
-                      });
+                      setConfirmModal({ id_asignacion: rutina.id_asignacion, nombre: rutina.nombre });
                     }}
                   >
                     Cancelar rutina
@@ -265,6 +250,7 @@ function DetalleCliente() {
         )}
       </article>
 
+      {/* ── Modal asignar ── */}
       {showAssignModal && (
         <AssignRutinaModal
           cliente={cliente}
@@ -273,43 +259,35 @@ function DetalleCliente() {
         />
       )}
 
+      {/* ── Modal confirmar cancelar ── */}
       {confirmModal && (
-        <div className="modal-overlay">
-          <div className="modal-box">
-            <h3 className="modal-title">Cancelar rutina</h3>
-            <p className="modal-body">
-              ¿Estás seguro de que deseas cancelar la rutina
-              <strong> {confirmModal.nombre}</strong> para este cliente?
-              Esta acción no se puede deshacer.
-            </p>
-
-            {cancelError && (
-              <div className="modal-error" style={{ marginBottom: "12px" }}>
-                {cancelError}
+        <ModalPortal>
+          <div className="modal-overlay">
+            <div className="modal-box">
+              <h3 className="modal-title">Cancelar rutina</h3>
+              <p className="modal-body">
+                ¿Estás seguro de que deseas cancelar la rutina
+                <strong> {confirmModal.nombre}</strong> para este cliente?
+                Esta acción no se puede deshacer.
+              </p>
+              {cancelError && (
+                <div className="modal-error" style={{ marginBottom: "12px" }}>{cancelError}</div>
+              )}
+              <div className="modal-actions">
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => { setConfirmModal(null); setCancelError(""); }}
+                  disabled={cancelando}
+                >
+                  Volver
+                </button>
+                <button className="btn btn-danger" onClick={handleCancelar} disabled={cancelando}>
+                  {cancelando ? "Cancelando..." : "Sí, cancelar"}
+                </button>
               </div>
-            )}
-
-            <div className="modal-actions">
-              <button
-                className="btn btn-secondary"
-                onClick={() => {
-                  setConfirmModal(null);
-                  setCancelError("");
-                }}
-                disabled={cancelando}
-              >
-                Volver
-              </button>
-              <button
-                className="btn btn-danger"
-                onClick={handleCancelar}
-                disabled={cancelando}
-              >
-                {cancelando ? "Cancelando..." : "Sí, cancelar"}
-              </button>
             </div>
           </div>
-        </div>
+        </ModalPortal>
       )}
 
     </DashboardLayout>

@@ -16,23 +16,22 @@ function Rutinas() {
   const [gymError, setGymError] = useState("");
 
   const [stats, setStats] = useState({
-    total: 0,
-    asignadas: 0,
-    sinAsignar: 0
+    generales: 0,
+    personalizadas: 0,
+    asignadas: 0
   });
 
-  const [vista, setVista] = useState("activas");
+  // ── Vista: generales | personalizadas | desactivadas ──
+  const [vista, setVista] = useState("generales");
   const [clientesPorRutina, setClientesPorRutina] = useState({});
 
   const contarAsignacionesActivas = (asignaciones) =>
-    asignaciones.filter(
-      a => a.estado === "pendiente" || a.estado === "iniciada"
-    ).length;
+    asignaciones.filter(a => a.estado === "pendiente" || a.estado === "iniciada").length;
 
-  const fetchClientesPorRutina = async (rutinas) => {
+  const fetchClientesPorRutina = async (lista) => {
     try {
       const conteo = {};
-      for (const r of rutinas) {
+      for (const r of lista) {
         const res = await api.get(`/rutinas/${r.id_rutina}/clientes`);
         const asignaciones = res.data?.clientes || [];
         conteo[r.id_rutina] = contarAsignacionesActivas(asignaciones);
@@ -45,22 +44,27 @@ function Rutinas() {
 
   const fetchStats = async () => {
     try {
-      const res = await api.get("/rutinas");
-      const activas = res.data.rutinas || [];
+      const [resGenerales, resPersonalizadas] = await Promise.all([
+        api.get("/rutinas/generales"),
+        api.get("/rutinas/personalizadas")
+      ]);
+
+      const generales     = resGenerales.data.rutinas     || [];
+      const personalizadas = resPersonalizadas.data.rutinas || [];
+      const todas = [...generales, ...personalizadas];
 
       const conteo = {};
-      for (const r of activas) {
+      for (const r of todas) {
         const clientesRes = await api.get(`/rutinas/${r.id_rutina}/clientes`);
-        const asignaciones = clientesRes.data?.clientes || [];
-        conteo[r.id_rutina] = contarAsignacionesActivas(asignaciones);
+        conteo[r.id_rutina] = contarAsignacionesActivas(clientesRes.data?.clientes || []);
       }
 
-      const asignadas = activas.filter(r => (conteo[r.id_rutina] || 0) > 0).length;
+      const asignadas = todas.filter(r => (conteo[r.id_rutina] || 0) > 0).length;
 
       setStats({
-        total: activas.length,
-        asignadas,
-        sinAsignar: activas.length - asignadas
+        generales:      generales.length,
+        personalizadas: personalizadas.length,
+        asignadas
       });
     } catch (err) {
       console.error("Error obteniendo stats", err);
@@ -70,8 +74,12 @@ function Rutinas() {
   const fetchRutinas = async () => {
     try {
       setLoading(true);
-      const endpoint = vista === "activas" ? "/rutinas" : "/rutinas/desactivadas";
-      const res = await api.get(endpoint);
+      const endpoints = {
+        generales:       "/rutinas/generales",
+        personalizadas:  "/rutinas/personalizadas",
+        desactivadas:    "/rutinas/desactivadas"
+      };
+      const res = await api.get(endpoints[vista]);
       const data = res.data.rutinas || [];
       setRutinas(data);
       fetchClientesPorRutina(data);
@@ -107,15 +115,19 @@ function Rutinas() {
     }
   };
 
+  const emptyMsg = {
+    generales:      "No hay rutinas generales activas.",
+    personalizadas: "No hay rutinas personalizadas.",
+    desactivadas:   "No hay rutinas desactivadas."
+  };
+
   return (
     <DashboardLayout>
 
       <section className="page-header">
         <div>
-          <h1>Rutinas de gimnasio</h1>
-          <p className="subtitle">
-            Crea y administra rutinas para asignarlas a clientes.
-          </p>
+          <h1>Rutinas</h1>
+          <p className="subtitle">Crea y administra rutinas para asignarlas a clientes.</p>
         </div>
         <button className="btn btn-primary" onClick={handleCrearRutina}>
           Crear rutina
@@ -129,45 +141,50 @@ function Rutinas() {
         </div>
       )}
 
+      {/* ── Stats ── */}
       <section className="stats-grid">
         <article className="stat-card">
-          <p className="stat-label">Rutinas activas</p>
-          <p className="stat-value">{stats.total}</p>
+          <p className="stat-label">Rutinas generales</p>
+          <p className="stat-value">{stats.generales}</p>
         </article>
         <article className="stat-card">
-          <p className="stat-label">Asignadas</p>
+          <p className="stat-label">Personalizadas</p>
+          <p className="stat-value">{stats.personalizadas}</p>
+        </article>
+        <article className="stat-card">
+          <p className="stat-label">Asignadas activamente</p>
           <p className="stat-value">{stats.asignadas}</p>
-        </article>
-        <article className="stat-card">
-          <p className="stat-label">Sin asignar</p>
-          <p className="stat-value">{stats.sinAsignar}</p>
         </article>
       </section>
 
+      {/* ── Tabs ── */}
       <div className="tabs">
         <button
-          className={vista === "activas" ? "tab active" : "tab"}
-          onClick={() => setVista("activas")}
+          className={`tab ${vista === "generales" ? "active" : ""}`}
+          onClick={() => setVista("generales")}
         >
-          Rutinas activas
+          Generales
         </button>
         <button
-          className={vista === "desactivadas" ? "tab active" : "tab"}
+          className={`tab ${vista === "personalizadas" ? "active" : ""}`}
+          onClick={() => setVista("personalizadas")}
+        >
+          Personalizadas
+        </button>
+        <button
+          className={`tab ${vista === "desactivadas" ? "active" : ""}`}
           onClick={() => setVista("desactivadas")}
         >
-          Rutinas desactivadas
+          Desactivadas
         </button>
       </div>
 
+      {/* ── Lista ── */}
       <article className="panel">
         {loading ? (
           <p className="empty-state">Cargando rutinas...</p>
         ) : rutinas.length === 0 ? (
-          <p className="empty-state">
-            {vista === "activas"
-              ? "No hay rutinas activas."
-              : "No hay rutinas desactivadas."}
-          </p>
+          <p className="empty-state">{emptyMsg[vista]}</p>
         ) : (
           rutinas.map(rutina => (
             <RutinaCard

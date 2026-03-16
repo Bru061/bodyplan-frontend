@@ -1,4 +1,7 @@
-/* STATS */
+/* ═══════════════════════════════════════════
+   STATS
+═══════════════════════════════════════════ */
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -31,7 +34,10 @@
   line-height: 1;
 }
 
-/* TABLA PANEL */
+/* ═══════════════════════════════════════════
+   TABLA PANEL
+═══════════════════════════════════════════ */
+
 .table-panel {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -134,6 +140,19 @@
   font-weight: 600;
   color: var(--text-main);
   margin: 0;
+  display: block;
+}
+
+.client-name-link {
+  font-weight: 600;
+  color: var(--primary);
+  display: block;
+  transition: color 0.2s;
+}
+
+.client-name-link:hover {
+  color: var(--primary-hover);
+  text-decoration: underline;
 }
 
 .client-meta {
@@ -143,7 +162,10 @@
   font-size: 0.82rem;
 }
 
-/* BADGES */
+/* ═══════════════════════════════════════════
+   BADGES
+═══════════════════════════════════════════ */
+
 .badge {
   display: inline-flex;
   align-items: center;
@@ -153,14 +175,17 @@
   font-weight: 700;
 }
 
-.badge-success { color: var(--success); background: #dcfce7; }
-.badge-danger { color: var(--danger); background: #fee2e2; }
-.badge-primary { color: var(--primary); background: #dbeafe; }
-.badge-secondary { color: #475569; background: #e2e8f0; }
-.badge-info { color: var(--info); background: #e0f2fe; }
-.badge-pending { color: #92400e; background: #fef3c7; }
+.badge-success  { color: var(--success); background: #dcfce7; }
+.badge-danger   { color: var(--danger);  background: #fee2e2; }
+.badge-primary  { color: var(--primary); background: #dbeafe; }
+.badge-secondary{ color: #475569;        background: #e2e8f0; }
+.badge-info     { color: var(--info);    background: #e0f2fe; }
+.badge-pending  { color: #92400e;        background: #fef3c7; }
 
-/* BOTONES DE FILA */
+/* ═══════════════════════════════════════════
+   BOTONES DE FILA
+═══════════════════════════════════════════ */
+
 .row-actions {
   display: flex;
   align-items: center;
@@ -225,7 +250,10 @@
   cursor: not-allowed;
 }
 
-/* PAGINADOR */
+/* ═══════════════════════════════════════════
+   PAGINADOR
+═══════════════════════════════════════════ */
+
 .pagination {
   display: flex;
   align-items: center;
@@ -272,7 +300,10 @@
   color: var(--text-secondary);
 }
 
-/* DETALLE CLIENTE */
+/* ═══════════════════════════════════════════
+   DETALLE CLIENTE
+═══════════════════════════════════════════ */
+
 .client-grid {
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -440,7 +471,10 @@
   font-size: 0.9rem;
 }
 
-/* HEADER */
+/* ═══════════════════════════════════════════
+   HEADER ACCIONES
+═══════════════════════════════════════════ */
+
 .header-actions {
   display: flex;
   align-items: center;
@@ -462,7 +496,10 @@
   margin-left: 12px;
 }
 
-/* RESPONSIVE */
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════ */
+
 @media (max-width: 768px) {
   .client-grid {
     grid-template-columns: 1fr;

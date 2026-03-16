@@ -2,11 +2,11 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "http://bodyplan-api.giize.com:4000/api/:path*"
+      "destination": "http://bodyplan-api.giize.com:3000/api/:path*"
     },
     {
       "source": "/uploads/:path*",
-      "destination": "http://bodyplan-api.giize.com:4000/uploads/:path*"
+      "destination": "http://bodyplan-api.giize.com:3000/uploads/:path*"
     }
   ]
 }

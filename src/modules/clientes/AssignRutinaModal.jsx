@@ -13,22 +13,28 @@ const FORM_INICIAL = {
   equipamiento: "",
   calorias_estimadas: "",
   duracion_min: "",
-  instrucciones: "",
-  entrenador: ""
+  instrucciones: ""
 };
 
 function AssignRutinaModal({ cliente, onClose, onAssigned }) {
 
   const [tab, setTab] = useState("existente");
 
+  // ── Pestaña existente ──
   const [rutinas, setRutinas] = useState([]);
   const [rutinaSeleccionada, setRutinaSeleccionada] = useState("");
   const [fechaLimite, setFechaLimite] = useState("");
+  const [personalExistente, setPersonalExistente] = useState([]);
+  const [idPersonalExistente, setIdPersonalExistente] = useState("");
 
+  // ── Pestaña personalizada ──
   const [form, setForm] = useState(FORM_INICIAL);
   const [fechaLimitePersonal, setFechaLimitePersonal] = useState("");
+  const [personalPersonalizada, setPersonalPersonalizada] = useState([]);
+  const [idPersonalPersonalizada, setIdPersonalPersonalizada] = useState("");
   const [formErrors, setFormErrors] = useState({});
 
+  // ── Compartido ──
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -40,16 +46,32 @@ function AssignRutinaModal({ cliente, onClose, onAssigned }) {
   })();
 
   useEffect(() => {
+    // Cargar rutinas generales
     const fetchRutinas = async () => {
       try {
-        const res = await api.get("/rutinas");
-        setRutinas(res.data.rutinas || res.data);
+        const res = await api.get("/rutinas/generales");
+        setRutinas(res.data.rutinas || []);
       } catch (err) {
         console.error("Error cargando rutinas:", err);
       }
     };
+
+    // Cargar personal del gimnasio del cliente
+    const fetchPersonal = async () => {
+      if (!cliente?.id_gimnasio) return;
+      try {
+        const res = await api.get(`/personal/gimnasio/${cliente.id_gimnasio}`);
+        const lista = res.data.personal || [];
+        setPersonalExistente(lista);
+        setPersonalPersonalizada(lista);
+      } catch (err) {
+        console.error("Error cargando personal:", err);
+      }
+    };
+
     fetchRutinas();
-  }, []);
+    fetchPersonal();
+  }, [cliente?.id_gimnasio]);
 
   const handleTabChange = (t) => {
     setTab(t);
@@ -60,13 +82,12 @@ function AssignRutinaModal({ cliente, onClose, onAssigned }) {
   const handleChange = (e) => {
     let { name, value } = e.target;
 
-    if (name === "duracion_min")        value = value.replace(/[^0-9]/g, "").slice(0, 3);
-    if (name === "calorias_estimadas")  value = value.replace(/[^0-9]/g, "").slice(0, 4);
-    if (name === "objetivo")            value = value.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]/g, "");
-    if (name === "nombre")              value = value.slice(0, 20);
-    if (name === "descripcion")         value = value.slice(0, 100);
-    if (name === "instrucciones")       value = value.slice(0, 255);
-    if (name === "entrenador")          value = value.slice(0, 60);
+    if (name === "duracion_min")       value = value.replace(/[^0-9]/g, "").slice(0, 3);
+    if (name === "calorias_estimadas") value = value.replace(/[^0-9]/g, "").slice(0, 4);
+    if (name === "objetivo")           value = value.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]/g, "");
+    if (name === "nombre")             value = value.slice(0, 20);
+    if (name === "descripcion")        value = value.slice(0, 100);
+    if (name === "instrucciones")      value = value.slice(0, 255);
 
     setForm(prev => ({ ...prev, [name]: value }));
     if (formErrors[name]) setFormErrors(prev => ({ ...prev, [name]: null }));
@@ -75,7 +96,6 @@ function AssignRutinaModal({ cliente, onClose, onAssigned }) {
   const validatePersonalizada = () => {
     const e = {};
 
-    if (!form.entrenador.trim())        e.entrenador = "El nombre del entrenador es obligatorio";
     if (!form.nombre.trim())            e.nombre = "El nombre es obligatorio";
     else if (form.nombre.length > 20)   e.nombre = "Máximo 20 caracteres";
     if (!form.descripcion.trim())       e.descripcion = "La descripción es obligatoria";
@@ -102,6 +122,7 @@ function AssignRutinaModal({ cliente, onClose, onAssigned }) {
     return Object.keys(e).length === 0;
   };
 
+  // ── Submit existente ──
   const handleSubmitExistente = async (e) => {
     e.preventDefault();
     setError("");
@@ -122,10 +143,11 @@ function AssignRutinaModal({ cliente, onClose, onAssigned }) {
     try {
       setLoading(true);
       await api.post("/rutinas/asignar", {
-        id_rutina:   parseInt(rutinaSeleccionada),
-        id_usuario:  cliente.id,
-        id_gimnasio: cliente.id_gimnasio,
-        fecha_limite: fechaLimite
+        id_rutina:    parseInt(rutinaSeleccionada),
+        id_usuario:   cliente.id,
+        id_gimnasio:  cliente.id_gimnasio,
+        fecha_limite: fechaLimite,
+        ...(idPersonalExistente ? { id_personal: parseInt(idPersonalExistente) } : {})
       });
       onAssigned();
       onClose();
@@ -136,6 +158,7 @@ function AssignRutinaModal({ cliente, onClose, onAssigned }) {
     }
   };
 
+  // ── Submit personalizada: crear rutina → asignar ──
   const handleSubmitPersonalizada = async (e) => {
     e.preventDefault();
     setError("");
@@ -149,18 +172,15 @@ function AssignRutinaModal({ cliente, onClose, onAssigned }) {
     try {
       setLoading(true);
 
-      const descripcionFinal = form.entrenador.trim()
-        ? `Entrenador: ${form.entrenador.trim()}. ${form.descripcion.trim()}`
-        : form.descripcion.trim();
-
       const payload = {
         nombre:              form.nombre.trim(),
-        descripcion:         descripcionFinal,
+        descripcion:         form.descripcion.trim(),
         objetivo:            form.objetivo.trim(),
         categoria:           form.categoria,
         nivel:               form.nivel,
         tipo_rutina:         form.tipo_rutina,
         es_premium:          0,
+        es_personalizada:    true,
         equipamiento:        form.equipamiento.trim(),
         calorias_estimadas:  parseInt(form.calorias_estimadas, 10),
         instrucciones:       form.instrucciones.trim(),
@@ -181,25 +201,30 @@ function AssignRutinaModal({ cliente, onClose, onAssigned }) {
 
       await api.post("/rutinas/asignar", {
         id_rutina,
-        id_usuario:  cliente.id,
-        id_gimnasio: cliente.id_gimnasio,
-        fecha_limite: fechaLimitePersonal
+        id_usuario:   cliente.id,
+        id_gimnasio:  cliente.id_gimnasio,
+        fecha_limite: fechaLimitePersonal,
+        ...(idPersonalPersonalizada ? { id_personal: parseInt(idPersonalPersonalizada) } : {})
       });
 
       onAssigned();
       onClose();
 
     } catch (err) {
-      const msg =
+      setError(
         err?.response?.data?.message ||
         err?.response?.data?.error ||
         err?.message ||
-        "No se pudo crear y asignar la rutina";
-      setError(msg);
+        "No se pudo crear y asignar la rutina"
+      );
     } finally {
       setLoading(false);
     }
   };
+
+  // ── Helper nombre instructor ──
+  const nombrePersonal = (p) =>
+    [p.nombre, p.apellido_paterno].filter(Boolean).join(" ");
 
   return (
     <ModalPortal>
@@ -211,6 +236,7 @@ function AssignRutinaModal({ cliente, onClose, onAssigned }) {
             {cliente.nombre}
           </span>
 
+          {/* ── Pestañas ── */}
           <div className="assign-tabs">
             <button
               type="button"
@@ -229,18 +255,18 @@ function AssignRutinaModal({ cliente, onClose, onAssigned }) {
           </div>
 
           {error && (
-            <div className="modal-error" style={{ marginTop: "12px" }}>
-              {error}
-            </div>
+            <div className="modal-error" style={{ marginTop: "12px" }}>{error}</div>
           )}
 
+          {/* ══ PESTAÑA: EXISTENTE ══ */}
           {tab === "existente" && (
             <form onSubmit={handleSubmitExistente} className="modal-form">
               <div className="modal-grid" style={{ marginTop: "16px" }}>
+
                 <div className="form-group">
                   <label>Rutina *</label>
                   {rutinas.length === 0 ? (
-                    <p className="empty-state">Aún no has creado rutinas.</p>
+                    <p className="empty-state">Aún no has creado rutinas generales.</p>
                   ) : (
                     <select
                       value={rutinaSeleccionada}
@@ -267,7 +293,26 @@ function AssignRutinaModal({ cliente, onClose, onAssigned }) {
                   />
                   <span className="field-hint">Máximo 3 meses desde hoy</span>
                 </div>
+
               </div>
+
+              {/* ── Instructor (opcional) ── */}
+              {personalExistente.length > 0 && (
+                <div className="form-group" style={{ marginTop: "1rem" }}>
+                  <label>Instructor encargado <span style={{ fontWeight: 400, color: "var(--text-secondary)" }}>(opcional)</span></label>
+                  <select
+                    value={idPersonalExistente}
+                    onChange={e => setIdPersonalExistente(e.target.value)}
+                  >
+                    <option value="">Sin instructor asignado</option>
+                    {personalExistente.map(p => (
+                      <option key={p.id_personal} value={p.id_personal}>
+                        {nombrePersonal(p)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div className="modal-actions">
                 <button type="button" className="btn btn-ghost" onClick={onClose}>Cancelar</button>
@@ -278,21 +323,10 @@ function AssignRutinaModal({ cliente, onClose, onAssigned }) {
             </form>
           )}
 
+          {/* ══ PESTAÑA: PERSONALIZADA ══ */}
           {tab === "personalizada" && (
             <form onSubmit={handleSubmitPersonalizada}>
               <div className="personal-form">
-
-                <div className="form-group">
-                  <label>Entrenador *</label>
-                  <input
-                    name="entrenador"
-                    value={form.entrenador}
-                    onChange={handleChange}
-                    placeholder="Nombre del entrenador"
-                    maxLength={60}
-                  />
-                  {formErrors.entrenador && <span className="field-error-msg">{formErrors.entrenador}</span>}
-                </div>
 
                 <div className="form-group">
                   <label>Nombre de la rutina *</label>
@@ -309,12 +343,7 @@ function AssignRutinaModal({ cliente, onClose, onAssigned }) {
                 <div className="form-group">
                   <label>Descripción *</label>
                   <div className="textarea-wrapper">
-                    <textarea
-                      name="descripcion"
-                      value={form.descripcion}
-                      onChange={handleChange}
-                      maxLength={100}
-                    />
+                    <textarea name="descripcion" value={form.descripcion} onChange={handleChange} maxLength={100} />
                     <span className="char-counter">{form.descripcion.length}/100</span>
                   </div>
                   {formErrors.descripcion && <span className="field-error-msg">{formErrors.descripcion}</span>}
@@ -322,12 +351,7 @@ function AssignRutinaModal({ cliente, onClose, onAssigned }) {
 
                 <div className="form-group">
                   <label>Objetivo *</label>
-                  <input
-                    name="objetivo"
-                    value={form.objetivo}
-                    onChange={handleChange}
-                    placeholder="Ej. Ganar masa muscular"
-                  />
+                  <input name="objetivo" value={form.objetivo} onChange={handleChange} placeholder="Ej. Ganar masa muscular" />
                   {formErrors.objetivo && <span className="field-error-msg">{formErrors.objetivo}</span>}
                 </div>
 
@@ -367,37 +391,19 @@ function AssignRutinaModal({ cliente, onClose, onAssigned }) {
 
                   <div className="form-group">
                     <label>Duración (min) *</label>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      name="duracion_min"
-                      value={form.duracion_min}
-                      onChange={handleChange}
-                      maxLength={3}
-                    />
+                    <input type="text" inputMode="numeric" name="duracion_min" value={form.duracion_min} onChange={handleChange} maxLength={3} />
                     {formErrors.duracion_min && <span className="field-error-msg">{formErrors.duracion_min}</span>}
                   </div>
 
                   <div className="form-group">
                     <label>Equipamiento *</label>
-                    <input
-                      name="equipamiento"
-                      value={form.equipamiento}
-                      onChange={handleChange}
-                    />
+                    <input name="equipamiento" value={form.equipamiento} onChange={handleChange} />
                     {formErrors.equipamiento && <span className="field-error-msg">{formErrors.equipamiento}</span>}
                   </div>
 
                   <div className="form-group">
                     <label>Calorías estimadas *</label>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      name="calorias_estimadas"
-                      value={form.calorias_estimadas}
-                      onChange={handleChange}
-                      maxLength={4}
-                    />
+                    <input type="text" inputMode="numeric" name="calorias_estimadas" value={form.calorias_estimadas} onChange={handleChange} maxLength={4} />
                     {formErrors.calorias_estimadas && <span className="field-error-msg">{formErrors.calorias_estimadas}</span>}
                   </div>
 
@@ -406,16 +412,29 @@ function AssignRutinaModal({ cliente, onClose, onAssigned }) {
                 <div className="form-group">
                   <label>Instrucciones *</label>
                   <div className="textarea-wrapper">
-                    <textarea
-                      name="instrucciones"
-                      value={form.instrucciones}
-                      onChange={handleChange}
-                      maxLength={255}
-                    />
+                    <textarea name="instrucciones" value={form.instrucciones} onChange={handleChange} maxLength={255} />
                     <span className="char-counter">{form.instrucciones.length}/255</span>
                   </div>
                   {formErrors.instrucciones && <span className="field-error-msg">{formErrors.instrucciones}</span>}
                 </div>
+
+                {/* ── Instructor (opcional, solo si tipo_rutina = gimnasio) ── */}
+                {form.tipo_rutina === "gimnasio" && personalPersonalizada.length > 0 && (
+                  <div className="form-group">
+                    <label>Instructor encargado <span style={{ fontWeight: 400, color: "var(--text-secondary)" }}>(opcional)</span></label>
+                    <select
+                      value={idPersonalPersonalizada}
+                      onChange={e => setIdPersonalPersonalizada(e.target.value)}
+                    >
+                      <option value="">Sin instructor asignado</option>
+                      {personalPersonalizada.map(p => (
+                        <option key={p.id_personal} value={p.id_personal}>
+                          {nombrePersonal(p)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 <div className="form-group">
                   <label>Fecha límite *</label>

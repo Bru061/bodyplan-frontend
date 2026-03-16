@@ -22,6 +22,7 @@ function Clientes() {
   const [gimnasios, setGimnasios] = useState([]);
   const [membresias, setMembresias] = useState([]);
 
+  // ── Leer filtro de URL al montar ──
   const estadoParam = searchParams.get("estado") || "";
   const [filtroEstado, setFiltroEstado] = useState(
     ["activa", "inactiva"].includes(estadoParam) ? estadoParam : ""
@@ -279,7 +280,9 @@ function Clientes() {
                   <tr key={`${cliente.id}-${index}`}>
 
                     <td>
-                      <p className="client-name">{cliente.nombre}</p>
+                      <Link to={`/detalle-cliente/${cliente.id}`} className="client-name client-name-link">
+                        {cliente.nombre}
+                      </Link>
                       <span className="client-meta">
                         Cliente desde {cliente.fechaInicio}
                       </span>
