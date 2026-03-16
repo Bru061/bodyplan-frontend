@@ -1,20 +1,16 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-function getRedirectByRole(role){
-  if(role === "admin") return "/admin";
-  if(role === "proveedor") return "/dashboard";
-  if(role === "user") return "/solo-app";
-  return "/";
-}
-
 export default function PublicRoute() {
   const { isAuthenticated, user, loading } = useAuth();
 
   if (loading) return null;
 
   if (isAuthenticated) {
-    return <Navigate to="/mis-gimnasios" replace />;
+    if (user?.role === "admin")     return <Navigate to="/admin/dashboard" replace />;
+    if (user?.role === "proveedor") return <Navigate to="/dashboard"       replace />;
+    if (user?.role === "user")      return <Navigate to="/solo-app"        replace />;
+    return <Navigate to="/" replace />;
   }
 
   return <Outlet />;

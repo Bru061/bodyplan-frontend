@@ -1,65 +1,88 @@
-import { Routes, Route} from "react-router-dom";
-import Home from "../../modules/public/home";
-import Login from "../../modules/auth/Login";
-import Register from "../../modules/auth/Register";
+import { Routes, Route } from "react-router-dom";
+import Home           from "../../modules/public/home";
+import Login          from "../../modules/auth/Login";
+import Register       from "../../modules/auth/Register";
 import ForgotPassword from "../../modules/auth/ForgotPassword";
-import ResetPassword from "../../modules/auth/ResetPassword";
-import VerifyEmail from "../../modules/auth/VerifyEmail";
-import Dashboard from "../../modules/dashboard/Dashboard";
-import Resenas from "../../modules/resenas/Resenas";
-import Clientes from "../../modules/clientes/Clientes";
-import DetalleCliente from "../../modules/clientes/detalleCliente"
-import MiGimnasio from "../../modules/gym/MiGimnasio";
-import MisGimnasios from "../../modules/gym/MisGimnasios";
-import Rutinas from "../../modules/rutinas/rutinas";
-import Personal from "../../modules/personal/Personal";
+import ResetPassword  from "../../modules/auth/ResetPassword";
+import VerifyEmail    from "../../modules/auth/VerifyEmail";
+import Dashboard      from "../../modules/dashboard/Dashboard";
+import Resenas        from "../../modules/resenas/Resenas";
+import Clientes       from "../../modules/clientes/Clientes";
+import DetalleCliente from "../../modules/clientes/detalleCliente";
+import MiGimnasio     from "../../modules/gym/MiGimnasio";
+import MisGimnasios   from "../../modules/gym/MisGimnasios";
+import Rutinas        from "../../modules/rutinas/rutinas";
+import Personal       from "../../modules/personal/Personal";
 import Notificaciones from "../../modules/notificaciones/Notificaciones";
-import Perfil from "../../modules/perfil/perfil";
-import CreateGym from "../../modules/gym/CreateGym"
-import AdminDashboard from "../../modules/admin/AdminDashboard";
-import AdminGimnasios from "../../modules/admin/AdminGimnasios";
-import AdminFinanzas from "../../modules/admin/AdminFinanzas";
-import PublicRoute from "../guards/PublicRoute";
-import PrivateRoute from "../guards/PrivateRoute";
-import RoleRoute from "../guards/RoleRoute";
-import AppOnly from "../../modules/public/AppOnly"
+import Perfil         from "../../modules/perfil/perfil";
+import CreateGym      from "../../modules/gym/CreateGym";
+import Planes         from "../../modules/planes/Planes";
+import Checkout       from "../../modules/planes/Checkout";
+import PagoExitoso    from "../../modules/planes/PagoExitoso";
+import AdminDashboard    from "../../modules/admin/AdminDashboard";
+import AdminMovimientos  from "../../modules/admin/AdminMovimientos";
+import AdminPlanes       from "../../modules/admin/AdminPlanes";
+import AdminReembolsos   from "../../modules/admin/AdminReembolsos";
+import AdminSuscripciones from "../../modules/admin/AdminSuscripciones";
+import AppOnly        from "../../modules/public/AppOnly";
 
-function AppRouter(){
-  return(
+import PublicRoute  from "../guards/PublicRoute";
+import PrivateRoute from "../guards/PrivateRoute";
+import RoleRoute    from "../guards/RoleRoute";
+import PlanRoute    from "../guards/PlanRoute";
+
+function AppRouter() {
+  return (
     <Routes>
 
-      {/* PUBLICAS */}
+      {/* ── Públicas ── */}
       <Route element={<PublicRoute />}>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password/:token" element={<ResetPassword />} />
-        <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/"                       element={<Home />} />
+        <Route path="/login"                  element={<Login />} />
+        <Route path="/register"               element={<Register />} />
+        <Route path="/forgot-password"        element={<ForgotPassword />} />
+        <Route path="/reset-password/:token"  element={<ResetPassword />} />
+        <Route path="/verify-email"           element={<VerifyEmail />} />
       </Route>
 
-      {/* PRIVADAS */}
+      {/* ── Privadas ── */}
       <Route element={<PrivateRoute />}>
+
+        {/* Proveedor */}
         <Route element={<RoleRoute allowedRoles={["proveedor"]} />}>
-          <Route path="/crear-gimnasio" element={<CreateGym />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/resenas" element={<Resenas />} />
-          <Route path="/clientes" element={<Clientes />} />
-          <Route path="/detalle-cliente/:id" element={<DetalleCliente />} />
-          <Route path="/mis-gimnasios" element={<MisGimnasios />} />
-          <Route path="/gimnasio/:id" element={<MiGimnasio />} />
-          <Route path="/rutinas" element={<Rutinas />} />
-          <Route path="/personal" element={<Personal />} />
-          <Route path="/notificaciones" element={<Notificaciones />} />
-          <Route path="/perfil" element={<Perfil />} />
+
+          {/* Rutas libres — sin plan requerido ── */}
+          <Route path="/planes"       element={<Planes />} />
+          <Route path="/checkout"     element={<Checkout />} />
+          <Route path="/pago-exitoso" element={<PagoExitoso />} />
+          <Route path="/perfil"       element={<Perfil />} />
+
+          {/* Rutas con plan activo requerido ── */}
+          <Route element={<PlanRoute />}>
+            <Route path="/dashboard"              element={<Dashboard />} />
+            <Route path="/crear-gimnasio"         element={<CreateGym />} />
+            <Route path="/resenas"                element={<Resenas />} />
+            <Route path="/clientes"               element={<Clientes />} />
+            <Route path="/detalle-cliente/:id"    element={<DetalleCliente />} />
+            <Route path="/mis-gimnasios"          element={<MisGimnasios />} />
+            <Route path="/gimnasio/:id"           element={<MiGimnasio />} />
+            <Route path="/rutinas"                element={<Rutinas />} />
+            <Route path="/personal"               element={<Personal />} />
+            <Route path="/notificaciones"         element={<Notificaciones />} />
+          </Route>
+
         </Route>
 
+        {/* Admin */}
         <Route element={<RoleRoute allowedRoles={["admin"]} />}>
-          <Route path="/admin/admin-dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/admin-gimnasios" element={<AdminGimnasios />} />
-          <Route path="/admin/admin-finanzas" element={<AdminFinanzas />} />
+          <Route path="/admin/dashboard"     element={<AdminDashboard />} />
+          <Route path="/admin/movimientos"   element={<AdminMovimientos />} />
+          <Route path="/admin/planes"        element={<AdminPlanes />} />
+          <Route path="/admin/reembolsos"    element={<AdminReembolsos />} />
+          <Route path="/admin/suscripciones" element={<AdminSuscripciones />} />
         </Route>
 
+        {/* Usuario app */}
         <Route element={<RoleRoute allowedRoles={["user"]} />}>
           <Route path="/solo-app" element={<AppOnly />} />
         </Route>
@@ -67,7 +90,7 @@ function AppRouter(){
       </Route>
 
     </Routes>
-  )
+  );
 }
 
 export default AppRouter;

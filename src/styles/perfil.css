@@ -89,9 +89,136 @@
   font-weight: 600;
 }
 
+/* ═══════════════════════════════════════════
+   MI PLAN ACTIVO
+═══════════════════════════════════════════ */
+
+.mi-plan-card {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border: 1px solid #bfdbfe;
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.mi-plan-info h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--primary-hover);
+  margin: 0 0 4px;
+}
+
+.mi-plan-info p {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.mi-plan-dias {
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: var(--primary);
+  color: #fff;
+  white-space: nowrap;
+}
+
+.mi-plan-dias.venciendo { background: #f59e0b; }
+.mi-plan-dias.vencido   { background: #dc2626; }
+
+.mi-plan-acciones {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.mi-plan-sin {
+  background: #f8fafc;
+  border: 2px dashed var(--border);
+  border-radius: 14px;
+  padding: 1.5rem;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.mi-plan-sin p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin: 0 0 1rem;
+}
+
+/* ═══════════════════════════════════════════
+   CLABE BANCARIA
+═══════════════════════════════════════════ */
+
+.clabe-card {
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.clabe-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.clabe-info p {
+  margin: 0 0 3px;
+  font-size: 0.9rem;
+  color: var(--text-main);
+}
+
+.clabe-info span {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.clabe-verificado {
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.clabe-pendiente {
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.clabe-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.clabe-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
 /* RESPONSIVE */
 @media (max-width: 768px) {
-  .content-grid {
-    grid-template-columns: 1fr;
-  }
+  .content-grid { grid-template-columns: 1fr; }
+  .mi-plan-card { flex-direction: column; align-items: flex-start; }
+  .clabe-form-grid { grid-template-columns: 1fr; }
 }

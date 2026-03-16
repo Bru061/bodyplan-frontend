@@ -18,12 +18,6 @@ function mapRole(idRol){
   return "user";
 }
 
-function getDashboardByRole(role) {
-  if (role === "admin") return "/superadmin/dashboard";
-  if (role === "proveedor") return "/dashboard";
-  if (role === "user") return "/solo-app";
-  return "/";
-}
 
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(null);

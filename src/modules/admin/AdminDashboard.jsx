@@ -1,206 +1,120 @@
-import { useState, useEffect } from "react";
-import SuperAdminLayout from "../../layout/AdminLayout";
+import { useEffect, useState } from "react";
+import AdminLayout from "../../layout/AdminLayout";
 import { Link } from "react-router-dom";
-import { MdOutlineCalendarMonth, MdFileDownload } from "react-icons/md";
-import "../../styles/admin.css";
+import api from "../../services/axios";
 
 function AdminDashboard() {
 
-  const [stats, setStats] = useState({
-    totalGyms: 0,
-    activeGyms: 0,
-    blockedGyms: 0,
-    ingresos: 0
-  });
-
-  const [finance, setFinance] = useState({
-    suscripciones: 0,
-    totalRecibido: 0,
-    pagosVencidos: 0
-  });
-
-  const [actividad, setActividad] = useState([]);
-
-  const [alertas, setAlertas] = useState([]);
-
+  const [stats, setStats]   = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const [resMovimientos, resSuscripciones, resReembolsos] = await Promise.allSettled([
+          api.get("/admin/movimientos"),
+          api.get("/admin/suscripciones", { params: { estado: "activa" } }),
+          api.get("/admin/reembolsos",    { params: { estado: "pendiente_revision" } })
+        ]);
 
-    setLoading(false);
+        setStats({
+          totalCobrado: resMovimientos.status === "fulfilled"
+            ? resMovimientos.value.data.resumen?.total_cobrado || 0
+            : 0,
+          suscripcionesActivas: resSuscripciones.status === "fulfilled"
+            ? (resSuscripciones.value.data.suscripciones || []).length
+            : 0,
+          reembolsosPendientes: resReembolsos.status === "fulfilled"
+            ? (resReembolsos.value.data.reembolsos || []).length
+            : 0
+        });
+      } catch (err) {
+        console.error("Error cargando stats admin", err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
+    fetchStats();
   }, []);
 
-  if (loading) {
-    return (
-      <SuperAdminLayout>
-        <h2 style={{ padding: 40 }}>Cargando dashboard...</h2>
-      </SuperAdminLayout>
-    );
-  }
-
   return (
-    <SuperAdminLayout>
+    <AdminLayout>
 
       <section className="page-header">
         <div>
-          <p className="eyebrow">Control global de plataforma</p>
-          <h1>Dashboard superadministrador</h1>
-          <p className="subtitle">
-            Monitorea gimnasios, ingresos y eventos críticos de BodyPlan.
+          <p className="eyebrow">Panel de administración</p>
+          <h1>Dashboard</h1>
+          <p className="subtitle">Resumen general de la plataforma BodyPlan.</p>
+        </div>
+      </section>
+
+      {/* ── Stats ── */}
+      <div className="admin-stats">
+        <div className="admin-stat-card">
+          <p className="admin-stat-label">Total cobrado</p>
+          <p className="admin-stat-value">
+            {loading ? "..." : `$${parseFloat(stats?.totalCobrado || 0).toLocaleString("es-MX")}`}
           </p>
         </div>
-
-        <div className="header-actions">
-          <button className="btn btn-primary">
-            <MdFileDownload />
-            Exportar reporte
-          </button>
-
-          <button className="btn btn-ghost">
-            <MdOutlineCalendarMonth />
-            Periodo
-          </button>
+        <div className="admin-stat-card">
+          <p className="admin-stat-label">Suscripciones activas</p>
+          <p className="admin-stat-value">{loading ? "..." : stats?.suscripcionesActivas}</p>
         </div>
-      </section>
-
-      <section className="stats-grid">
-
-        <article className="stat-card">
-          <p className="stat-label">Total gimnasios</p>
-          <p className="stat-value">{stats.totalGyms}</p>
-        </article>
-
-        <article className="stat-card">
-          <p className="stat-label">Gimnasios activos</p>
-          <p className="stat-value">{stats.activeGyms}</p>
-        </article>
-
-        <article className="stat-card">
-          <p className="stat-label">Gimnasios bloqueados</p>
-          <p className="stat-value">{stats.blockedGyms}</p>
-        </article>
-
-        <article className="stat-card">
-          <p className="stat-label">Ingresos globales</p>
-          <p className="stat-value">${stats.ingresos}</p>
-        </article>
-
-      </section>
-
-      <section className="content-grid">
-
-        <article className="panel">
-          <div className="panel-header">
-            <h2>Resumen financiero</h2>
-            <Link to="/admin/finanzas" className="inline-link">
-              Ver finanzas
-            </Link>
-          </div>
-
-          <div className="finance-list">
-            <p>
-              <span>Suscripciones vigentes</span>
-              <strong>{finance.suscripciones}</strong>
-            </p>
-
-            <p>
-              <span>Total recibido</span>
-              <strong>${finance.totalRecibido}</strong>
-            </p>
-
-            <p>
-              <span>Pagos vencidos</span>
-              <strong>{finance.pagosVencidos}</strong>
-            </p>
-          </div>
-
-        </article>
-
-        <article className="panel">
-          <div className="panel-header">
-            <h2>Actividad reciente</h2>
-            <Link to="/admin/actividad" className="inline-link">
-              Ver actividad
-            </Link>
-          </div>
-
-          {actividad.length === 0 ? (
-            <p className="empty-state">No hay actividad reciente</p>
-          ) : (
-            <ul className="activity-list">
-              {actividad.map((a, index) => (
-                <li key={index}>
-                  <span className={`badge badge-${a.tipo}`}>
-                    {a.tipo}
-                  </span>
-                  {a.descripcion}
-                  <span className="time">{a.tiempo}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-
-        </article>
-
-      </section>
-
-      <section className="panel table-panel">
-
-        <div className="panel-header">
-          <h2>Gimnasios con alertas críticas</h2>
-          <Link to="/admin/gimnasios" className="inline-link">
-            Gestionar gimnasios
-          </Link>
+        <div className="admin-stat-card" style={{ borderLeft: stats?.reembolsosPendientes > 0 ? "4px solid #f59e0b" : undefined }}>
+          <p className="admin-stat-label">Reembolsos pendientes</p>
+          <p className="admin-stat-value" style={{ color: stats?.reembolsosPendientes > 0 ? "#f59e0b" : undefined }}>
+            {loading ? "..." : stats?.reembolsosPendientes}
+          </p>
         </div>
+      </div>
 
-        <div className="table-wrap">
+      {/* ── Accesos rápidos ── */}
+      <div className="content-grid" style={{ gridTemplateColumns: "repeat(2, 1fr)" }}>
 
-          <table>
+        <Link to="/admin/planes" style={{ textDecoration: "none" }}>
+          <div className="panel" style={{ cursor: "pointer", transition: "transform 0.2s" }}
+            onMouseEnter={e => e.currentTarget.style.transform = "translateY(-4px)"}
+            onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}
+          >
+            <h2 style={{ margin: "0 0 0.5rem" }}>Gestión de planes</h2>
+            <p className="subtitle" style={{ margin: 0 }}>Crea y edita los planes de la plataforma.</p>
+          </div>
+        </Link>
 
-            <thead>
-              <tr>
-                <th>Gimnasio</th>
-                <th>Estado</th>
-                <th>Plan</th>
-                <th>Último pago</th>
-                <th>Alerta</th>
-              </tr>
-            </thead>
+        <Link to="/admin/movimientos" style={{ textDecoration: "none" }}>
+          <div className="panel" style={{ cursor: "pointer", transition: "transform 0.2s" }}
+            onMouseEnter={e => e.currentTarget.style.transform = "translateY(-4px)"}
+            onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}
+          >
+            <h2 style={{ margin: "0 0 0.5rem" }}>Movimientos</h2>
+            <p className="subtitle" style={{ margin: 0 }}>Historial de pagos y transacciones.</p>
+          </div>
+        </Link>
 
-            <tbody>
+        <Link to="/admin/reembolsos" style={{ textDecoration: "none" }}>
+          <div className="panel" style={{ cursor: "pointer", transition: "transform 0.2s" }}
+            onMouseEnter={e => e.currentTarget.style.transform = "translateY(-4px)"}
+            onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}
+          >
+            <h2 style={{ margin: "0 0 0.5rem" }}>Reembolsos</h2>
+            <p className="subtitle" style={{ margin: 0 }}>Aprueba o rechaza solicitudes pendientes.</p>
+          </div>
+        </Link>
 
-              {alertas.length === 0 ? (
-                <tr>
-                  <td colSpan="5" className="empty-table">
-                    No hay alertas críticas
-                  </td>
-                </tr>
-              ) : (
-                alertas.map((g) => (
-                  <tr key={g.id}>
-                    <td>{g.nombre}</td>
-                    <td>
-                      <span className={`badge badge-${g.estado}`}>
-                        {g.estado}
-                      </span>
-                    </td>
-                    <td>{g.plan}</td>
-                    <td>{g.ultimoPago}</td>
-                    <td>{g.alerta}</td>
-                  </tr>
-                ))
-              )}
+        <Link to="/admin/suscripciones" style={{ textDecoration: "none" }}>
+          <div className="panel" style={{ cursor: "pointer", transition: "transform 0.2s" }}
+            onMouseEnter={e => e.currentTarget.style.transform = "translateY(-4px)"}
+            onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}
+          >
+            <h2 style={{ margin: "0 0 0.5rem" }}>Suscripciones</h2>
+            <p className="subtitle" style={{ margin: 0 }}>Membresías activas en todos los gimnasios.</p>
+          </div>
+        </Link>
 
-            </tbody>
+      </div>
 
-          </table>
-
-        </div>
-
-      </section>
-
-    </SuperAdminLayout>
+    </AdminLayout>
   );
 }
 
