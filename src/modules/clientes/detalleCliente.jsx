@@ -39,7 +39,6 @@ function DetalleCliente() {
           );
 
           if (pertenece) {
-            // Construir nombre del encargado si existe
             const enc = pertenece.encargado;
             const encargadoNombre = enc
               ? [enc.nombre, enc.apellido_paterno].filter(Boolean).join(" ")
@@ -47,8 +46,8 @@ function DetalleCliente() {
 
             rutinasCliente.push({
               ...rutina,
-              estado:          pertenece.estado,
-              id_asignacion:   pertenece.id_usuario_rutina,
+              estado: pertenece.estado,
+              id_asignacion: pertenece.id_usuario_rutina,
               encargadoNombre
             });
           }
@@ -73,17 +72,17 @@ function DetalleCliente() {
 
         setHistorial(data.suscripciones || []);
         setCliente({
-          id:            usuario.id_usuario,
-          id_gimnasio:   suscripcion?.gimnasio?.id_gimnasio,
-          nombre:        usuario.nombre,
-          email:         usuario.correo,
-          telefono:      usuario.telefono,
-          gimnasio:      suscripcion?.gimnasio?.nombre || "Sin gimnasio",
+          id: usuario.id_usuario,
+          id_gimnasio: suscripcion?.gimnasio?.id_gimnasio,
+          nombre: usuario.nombre,
+          email: usuario.correo,
+          telefono: usuario.telefono,
+          gimnasio: suscripcion?.gimnasio?.nombre || "Sin gimnasio",
           fechaRegistro: suscripcion
             ? new Date(suscripcion.fecha_inicio).toLocaleDateString()
             : "Sin registro",
           membresia: suscripcion?.membresia?.nombre || "Sin membresía",
-          estado:    suscripcion?.estado === "activa" ? "Activo" : "Inactivo"
+          estado: suscripcion?.estado === "activa" ? "Activo" : "Inactivo"
         });
       } catch (error) {
         console.error("Error cargando cliente", error);
@@ -164,7 +163,6 @@ function DetalleCliente() {
 
       </section>
 
-      {/* ── Historial suscripciones ── */}
       <article className="panel">
         <h2>Historial de suscripciones</h2>
         {historial.length === 0 ? (
@@ -184,7 +182,6 @@ function DetalleCliente() {
         )}
       </article>
 
-      {/* ── Rutinas asignadas ── */}
       <article className="panel routines-panel">
         <div className="panel-head">
           <h2>Rutinas asignadas</h2>
@@ -223,7 +220,6 @@ function DetalleCliente() {
                 </p>
                 <p>Instrucciones: {rutina.instrucciones}</p>
 
-                {/* ── Instructor encargado ── */}
                 {rutina.encargadoNombre && (
                   <p className="routine-instructor">
                     👤 Instructor: <strong>{rutina.encargadoNombre}</strong>
@@ -250,7 +246,6 @@ function DetalleCliente() {
         )}
       </article>
 
-      {/* ── Modal asignar ── */}
       {showAssignModal && (
         <AssignRutinaModal
           cliente={cliente}
@@ -259,7 +254,6 @@ function DetalleCliente() {
         />
       )}
 
-      {/* ── Modal confirmar cancelar ── */}
       {confirmModal && (
         <ModalPortal>
           <div className="modal-overlay">

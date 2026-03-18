@@ -17,9 +17,9 @@ function EditHorariosModal({ gym, onClose, onUpdated }) {
     if (gym.horarios?.length > 0) {
       setHorarios(gym.horarios.map(h => ({
         id_horario: h.id_horario,
-        dia:        h.dia_semana,
-        apertura:   h.hora_apertura?.slice(0, 5),
-        cierre:     h.hora_cierre?.slice(0, 5)
+        dia: h.dia_semana,
+        apertura: h.hora_apertura?.slice(0, 5),
+        cierre: h.hora_cierre?.slice(0, 5)
       })));
     } else {
       setHorarios([{ id_horario: null, dia: "", apertura: "", cierre: "" }]);
@@ -67,9 +67,9 @@ function EditHorariosModal({ gym, onClose, onUpdated }) {
 
     const diasUsados = new Set();
     horarios.forEach((h, i) => {
-      if (!h.dia)      newErrors[`dia-${i}`]      = "Selecciona un día";
+      if (!h.dia) newErrors[`dia-${i}`] = "Selecciona un día";
       if (!h.apertura) newErrors[`apertura-${i}`] = "Selecciona hora de apertura";
-      if (!h.cierre)   newErrors[`cierre-${i}`]   = "Selecciona hora de cierre";
+      if (!h.cierre) newErrors[`cierre-${i}`] = "Selecciona hora de cierre";
       if (h.apertura && h.cierre && !horaEsValida(h.apertura, h.cierre))
         newErrors[`cierre-${i}`] = "La hora de cierre debe ser mayor";
       if (h.dia) {
@@ -84,7 +84,7 @@ function EditHorariosModal({ gym, onClose, onUpdated }) {
       setLoading(true);
       for (const h of horarios) {
         const apertura = h.apertura.length === 5 ? h.apertura + ":00" : h.apertura;
-        const cierre   = h.cierre.length === 5   ? h.cierre   + ":00" : h.cierre;
+        const cierre = h.cierre.length === 5 ? h.cierre + ":00" : h.cierre;
         if (!h.id_horario) {
           await api.post(`/gym/${gym.id_gimnasio}/horarios`, { dia_semana: h.dia, hora_apertura: apertura, hora_cierre: cierre });
         } else {

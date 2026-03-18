@@ -49,7 +49,6 @@ function AdminDashboard() {
         </div>
       </section>
 
-      {/* ── Stats ── */}
       <div className="admin-stats">
         <div className="admin-stat-card">
           <p className="admin-stat-label">Total cobrado</p>
@@ -69,7 +68,6 @@ function AdminDashboard() {
         </div>
       </div>
 
-      {/* ── Accesos rápidos ── */}
       <div className="content-grid" style={{ gridTemplateColumns: "repeat(2, 1fr)" }}>
 
         <Link to="/admin/planes" style={{ textDecoration: "none" }}>

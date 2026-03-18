@@ -29,7 +29,7 @@ function CreatePersonalModal({ onClose, onCreated }) {
 
   const handleSubmit = async () => {
     const newErrors = {};
-    if (!form.nombre.trim())          newErrors.nombre = "El nombre es obligatorio";
+    if (!form.nombre.trim()) newErrors.nombre = "El nombre es obligatorio";
     if (!form.apellido_paterno.trim()) newErrors.apellido_paterno = "El apellido paterno es obligatorio";
 
     if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
@@ -38,7 +38,7 @@ function CreatePersonalModal({ onClose, onCreated }) {
       setLoading(true);
       setError("");
       await api.post("/personal", {
-        nombre:           form.nombre.trim(),
+        nombre: form.nombre.trim(),
         apellido_paterno: form.apellido_paterno.trim(),
         apellido_materno: form.apellido_materno.trim() || undefined
       });

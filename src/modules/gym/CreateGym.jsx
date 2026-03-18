@@ -9,9 +9,9 @@ import StepFotosHorarios from "./steps/StepFotosHorarios";
 import StepMembresias from "./steps/StepMembresias";
 
 const STEPS = [
-  { label: "Básico"     },
-  { label: "Ubicación"  },
-  { label: "Fotos"      },
+  { label: "Básico" },
+  { label: "Ubicación" },
+  { label: "Fotos" },
   { label: "Membresías" },
 ];
 
@@ -68,16 +68,16 @@ function CreateGym() {
     const e = {};
 
     if (index === 0) {
-      if (!form.nombre.trim())       e.nombre = "El nombre es obligatorio";
-      if (!form.descripcion.trim())  e.descripcion = "La descripción es obligatoria";
-      if (!form.telefono.trim())     e.telefono = "El teléfono es obligatorio";
+      if (!form.nombre.trim()) e.nombre = "El nombre es obligatorio";
+      if (!form.descripcion.trim()) e.descripcion = "La descripción es obligatoria";
+      if (!form.telefono.trim()) e.telefono = "El teléfono es obligatorio";
       else if (form.telefono.length !== 10) e.telefono = "Debe tener 10 dígitos";
     }
 
     if (index === 1) {
-      if (!form.direccion.trim())     e.direccion = "La dirección es obligatoria";
-      if (!form.municipio.trim())     e.municipio = "El municipio es obligatorio";
-      if (!form.estado.trim())        e.estado = "El estado es obligatorio";
+      if (!form.direccion.trim()) e.direccion = "La dirección es obligatoria";
+      if (!form.municipio.trim()) e.municipio = "El municipio es obligatorio";
+      if (!form.estado.trim()) e.estado = "El estado es obligatorio";
       if (!form.codigo_postal.trim()) e.codigo_postal = "El código postal es obligatorio";
       else if (form.codigo_postal.length !== 5) e.codigo_postal = "Debe tener 5 dígitos";
       if (!form.url_map.trim()) {
@@ -166,17 +166,17 @@ function CreateGym() {
       formData.append("descripcion", form.descripcion);
       formData.append("telefono",    form.telefono);
       formData.append("ubicacion", JSON.stringify({
-        direccion:     form.direccion,
-        municipio:     form.municipio,
-        estado:        form.estado,
-        pais:          form.pais,
+        direccion: form.direccion,
+        municipio: form.municipio,
+        estado: form.estado,
+        pais: form.pais,
         codigo_postal: form.codigo_postal,
-        localidad:     form.localidad || "",
-        latitud:       null,
-        longitud:      null,
-        url_map:       form.url_map
+        localidad: form.localidad || "",
+        latitud: null,
+        longitud: null,
+        url_map: form.url_map
       }));
-      formData.append("horarios",   JSON.stringify(horarios));
+      formData.append("horarios", JSON.stringify(horarios));
       formData.append("membresias", JSON.stringify(membresias));
       fotos.forEach(f => formData.append("fotos", f));
 

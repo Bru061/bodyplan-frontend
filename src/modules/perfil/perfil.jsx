@@ -16,19 +16,14 @@ function Perfil() {
   const [user, setUser]       = useState(null);
   const [loading, setLoading] = useState(true);
   const [toast, setToast]     = useState(null);
-
-  // ── Plan ──
   const [planActivo, setPlanActivo]   = useState(null);
   const [historialPlanes, setHistorialPlanes] = useState([]);
-
-  // ── CLABE ──
   const [clabe, setClabe]         = useState(null);
   const [editandoClabe, setEditandoClabe] = useState(false);
   const [clabeForm, setClabeForm] = useState({ clabe: "", banco: "", titular: "" });
   const [clabeErrors, setClabeErrors] = useState({});
   const [clabeLoading, setClabeLoading] = useState(false);
 
-  // ── Modal confirmar cambio de plan ──
   const [confirmCambio, setConfirmCambio] = useState(false);
 
   const showToast = (message, type = "success") => setToast({ message, type });
@@ -66,7 +61,6 @@ function Perfil() {
 
   useEffect(() => { fetchAll(); }, []);
 
-  // ── Días restantes del plan ──
   const diasRestantes = () => {
     if (!planActivo?.fecha_fin) return 0;
     const hoy = new Date();
@@ -81,7 +75,6 @@ function Perfil() {
     return "";
   };
 
-  // ── Renovar plan (mismo plan) ──
   const handleRenovar = async () => {
     if (!planActivo?.plan) return;
     try {
@@ -105,7 +98,6 @@ function Perfil() {
     }
   };
 
-  // ── Guardar / actualizar CLABE ──
   const handleGuardarClabe = async () => {
     const errors = {};
     if (!clabeForm.clabe.trim() || clabeForm.clabe.length !== 18)
@@ -159,7 +151,6 @@ function Perfil() {
 
       <section className="content-grid">
 
-        {/* ── Información personal ── */}
         <article className="panel">
           <h2 className="panel-icon-title">
             <FiUser size={18} /> Información personal
@@ -171,7 +162,6 @@ function Perfil() {
           </div>
         </article>
 
-        {/* ── Mi Plan ── */}
         <article className="panel">
           <h2 className="panel-icon-title">
             <FiCreditCard size={18} /> Mi plan
@@ -210,7 +200,6 @@ function Perfil() {
             </div>
           )}
 
-          {/* ── Historial ── */}
           <p className="panel-description">Historial de pagos hacia la plataforma BodyPlan.</p>
           <div className="table-wrap">
             <table className="history-table">
@@ -250,7 +239,6 @@ function Perfil() {
           </div>
         </article>
 
-        {/* ── CLABE bancaria ── */}
         <article className="panel" style={{ gridColumn: "1 / -1" }}>
           <h2 className="panel-icon-title">
             <MdAccountBalance size={18} /> Datos bancarios (CLABE)
@@ -349,7 +337,6 @@ function Perfil() {
 
       </section>
 
-      {/* ── Modal confirmar cambio de plan ── */}
       {confirmCambio && (
         <ModalPortal>
           <div className="modal-overlay">

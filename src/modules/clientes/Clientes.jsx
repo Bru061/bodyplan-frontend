@@ -21,8 +21,6 @@ function Clientes() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [gimnasios, setGimnasios] = useState([]);
   const [membresias, setMembresias] = useState([]);
-
-  // ── Leer filtro de URL al montar ──
   const estadoParam = searchParams.get("estado") || "";
   const [filtroEstado, setFiltroEstado] = useState(
     ["activa", "inactiva"].includes(estadoParam) ? estadoParam : ""
@@ -44,8 +42,8 @@ function Clientes() {
       const res = await api.get("/clientes", { params: { limit: 9999 } });
       const estadisticas = res.data.estadisticas || {};
       setStats({
-        activos:      estadisticas.clientes_activos   || 0,
-        inactivos:    estadisticas.clientes_inactivos || 0,
+        activos: estadisticas.clientes_activos   || 0,
+        inactivos: estadisticas.clientes_inactivos || 0,
         conMembresia: estadisticas.membresias_activas || 0
       });
     } catch (error) {

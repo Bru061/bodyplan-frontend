@@ -9,13 +9,13 @@ function EditGymModal({ gym, onClose, onUpdated }) {
   const ubicacion = gym.Ubicacion || {};
 
   const [form, setForm] = useState({
-    nombre:        gym.nombre           || "",
-    descripcion:   gym.descripcion      || "",
-    telefono:      gym.telefono         || "",
-    direccion:     ubicacion.direccion  || "",
-    municipio:     ubicacion.municipio  || "",
-    estado:        ubicacion.estado     || "",
-    pais:          ubicacion.pais       || "México",
+    nombre: gym.nombre  || "",
+    descripcion: gym.descripcion || "",
+    telefono: gym.telefono || "",
+    direccion: ubicacion.direccion || "",
+    municipio: ubicacion.municipio || "",
+    estado: ubicacion.estado || "",
+    pais: ubicacion.pais || "México",
     codigo_postal: ubicacion.codigo_postal || ""
   });
 
@@ -23,7 +23,6 @@ function EditGymModal({ gym, onClose, onUpdated }) {
   const [error, setError] = useState("");
   const [errors, setErrors] = useState({});
 
-  // ── Scroll al primer error ──
   useEffect(() => {
     const keys = Object.keys(errors);
     if (keys.length === 0) return;
@@ -47,14 +46,14 @@ function EditGymModal({ gym, onClose, onUpdated }) {
     const newErrors = {};
     setError("");
 
-    if (!form.nombre.trim())         newErrors.nombre = "El nombre es obligatorio";
-    if (!form.descripcion.trim())    newErrors.descripcion = "La descripción es obligatoria";
-    if (!form.telefono.trim())       newErrors.telefono = "El teléfono es obligatorio";
+    if (!form.nombre.trim()) newErrors.nombre = "El nombre es obligatorio";
+    if (!form.descripcion.trim()) newErrors.descripcion = "La descripción es obligatoria";
+    if (!form.telefono.trim()) newErrors.telefono = "El teléfono es obligatorio";
     else if (form.telefono.length !== 10) newErrors.telefono = "Debe tener 10 dígitos";
-    if (!form.direccion.trim())      newErrors.direccion = "La dirección es obligatoria";
-    if (!form.municipio.trim())      newErrors.municipio = "El municipio es obligatorio";
-    if (!form.estado.trim())         newErrors.estado = "El estado es obligatorio";
-    if (!form.codigo_postal.trim())  newErrors.codigo_postal = "El código postal es obligatorio";
+    if (!form.direccion.trim()) newErrors.direccion = "La dirección es obligatoria";
+    if (!form.municipio.trim()) newErrors.municipio = "El municipio es obligatorio";
+    if (!form.estado.trim()) newErrors.estado = "El estado es obligatorio";
+    if (!form.codigo_postal.trim()) newErrors.codigo_postal = "El código postal es obligatorio";
     else if (form.codigo_postal.length !== 5) newErrors.codigo_postal = "Debe tener 5 dígitos";
 
     if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
@@ -62,15 +61,15 @@ function EditGymModal({ gym, onClose, onUpdated }) {
     try {
       setLoading(true);
       await api.put(`/gym/${gym.id_gimnasio}`, {
-        nombre:      form.nombre,
+        nombre: form.nombre,
         descripcion: form.descripcion,
-        telefono:    form.telefono
+        telefono: form.telefono
       });
       await api.put(`/gym/${gym.id_gimnasio}/ubicacion`, {
-        direccion:     form.direccion,
-        municipio:     form.municipio,
-        estado:        form.estado,
-        pais:          form.pais,
+        direccion: form.direccion,
+        municipio: form.municipio,
+        estado: form.estado,
+        pais: form.pais,
         codigo_postal: form.codigo_postal
       });
       onUpdated();

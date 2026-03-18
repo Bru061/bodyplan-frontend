@@ -13,7 +13,7 @@ function AdminPlanes() {
   const [planes, setPlanes]     = useState([]);
   const [loading, setLoading]   = useState(true);
   const [toast, setToast]       = useState(null);
-  const [modal, setModal]       = useState(null); // null | "crear" | "editar"
+  const [modal, setModal]       = useState(null);
   const [planEdit, setPlanEdit] = useState(null);
   const [form, setForm]         = useState(FORM_INICIAL);
   const [errors, setErrors]     = useState({});
@@ -161,7 +161,6 @@ function AdminPlanes() {
         ))
       )}
 
-      {/* ── Modal crear/editar ── */}
       {modal && (
         <ModalPortal>
           <div className="modal-overlay">
@@ -213,7 +212,6 @@ function AdminPlanes() {
         </ModalPortal>
       )}
 
-      {/* ── Modal confirmar toggle ── */}
       {confirmToggle && (
         <ModalPortal>
           <div className="modal-overlay">

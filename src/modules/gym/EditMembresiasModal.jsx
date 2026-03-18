@@ -19,12 +19,12 @@ function EditMembresiasModal({ gym, onClose, onUpdated }) {
     if (!gym) return;
     if (gym.membresias?.length > 0) {
       setMembresias(gym.membresias.map(m => ({
-        id:          m.id_membresia,
-        nombre:      m.nombre,
-        precio:      m.precio,
-        duracion:    m.duracion_dias,
+        id: m.id_membresia,
+        nombre: m.nombre,
+        precio: m.precio,
+        duracion: m.duracion_dias,
         descripcion: m.descripcion || "",
-        activo:      m.activo ?? true
+        activo: m.activo ?? true
       })));
     } else {
       setMembresias([{ id: null, nombre: "", precio: "", duracion: "", descripcion: "", activo: true }]);
@@ -64,13 +64,13 @@ function EditMembresiasModal({ gym, onClose, onUpdated }) {
     const nombres = new Set();
 
     membresias.forEach((m, i) => {
-      if (!m.nombre.trim())                         newErrors[`nombre-${i}`]      = "El nombre es obligatorio";
-      if (!m.precio || Number(m.precio) < 1)        newErrors[`precio-${i}`]      = "El precio debe ser mayor a 0";
-      if (!m.duracion || Number(m.duracion) < 1)    newErrors[`duracion-${i}`]    = "La duración debe ser mayor a 0";
+      if (!m.nombre.trim()) newErrors[`nombre-${i}`] = "El nombre es obligatorio";
+      if (!m.precio || Number(m.precio) < 1) newErrors[`precio-${i}`] = "El precio debe ser mayor a 0";
+      if (!m.duracion || Number(m.duracion) < 1) newErrors[`duracion-${i}`] = "La duración debe ser mayor a 0";
       if (m.nombre && nombres.has(m.nombre.toLowerCase())) newErrors[`nombre-${i}`] = "Nombre repetido";
-      if (m.nombre.length > 15)                     newErrors[`nombre-${i}`]      = "Máximo 15 caracteres";
-      if (!m.descripcion?.trim())                   newErrors[`descripcion-${i}`] = "La descripción es obligatoria";
-      if (m.descripcion?.length > 200)              newErrors[`descripcion-${i}`] = "Máximo 200 caracteres";
+      if (m.nombre.length > 15) newErrors[`nombre-${i}`] = "Máximo 15 caracteres";
+      if (!m.descripcion?.trim()) newErrors[`descripcion-${i}`] = "La descripción es obligatoria";
+      if (m.descripcion?.length > 200) newErrors[`descripcion-${i}`] = "Máximo 200 caracteres";
       nombres.add(m.nombre.toLowerCase());
     });
 

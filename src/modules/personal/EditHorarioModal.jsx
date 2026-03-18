@@ -1,33 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import api from "../../services/axios";
 import ModalPortal from "../../components/ui/ModalPortal";
 
-const DIAS = ["Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado", "Domingo"];
+function EditHorarioModal({ data, onClose, onUpdated }) {
 
-function AsignarGimnasioModal({ personal, onClose, onAsignado }) {
-
-  const [gimnasios, setGimnasios] = useState([]);
   const [form, setForm] = useState({
-    id_gimnasio: "",
-    dia_semana:  "",
-    hora_entrada: "",
-    hora_salida:  ""
+    hora_entrada: data.hora_entrada?.slice(0,5) || "",
+    hora_salida: data.hora_salida?.slice(0,5) || ""
   });
+
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    const fetchGimnasios = async () => {
-      try {
-        const res = await api.get("/gym");
-        setGimnasios(res.data.gimnasios || []);
-      } catch (err) {
-        console.error("Error cargando gimnasios", err);
-      }
-    };
-    fetchGimnasios();
-  }, []);
 
   const horaEsValida = (entrada, salida) => {
     if (!entrada || !salida) return false;
@@ -45,14 +29,21 @@ function AsignarGimnasioModal({ personal, onClose, onAsignado }) {
   const handleSubmit = async () => {
     const newErrors = {};
 
-    if (!form.id_gimnasio) newErrors.id_gimnasio = "Selecciona un gimnasio";
-    if (!form.dia_semana) newErrors.dia_semana = "Selecciona un día";
     if (!form.hora_entrada) newErrors.hora_entrada = "Indica la hora de entrada";
     if (!form.hora_salida) newErrors.hora_salida = "Indica la hora de salida";
-    if (form.hora_entrada && form.hora_salida && !horaEsValida(form.hora_entrada, form.hora_salida))
-      newErrors.hora_salida = "La hora de salida debe ser mayor a la entrada";
 
-    if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
+    if (
+      form.hora_entrada &&
+      form.hora_salida &&
+      !horaEsValida(form.hora_entrada, form.hora_salida)
+    ) {
+      newErrors.hora_salida = "La hora de salida debe ser mayor a la entrada";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
 
     try {
       setLoading(true);
@@ -60,20 +51,22 @@ function AsignarGimnasioModal({ personal, onClose, onAsignado }) {
 
       const toTime = (t) => t.length === 5 ? t + ":00" : t;
 
-      await api.post(`/personal/${personal.id_personal}/gimnasios`, {
-        id_gimnasio: Number(form.id_gimnasio),
-        dia_semana: form.dia_semana,
-        hora_entrada: toTime(form.hora_entrada),
-        hora_salida: toTime(form.hora_salida)
-      });
+      await api.put(
+        `/personal/${data.personalId}/gimnasios/${data.gimnasioId}/${data.dia}`,
+        {
+          hora_entrada: toTime(form.hora_entrada),
+          hora_salida: toTime(form.hora_salida)
+        }
+      );
 
-      onAsignado();
+      onUpdated();
       onClose();
+
     } catch (err) {
       setError(
         err?.response?.data?.error ||
         err?.response?.data?.message ||
-        "Error asignando al gimnasio"
+        "Error actualizando horario"
       );
     } finally {
       setLoading(false);
@@ -85,34 +78,15 @@ function AsignarGimnasioModal({ personal, onClose, onAsignado }) {
       <div className="modal-overlay">
         <div className="modal-card">
 
-          <h2 className="modal-title">Asignar a gimnasio</h2>
+          <h2 className="modal-title">Editar horario</h2>
+
           <span style={{ color: "var(--text-secondary)", fontSize: "0.92rem" }}>
-            {[personal.nombre, personal.apellido_paterno].filter(Boolean).join(" ")}
+            {data.dia}
           </span>
 
           {error && <div className="modal-error" style={{ marginTop: "12px" }}>{error}</div>}
 
           <div className="modal-form" style={{ marginTop: "1rem" }}>
-
-            <div className="form-group">
-              <label>Gimnasio *</label>
-              <select name="id_gimnasio" value={form.id_gimnasio} onChange={handleChange}>
-                <option value="">Seleccionar gimnasio</option>
-                {gimnasios.map(g => (
-                  <option key={g.id_gimnasio} value={g.id_gimnasio}>{g.nombre}</option>
-                ))}
-              </select>
-              {errors.id_gimnasio && <span className="field-error-msg">{errors.id_gimnasio}</span>}
-            </div>
-
-            <div className="form-group">
-              <label>Día *</label>
-              <select name="dia_semana" value={form.dia_semana} onChange={handleChange}>
-                <option value="">Seleccionar día</option>
-                {DIAS.map(d => <option key={d}>{d}</option>)}
-              </select>
-              {errors.dia_semana && <span className="field-error-msg">{errors.dia_semana}</span>}
-            </div>
 
             <div className="modal-grid">
               <div className="form-group">
@@ -138,16 +112,12 @@ function AsignarGimnasioModal({ personal, onClose, onAsignado }) {
               </div>
             </div>
 
-            <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: 0 }}>
-              Para asignar varios días repite el proceso una vez por cada día.
-            </p>
-
           </div>
 
           <div className="modal-actions">
             <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
             <button className="btn btn-primary" onClick={handleSubmit} disabled={loading}>
-              {loading ? "Asignando..." : "Asignar"}
+              {loading ? "Guardando..." : "Guardar"}
             </button>
           </div>
 
@@ -157,4 +127,4 @@ function AsignarGimnasioModal({ personal, onClose, onAsignado }) {
   );
 }
 
-export default AsignarGimnasioModal;
+export default EditHorarioModal;

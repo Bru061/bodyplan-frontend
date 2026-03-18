@@ -5,7 +5,7 @@ import ModalPortal from "../../components/ui/ModalPortal";
 function EditPersonalModal({ personal, onClose, onUpdated }) {
 
   const [form, setForm] = useState({
-    nombre:           personal.nombre           || "",
+    nombre: personal.nombre           || "",
     apellido_paterno: personal.apellido_paterno || "",
     apellido_materno: personal.apellido_materno || ""
   });
@@ -19,7 +19,7 @@ function EditPersonalModal({ personal, onClose, onUpdated }) {
   const handleChange = (e) => {
     const { name, value } = e.target;
     let v = value;
-    if (name === "nombre")           v = onlyLetters(value).slice(0, 40);
+    if (name === "nombre") v = onlyLetters(value).slice(0, 40);
     if (name === "apellido_paterno") v = onlyLettersNoSpace(value).slice(0, 30);
     if (name === "apellido_materno") v = onlyLettersNoSpace(value).slice(0, 30);
 
@@ -29,7 +29,7 @@ function EditPersonalModal({ personal, onClose, onUpdated }) {
 
   const handleSubmit = async () => {
     const newErrors = {};
-    if (!form.nombre.trim())           newErrors.nombre = "El nombre es obligatorio";
+    if (!form.nombre.trim()) newErrors.nombre = "El nombre es obligatorio";
     if (!form.apellido_paterno.trim()) newErrors.apellido_paterno = "El apellido paterno es obligatorio";
 
     if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
@@ -38,7 +38,7 @@ function EditPersonalModal({ personal, onClose, onUpdated }) {
       setLoading(true);
       setError("");
       await api.put(`/personal/${personal.id_personal}`, {
-        nombre:           form.nombre.trim(),
+        nombre: form.nombre.trim(),
         apellido_paterno: form.apellido_paterno.trim(),
         apellido_materno: form.apellido_materno.trim() || null
       });

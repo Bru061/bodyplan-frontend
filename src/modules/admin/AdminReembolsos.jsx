@@ -10,8 +10,6 @@ function AdminReembolsos() {
   const [loading, setLoading]       = useState(true);
   const [filtroEstado, setFiltroEstado] = useState("pendiente_revision");
   const [toast, setToast]           = useState(null);
-
-  // ── Modal rechazar (necesita motivo) ──
   const [modalRechazar, setModalRechazar] = useState(null);
   const [motivoRechazo, setMotivoRechazo] = useState("");
   const [motivoError, setMotivoError]     = useState("");
@@ -181,7 +179,6 @@ function AdminReembolsos() {
         </div>
       </div>
 
-      {/* ── Modal rechazar ── */}
       {modalRechazar && (
         <ModalPortal>
           <div className="modal-overlay">

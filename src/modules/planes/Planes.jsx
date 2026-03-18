@@ -3,46 +3,44 @@ import { useNavigate } from "react-router-dom";
 import api from "../../services/axios";
 import "../../styles/planes.css";
 
-// ── Accesos hardcodeados por id_plan (temporal hasta que backend los actualice) ──
-// TODO: reemplazar con datos reales del backend cuando accesos estén configurados
 const ACCESOS_HARDCODED = {
   1: [ // Prueba Gratis
-    { nombre: "Hasta 3 gimnasios",      incluido: true  },
-    { nombre: "Gestión de clientes",    incluido: true  },
-    { nombre: "Rutinas",                incluido: true  },
-    { nombre: "Exportar reportes",      incluido: true  },
-    { nombre: "Módulo de personal",     incluido: true  },
-    { nombre: "Destacar gimnasio",      incluido: true  },
-    { nombre: "Soporte prioritario",    incluido: false }
+    { nombre: "Hasta 3 gimnasios", incluido: true  },
+    { nombre: "Gestión de clientes", incluido: true  },
+    { nombre: "Rutinas", incluido: true  },
+    { nombre: "Exportar reportes", incluido: true  },
+    { nombre: "Módulo de personal", incluido: true  },
+    { nombre: "Destacar gimnasio", incluido: true  },
+    { nombre: "Soporte prioritario", incluido: false }
   ],
   2: [ // Estándar / Básico
-    { nombre: "Hasta 3 gimnasios",      incluido: true  },
-    { nombre: "Gestión de clientes",    incluido: true  },
-    { nombre: "Rutinas",                incluido: true  },
-    { nombre: "Exportar reportes",      incluido: true  },
-    { nombre: "Módulo de personal",     incluido: false },
-    { nombre: "Destacar gimnasio",      incluido: false },
-    { nombre: "Soporte prioritario",    incluido: false }
+    { nombre: "Hasta 3 gimnasios", incluido: true  },
+    { nombre: "Gestión de clientes", incluido: true  },
+    { nombre: "Rutinas", incluido: true  },
+    { nombre: "Exportar reportes", incluido: true  },
+    { nombre: "Módulo de personal", incluido: false },
+    { nombre: "Destacar gimnasio", incluido: false },
+    { nombre: "Soporte prioritario", incluido: false }
   ],
   3: [ // Pro
-    { nombre: "Gimnasios ilimitados",   incluido: true  },
-    { nombre: "Gestión de clientes",    incluido: true  },
-    { nombre: "Rutinas",                incluido: true  },
-    { nombre: "Exportar reportes",      incluido: true  },
-    { nombre: "Módulo de personal",     incluido: true  },
-    { nombre: "Destacar gimnasio",      incluido: true  },
-    { nombre: "Soporte prioritario",    incluido: true  }
+    { nombre: "Gimnasios ilimitados", incluido: true  },
+    { nombre: "Gestión de clientes", incluido: true  },
+    { nombre: "Rutinas", incluido: true  },
+    { nombre: "Exportar reportes", incluido: true  },
+    { nombre: "Módulo de personal", incluido: true  },
+    { nombre: "Destacar gimnasio", incluido: true  },
+    { nombre: "Soporte prioritario", incluido: true  }
   ]
 };
 
 function Planes() {
 
   const navigate = useNavigate();
-  const [planes, setPlanes]       = useState([]);
+  const [planes, setPlanes] = useState([]);
   const [planActivo, setPlanActivo] = useState(null);
-  const [loading, setLoading]     = useState(true);
+  const [loading, setLoading] = useState(true);
   const [procesando, setProcesando] = useState(null);
-  const [error, setError]         = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -56,7 +54,6 @@ function Planes() {
             setPlanActivo(resPlan.data.plan_activo);
           }
         } catch {
-          // Sin plan activo o no logueado — no crítico
         }
 
       } catch (err) {
@@ -86,7 +83,7 @@ function Planes() {
       navigate("/checkout", {
         state: {
           client_secret: res.data.client_secret,
-          desglose:      res.data.desglose,
+          desglose: res.data.desglose,
           plan
         }
       });
@@ -129,7 +126,6 @@ function Planes() {
   return (
     <div className="planes-page">
 
-      {/* ── Botón atrás ── */}
       <button
         className="planes-back"
         onClick={() => navigate(-1)}

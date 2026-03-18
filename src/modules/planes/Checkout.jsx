@@ -11,15 +11,14 @@ import "../../styles/planes.css";
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
-// ── Formulario interno (necesita estar dentro de <Elements>) ──
 function CheckoutForm({ desglose, plan }) {
 
-  const stripe   = useStripe();
+  const stripe = useStripe();
   const elements = useElements();
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState("");
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -36,7 +35,6 @@ function CheckoutForm({ desglose, plan }) {
       }
     });
 
-    // Si llegamos aquí es porque hubo error (si no, Stripe redirige automáticamente)
     if (stripeError) {
       setError(stripeError.message || "Error procesando el pago");
     }
@@ -47,7 +45,6 @@ function CheckoutForm({ desglose, plan }) {
   return (
     <form onSubmit={handleSubmit} className="checkout-stripe-form">
 
-      {/* ── Resumen del plan ── */}
       <div className="checkout-resumen">
         <div className="checkout-resumen-row">
           <span>Plan {plan?.nombre}</span>
@@ -63,7 +60,6 @@ function CheckoutForm({ desglose, plan }) {
         </div>
       </div>
 
-      {/* ── Stripe Payment Element ── */}
       <PaymentElement />
 
       {error && <div className="checkout-error">{error}</div>}
@@ -84,7 +80,6 @@ function CheckoutForm({ desglose, plan }) {
   );
 }
 
-// ── Página principal de Checkout ──
 function Checkout() {
 
   const location = useLocation();
@@ -92,7 +87,6 @@ function Checkout() {
 
   const { client_secret, desglose, plan } = location.state || {};
 
-  // Si no hay client_secret redirigir a planes
   if (!client_secret) {
     navigate("/planes");
     return null;
@@ -103,11 +97,11 @@ function Checkout() {
     appearance: {
       theme: "stripe",
       variables: {
-        colorPrimary:       "#1e3a8a",
-        colorBackground:    "#f8fafc",
-        colorText:          "#0f172a",
-        borderRadius:       "10px",
-        fontFamily:         "Inter, sans-serif"
+        colorPrimary: "#1e3a8a",
+        colorBackground: "#f8fafc",
+        colorText: "#0f172a",
+        borderRadius: "10px",
+        fontFamily: "Inter, sans-serif"
       }
     }
   };

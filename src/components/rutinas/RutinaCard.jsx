@@ -8,10 +8,7 @@ function RutinaCard({ rutina, onEdit, clientesCount, refresh, refreshStats }) {
   const [modal, setModal] = useState(false);
   const [toast, setToast] = useState("");
   const [loading, setLoading] = useState(false);
-
-  // ── Instructores únicos asignados a esta rutina ──
   const [instructores, setInstructores] = useState([]);
-
   const esActiva = rutina.activo;
   const tieneAsignacionesActivas = esActiva && clientesCount > 0;
 
@@ -20,8 +17,6 @@ function RutinaCard({ rutina, onEdit, clientesCount, refresh, refreshStats }) {
       try {
         const res = await api.get(`/rutinas/${rutina.id_rutina}/clientes`);
         const asignaciones = res.data?.clientes || [];
-
-        // Extraer instructores únicos
         const mapa = {};
         for (const a of asignaciones) {
           if (a.encargado && !mapa[a.encargado.id_personal]) {
@@ -33,7 +28,6 @@ function RutinaCard({ rutina, onEdit, clientesCount, refresh, refreshStats }) {
         }
         setInstructores(Object.values(mapa));
       } catch (err) {
-        // Silencioso — no es crítico
       }
     };
 
@@ -121,7 +115,6 @@ function RutinaCard({ rutina, onEdit, clientesCount, refresh, refreshStats }) {
             Clientes con asignación activa: <strong>{clientesCount}</strong>
           </p>
 
-          {/* ── Instructores encargados ── */}
           {instructores.length > 0 && (
             <p className="routine-instructor">
               👤 {instructores.length === 1 ? "Instructor:" : "Instructores:"}{" "}

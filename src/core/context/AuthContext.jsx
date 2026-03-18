@@ -25,7 +25,6 @@ export function AuthProvider({ children }) {
   const [gymId, setGymId] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-
   const isAuthenticated = Boolean(token);
 
   useEffect(() => {

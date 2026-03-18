@@ -25,16 +25,16 @@ function EditRutinaModal({ rutina, onClose, onUpdated }) {
   useEffect(() => {
     if (rutina) {
       setForm({
-        nombre:             rutina.nombre             || "",
-        descripcion:        rutina.descripcion        || "",
-        objetivo:           rutina.objetivo           || "",
-        categoria:          rutina.categoria          || "",
-        nivel:              rutina.nivel              || "principiante",
-        tipo_rutina:        rutina.tipo_rutina        || "gimnasio",
-        equipamiento:       rutina.equipamiento       || "",
+        nombre: rutina.nombre || "",
+        descripcion: rutina.descripcion || "",
+        objetivo: rutina.objetivo || "",
+        categoria: rutina.categoria || "",
+        nivel: rutina.nivel || "principiante",
+        tipo_rutina: rutina.tipo_rutina || "gimnasio",
+        equipamiento: rutina.equipamiento || "",
         calorias_estimadas: rutina.calorias_estimadas || "",
-        duracion_min:       rutina.duracion_min       || "",
-        instrucciones:      rutina.instrucciones      || ""
+        duracion_min: rutina.duracion_min || "",
+        instrucciones: rutina.instrucciones || ""
       });
     }
   }, [rutina]);
@@ -42,12 +42,12 @@ function EditRutinaModal({ rutina, onClose, onUpdated }) {
   const handleChange = (e) => {
     let { name, value } = e.target;
 
-    if (name === "duracion_min")       value = value.replace(/[^0-9]/g, "").slice(0, 3);
+    if (name === "duracion_min") value = value.replace(/[^0-9]/g, "").slice(0, 3);
     if (name === "calorias_estimadas") value = value.replace(/[^0-9]/g, "").slice(0, 4);
-    if (name === "objetivo")           value = value.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]/g, "");
-    if (name === "nombre")             value = value.slice(0, 20);
-    if (name === "descripcion")        value = value.slice(0, 100);
-    if (name === "instrucciones")      value = value.slice(0, 255);
+    if (name === "objetivo") value = value.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]/g, "");
+    if (name === "nombre") value = value.slice(0, 20);
+    if (name === "descripcion") value = value.slice(0, 100);
+    if (name === "instrucciones") value = value.slice(0, 255);
 
     setForm(prev => ({ ...prev, [name]: value }));
     setErrors(prev => ({ ...prev, [name]: null }));
@@ -56,25 +56,25 @@ function EditRutinaModal({ rutina, onClose, onUpdated }) {
   const validate = () => {
     const e = {};
 
-    if (!form.nombre.trim())            e.nombre = "El nombre es obligatorio";
-    else if (form.nombre.length > 20)   e.nombre = "Máximo 20 caracteres";
+    if (!form.nombre.trim()) e.nombre = "El nombre es obligatorio";
+    else if (form.nombre.length > 20) e.nombre = "Máximo 20 caracteres";
 
-    if (!form.descripcion.trim())       e.descripcion = "La descripción es obligatoria";
+    if (!form.descripcion.trim()) e.descripcion = "La descripción es obligatoria";
     else if (form.descripcion.length > 100) e.descripcion = "Máximo 100 caracteres";
 
-    if (!form.objetivo.trim())          e.objetivo = "El objetivo es obligatorio";
-    if (!form.categoria)                e.categoria = "Selecciona una categoría";
-    if (!form.equipamiento.trim())      e.equipamiento = "El equipamiento es obligatorio";
+    if (!form.objetivo.trim()) e.objetivo = "El objetivo es obligatorio";
+    if (!form.categoria) e.categoria = "Selecciona una categoría";
+    if (!form.equipamiento.trim()) e.equipamiento = "El equipamiento es obligatorio";
 
-    if (!form.duracion_min)             e.duracion_min = "La duración es obligatoria";
-    else if (Number(form.duracion_min) <= 0)  e.duracion_min = "Debe ser mayor a 0";
+    if (!form.duracion_min) e.duracion_min = "La duración es obligatoria";
+    else if (Number(form.duracion_min) <= 0) e.duracion_min = "Debe ser mayor a 0";
     else if (Number(form.duracion_min) > 300) e.duracion_min = "Máximo 300 minutos";
 
-    if (!form.calorias_estimadas)       e.calorias_estimadas = "Las calorías son obligatorias";
-    else if (Number(form.calorias_estimadas) <= 0)   e.calorias_estimadas = "Debe ser mayor a 0";
+    if (!form.calorias_estimadas) e.calorias_estimadas = "Las calorías son obligatorias";
+    else if (Number(form.calorias_estimadas) <= 0) e.calorias_estimadas = "Debe ser mayor a 0";
     else if (Number(form.calorias_estimadas) > 5000) e.calorias_estimadas = "Máximo 5000";
 
-    if (!form.instrucciones.trim())     e.instrucciones = "Las instrucciones son obligatorias";
+    if (!form.instrucciones.trim()) e.instrucciones = "Las instrucciones son obligatorias";
     else if (form.instrucciones.length > 255) e.instrucciones = "Máximo 255 caracteres";
 
     setErrors(e);
@@ -89,16 +89,16 @@ function EditRutinaModal({ rutina, onClose, onUpdated }) {
     try {
       setLoading(true);
       await api.put(`/rutinas/${rutina.id_rutina}`, {
-        nombre:             form.nombre.trim(),
-        descripcion:        form.descripcion.trim(),
-        objetivo:           form.objetivo.trim(),
-        categoria:          form.categoria,
-        nivel:              form.nivel,
-        tipo_rutina:        form.tipo_rutina,
-        equipamiento:       form.equipamiento.trim(),
+        nombre: form.nombre.trim(),
+        descripcion: form.descripcion.trim(),
+        objetivo: form.objetivo.trim(),
+        categoria: form.categoria,
+        nivel: form.nivel,
+        tipo_rutina: form.tipo_rutina,
+        equipamiento: form.equipamiento.trim(),
         calorias_estimadas: parseInt(form.calorias_estimadas, 10),
-        instrucciones:      form.instrucciones.trim(),
-        duracion_min:       parseInt(form.duracion_min, 10)
+        instrucciones: form.instrucciones.trim(),
+        duracion_min: parseInt(form.duracion_min, 10)
       });
       onUpdated();
       onClose();
@@ -141,7 +141,11 @@ function EditRutinaModal({ rutina, onClose, onUpdated }) {
 
             <div className="form-group">
               <label>Objetivo *</label>
-              <input name="objetivo" value={form.objetivo} onChange={handleChange} />
+              <input
+                name="objetivo"
+                value={form.objetivo}
+                maxLength={50}
+                onChange={handleChange} />
               {errors.objetivo && <span className="field-error-msg">{errors.objetivo}</span>}
             </div>
 

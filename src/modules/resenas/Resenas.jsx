@@ -1,7 +1,6 @@
 import DashboardLayout from "../../layout/DashboardLayout";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiArrowLeft } from "react-icons/fi";
 import api from "../../services/axios";
 import "../../styles/clientes.css";
 
@@ -24,8 +23,7 @@ function Estrellas({ calificacion, size = 16 }) {
 }
 
 function Resenas() {
-
-  const navigate = useNavigate();
+  
   const [gimnasios, setGimnasios] = useState([]);
   const [gimnasioSeleccionado, setGimnasioSeleccionado] = useState(null);
   const [resenas, setResenas] = useState([]);

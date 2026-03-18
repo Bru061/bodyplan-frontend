@@ -9,12 +9,11 @@ import ModalPortal from "../../components/ui/ModalPortal";
 import CreatePersonalModal from "./CreatePersonalModal";
 import EditPersonalModal from "./EditPersonalModal";
 import AsignarGimnasioModal from "./AsignarGimnasioModal";
+import EditHorarioModal from "./EditHorarioModal";
 
-// ── Iniciales del nombre ──
 const getInitials = (p) =>
   `${p.nombre?.[0] ?? ""}${p.apellido_paterno?.[0] ?? ""}`.toUpperCase();
 
-// ── Nombre completo ──
 const getNombre = (p) =>
   [p.nombre, p.apellido_paterno, p.apellido_materno].filter(Boolean).join(" ");
 
@@ -25,14 +24,11 @@ function Personal() {
   const [tab, setTab] = useState("activos");
   const [seleccionado, setSeleccionado] = useState(null);
   const [toast, setToast] = useState(null);
-
-  // ── Modales ──
   const [showCreate, setShowCreate] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showAsignar, setShowAsignar] = useState(false);
-  const [editHorario, setEditHorario] = useState(null); // { personal, gimnasioId, dia, entrada, salida }
+  const [editHorario, setEditHorario] = useState(null);
 
-  // ── Modal confirmación desactivar ──
   const [confirmModal, setConfirmModal] = useState(null);
   const [confirmLoading, setConfirmLoading] = useState(false);
 
@@ -42,7 +38,17 @@ function Personal() {
     try {
       setLoading(true);
       const res = await api.get("/personal");
-      setPersonal(res.data.personal || []);
+      const nuevos = res.data.personal || [];
+
+      setPersonal(nuevos);
+
+      if (seleccionado) {
+        const actualizado = nuevos.find(
+          p => p.id_personal === seleccionado.id_personal
+        );
+        setSeleccionado(actualizado || null);
+      }
+
     } catch (err) {
       console.error("Error cargando personal", err);
       showToast("Error cargando el personal.", "error");
@@ -68,13 +74,27 @@ function Personal() {
       for (const r of todas) {
         const clientesRes = await api.get(`/rutinas/${r.id_rutina}/clientes`);
         const asignaciones = clientesRes.data?.clientes || [];
-        const tieneEsteInstructor = asignaciones.some(
-          a => a.encargado?.id_personal === personalId
-        );
-        if (tieneEsteInstructor) resultado.push(r);
+
+        asignaciones.forEach(a => {
+          if (a.encargado?.id_personal === personalId) {
+
+            const cliente =
+              a.cliente ||
+              a.usuario ||
+              a.Cliente ||
+              a.Usuario ||
+              null;
+
+            resultado.push({
+              ...r,
+              cliente
+            });
+          }
+        });
       }
 
       setRutinasInstructor(resultado);
+
     } catch (err) {
       console.error("Error cargando rutinas del instructor", err);
     } finally {
@@ -82,7 +102,6 @@ function Personal() {
     }
   };
 
-  // ── Cargar rutinas al cambiar el seleccionado ──
   useEffect(() => {
     if (seleccionado) {
       fetchRutinasInstructor(seleccionado.id_personal);
@@ -91,16 +110,14 @@ function Personal() {
     }
   }, [seleccionado?.id_personal]);
 
-  const activos    = personal.filter(p => p.activo !== false);
-  const inactivos  = personal.filter(p => p.activo === false);
+  const activos = personal.filter(p => p.activo !== false);
+  const inactivos = personal.filter(p => p.activo === false);
   const listaActual = tab === "activos" ? activos : inactivos;
 
-  // ── Desactivar / activar ──
   const handleToggle = async () => {
     if (!confirmModal) return;
     const { item, accion } = confirmModal;
 
-    // ── Bloquear desactivación si tiene rutinas activas ──
     if (accion === "desactivar" && rutinasInstructor.length > 0) {
       showToast(
         `No puedes desactivar a ${getNombre(item)} porque supervisa ${rutinasInstructor.length} rutina${rutinasInstructor.length > 1 ? "s" : ""} activa${rutinasInstructor.length > 1 ? "s" : ""}.`,
@@ -128,7 +145,6 @@ function Personal() {
     }
   };
 
-  // ── Eliminar horario de un día ──
   const handleEliminarDia = async (personalId, gimnasioId, dia) => {
     try {
       await api.delete(`/personal/${personalId}/gimnasios/${gimnasioId}/${dia}`);
@@ -145,7 +161,6 @@ function Personal() {
 
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-      {/* ── Header ── */}
       <section className="page-header">
         <div>
           <p className="eyebrow">Gestión de personal</p>
@@ -159,10 +174,8 @@ function Personal() {
         </button>
       </section>
 
-      {/* ── Layout split ── */}
       <div className="personal-layout">
 
-        {/* ── Lista ── */}
         <div className="personal-list">
           <div className="personal-tabs">
             <button
@@ -213,7 +226,6 @@ function Personal() {
           </div>
         </div>
 
-        {/* ── Panel detalle ── */}
         <div className="personal-detail">
           {!seleccionado ? (
             <div className="personal-detail-empty">
@@ -262,14 +274,12 @@ function Personal() {
 
               <div className="personal-detail-body">
 
-                {/* ── Horarios agrupados por gimnasio ── */}
                 {!seleccionado.horarios || seleccionado.horarios.length === 0 ? (
                   <p className="personal-no-gyms">
                     Este instructor aún no está asignado a ningún gimnasio.
                   </p>
                 ) : (
                   (() => {
-                    // Agrupar horarios por gimnasio
                     const porGimnasio = seleccionado.horarios.reduce((acc, h) => {
                       const key = h.id_gimnasio;
                       if (!acc[key]) acc[key] = { nombre: h.Gimnasio?.nombre || `Gimnasio ${key}`, dias: [] };
@@ -292,8 +302,26 @@ function Personal() {
                             <div className="personal-horario-actions">
                               <button
                                 className="icon-btn"
+                                title="Editar horario"
+                                onClick={() =>
+                                  setEditHorario({
+                                    personalId: seleccionado.id_personal,
+                                    gimnasioId: gymId,
+                                    dia: h.dia_semana,
+                                    hora_entrada: h.hora_entrada,
+                                    hora_salida: h.hora_salida
+                                  })
+                                }
+                              >
+                                <FiEdit2 size={13} />
+                              </button>
+
+                              <button
+                                className="icon-btn"
                                 title="Eliminar este día"
-                                onClick={() => handleEliminarDia(seleccionado.id_personal, gymId, h.dia_semana)}
+                                onClick={() =>
+                                  handleEliminarDia(seleccionado.id_personal, gymId, h.dia_semana)
+                                }
                               >
                                 <FiTrash2 size={13} />
                               </button>
@@ -305,7 +333,6 @@ function Personal() {
                   })()
                 )}
 
-                {/* ── Rutinas que supervisa ── */}
                 <div className="personal-gym-section" style={{ marginTop: "1.5rem" }}>
                   <div className="personal-gym-title">
                     <span>Rutinas que supervisa</span>
@@ -315,14 +342,27 @@ function Personal() {
                   ) : rutinasInstructor.length === 0 ? (
                     <p className="personal-no-gyms">No supervisa ninguna rutina actualmente.</p>
                   ) : (
-                    rutinasInstructor.map(r => (
-                      <div key={r.id_rutina} className="personal-horario-row">
+                    rutinasInstructor.map((r, i) => (
+                      <div key={i} className="personal-horario-row">
+                        
                         <span style={{ flex: 1, fontWeight: 600, fontSize: "0.88rem" }}>
                           {r.nombre}
+
+                          <br />
+
+                          <small style={{ fontWeight: 400 }}>
+                            Cliente: {
+                              r.cliente
+                                ? `${r.cliente.nombre || ""} ${r.cliente.apellido_paterno || ""}`
+                                : "Sin cliente"
+                            }
+                          </small>
                         </span>
+
                         <span className="personal-horario-horas">
                           {r.tipo_rutina} · {r.nivel || "N/A"} · {r.duracion_min || 0} min
                         </span>
+
                       </div>
                     ))
                   )}
@@ -335,7 +375,6 @@ function Personal() {
 
       </div>
 
-      {/* ── Modales ── */}
       {showCreate && (
         <CreatePersonalModal
           onClose={() => setShowCreate(false)}
@@ -368,7 +407,17 @@ function Personal() {
         />
       )}
 
-      {/* ── Modal confirmación toggle ── */}
+      {editHorario && (
+        <EditHorarioModal
+          data={editHorario}
+          onClose={() => setEditHorario(null)}
+          onUpdated={async () => {
+            await fetchPersonal();
+            showToast("Horario actualizado correctamente.");
+          }}
+        />
+      )}
+
       {confirmModal && (
         <ModalPortal>
           <div className="modal-overlay">

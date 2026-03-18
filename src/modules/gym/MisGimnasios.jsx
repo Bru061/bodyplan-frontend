@@ -17,8 +17,8 @@ function MisGimnasios() {
   const [modal, setModal] = useState(null);
   const [errorMsg, setErrorMsg] = useState("");
 
-  const activos      = gimnasios.filter(g => g.activo);
-  const archivados   = gimnasios.filter(g => !g.activo);
+  const activos = gimnasios.filter(g => g.activo);
+  const archivados = gimnasios.filter(g => !g.activo);
   const listaMostrar = tab === "activos" ? activos : archivados;
 
   const fetchGyms = async () => {
@@ -48,8 +48,6 @@ function MisGimnasios() {
 
   const confirmarToggle = async (gym) => {
     setErrorMsg("");
-
-    // ── Solo validar al archivar ──
     if (gym.activo) {
       try {
         const res = await api.get(`/clientes?estado=activa&limit=999`);
@@ -64,7 +62,6 @@ function MisGimnasios() {
         }
       } catch (err) {
         console.error("Error verificando clientes", err);
-        // Si falla la verificación dejamos continuar al usuario
       }
     }
 
@@ -100,7 +97,6 @@ function MisGimnasios() {
   return (
     <DashboardLayout>
 
-      {/* ── Modal confirmación ── */}
       {modal && (
         <ModalPortal>
           <div className="modal-overlay">
@@ -129,7 +125,6 @@ function MisGimnasios() {
         </ModalPortal>
       )}
 
-      {/* ── Header ── */}
       <section className="page-header">
         <div>
           <p className="eyebrow">Panel principal</p>
@@ -141,7 +136,6 @@ function MisGimnasios() {
         </button>
       </section>
 
-      {/* ── Error inline ── */}
       {errorMsg && (
         <div className="modal-error gym-error">
           {errorMsg}
@@ -149,7 +143,6 @@ function MisGimnasios() {
         </div>
       )}
 
-      {/* ── Tabs ── */}
       <div className="gym-tabs">
         <button
           className={`tab-btn ${tab === "activos" ? "active" : ""}`}
@@ -165,7 +158,6 @@ function MisGimnasios() {
         </button>
       </div>
 
-      {/* ── Lista ── */}
       <section className="service-list">
 
         {gimnasios.length === 0 && (

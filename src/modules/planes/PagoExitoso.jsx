@@ -9,14 +9,13 @@ function PagoExitoso() {
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [estado, setEstado] = useState("verificando"); // verificando | exitoso | error
+  const [estado, setEstado] = useState("verificando");
 
   useEffect(() => {
     const verificarPago = async () => {
       const clientSecret = searchParams.get("payment_intent_client_secret");
 
       if (!clientSecret) {
-        // Llegó aquí sin parámetros (plan gratis activado directo)
         setEstado("exitoso");
         return;
       }

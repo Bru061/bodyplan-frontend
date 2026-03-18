@@ -41,13 +41,13 @@ function AddClienteModal({ gimnasios, membresias, fetchMembresias, onClose, onCr
   const handleSubmit = async () => {
     const newErrors = {};
 
-    if (!form.nombre.trim())           newErrors.nombre = "El nombre es obligatorio";
-    if (!form.apellido_paterno.trim())  newErrors.apellido_paterno = "El apellido paterno es obligatorio";
-    if (!form.apellido_materno.trim())  newErrors.apellido_materno = "El apellido materno es obligatorio";
-    if (!form.correo.trim())            newErrors.correo = "El correo es obligatorio";
+    if (!form.nombre.trim()) newErrors.nombre = "El nombre es obligatorio";
+    if (!form.apellido_paterno.trim()) newErrors.apellido_paterno = "El apellido paterno es obligatorio";
+    if (!form.apellido_materno.trim()) newErrors.apellido_materno = "El apellido materno es obligatorio";
+    if (!form.correo.trim()) newErrors.correo = "El correo es obligatorio";
     else if (!/^\S+@\S+\.\S+$/.test(form.correo)) newErrors.correo = "Correo inválido";
-    if (!form.id_gimnasio)             newErrors.id_gimnasio = "Debes seleccionar un gimnasio";
-    if (!form.id_membresia)            newErrors.id_membresia = "Debes seleccionar una membresía";
+    if (!form.id_gimnasio) newErrors.id_gimnasio = "Debes seleccionar un gimnasio";
+    if (!form.id_membresia) newErrors.id_membresia = "Debes seleccionar una membresía";
 
     if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
 
@@ -55,12 +55,12 @@ function AddClienteModal({ gimnasios, membresias, fetchMembresias, onClose, onCr
       setLoading(true);
       setError("");
       await api.post("/gym/clientes/inscribir", {
-        nombre:           form.nombre.trim(),
+        nombre: form.nombre.trim(),
         apellido_paterno: form.apellido_paterno.trim(),
         apellido_materno: form.apellido_materno.trim(),
-        correo:           form.correo.trim(),
-        id_gimnasio:      Number(form.id_gimnasio),
-        id_membresia:     Number(form.id_membresia)
+        correo: form.correo.trim(),
+        id_gimnasio: Number(form.id_gimnasio),
+        id_membresia: Number(form.id_membresia)
       });
       onCreated();
       onClose();

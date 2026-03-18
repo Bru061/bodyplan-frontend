@@ -37,13 +37,13 @@ export const useDashboardData = (meses = 6) => {
           api.get("/rutinas")
         ]);
 
-        const stats     = clientesRes.data.estadisticas || {};
-        const clientes  = clientesRes.data.clientes || [];
+        const stats = clientesRes.data.estadisticas || {};
+        const clientes = clientesRes.data.clientes || [];
         const gimnasios = gymRes.data.gimnasios || [];
-        const rutinas   = rutinasRes.data.rutinas || [];
+        const rutinas = rutinasRes.data.rutinas || [];
 
-        const ahora      = new Date();
-        const mesActual  = ahora.getMonth();
+        const ahora = new Date();
+        const mesActual = ahora.getMonth();
         const anioActual = ahora.getFullYear();
 
         const clientesNuevosMes = clientes.filter(c => {
@@ -87,7 +87,7 @@ export const useDashboardData = (meses = 6) => {
 
         const membresiasActivasSerie = periodos.map(({ anio, mes }) => {
           const inicioMes = new Date(anio, mes, 1);
-          const finMes    = new Date(anio, mes + 1, 0, 23, 59, 59);
+          const finMes = new Date(anio, mes + 1, 0, 23, 59, 59);
 
           return clientes.filter(c => {
             const inicio = new Date(c.fecha_inicio);
@@ -100,19 +100,19 @@ export const useDashboardData = (meses = 6) => {
 
         setDashboard({
           metrics: {
-            clientesActivos:   stats.clientes_activos   || 0,
+            clientesActivos: stats.clientes_activos   || 0,
             clientesInactivos: stats.clientes_inactivos || 0,
             membresiasActivas: stats.membresias_activas || 0,
-            rutinas:           rutinas.length,
-            gimnasios:         gimnasios.length,
+            rutinas: rutinas.length,
+            gimnasios: gimnasios.length,
             clientesNuevosMes,
             membresiasPorVencer,
             gimnasioTop
           },
           chartData: {
-            labels:               periodos.map(p => p.label),
+            labels: periodos.map(p => p.label),
             membresiasIniciadas,
-            membresiasActivas:    membresiasActivasSerie
+            membresiasActivas: membresiasActivasSerie
           }
         });
 

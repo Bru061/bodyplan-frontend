@@ -21,7 +21,6 @@ function Rutinas() {
     asignadas: 0
   });
 
-  // ── Vista: generales | personalizadas | desactivadas ──
   const [vista, setVista] = useState("generales");
   const [clientesPorRutina, setClientesPorRutina] = useState({});
 
@@ -49,7 +48,7 @@ function Rutinas() {
         api.get("/rutinas/personalizadas")
       ]);
 
-      const generales     = resGenerales.data.rutinas     || [];
+      const generales = resGenerales.data.rutinas     || [];
       const personalizadas = resPersonalizadas.data.rutinas || [];
       const todas = [...generales, ...personalizadas];
 
@@ -62,7 +61,7 @@ function Rutinas() {
       const asignadas = todas.filter(r => (conteo[r.id_rutina] || 0) > 0).length;
 
       setStats({
-        generales:      generales.length,
+        generales: generales.length,
         personalizadas: personalizadas.length,
         asignadas
       });
@@ -75,9 +74,9 @@ function Rutinas() {
     try {
       setLoading(true);
       const endpoints = {
-        generales:       "/rutinas/generales",
-        personalizadas:  "/rutinas/personalizadas",
-        desactivadas:    "/rutinas/desactivadas"
+        generales: "/rutinas/generales",
+        personalizadas: "/rutinas/personalizadas",
+        desactivadas: "/rutinas/desactivadas"
       };
       const res = await api.get(endpoints[vista]);
       const data = res.data.rutinas || [];
@@ -116,9 +115,9 @@ function Rutinas() {
   };
 
   const emptyMsg = {
-    generales:      "No hay rutinas generales activas.",
+    generales: "No hay rutinas generales activas.",
     personalizadas: "No hay rutinas personalizadas.",
-    desactivadas:   "No hay rutinas desactivadas."
+    desactivadas: "No hay rutinas desactivadas."
   };
 
   return (
@@ -141,7 +140,6 @@ function Rutinas() {
         </div>
       )}
 
-      {/* ── Stats ── */}
       <section className="stats-grid">
         <article className="stat-card">
           <p className="stat-label">Rutinas generales</p>
@@ -157,7 +155,6 @@ function Rutinas() {
         </article>
       </section>
 
-      {/* ── Tabs ── */}
       <div className="tabs">
         <button
           className={`tab ${vista === "generales" ? "active" : ""}`}
@@ -179,7 +176,6 @@ function Rutinas() {
         </button>
       </div>
 
-      {/* ── Lista ── */}
       <article className="panel">
         {loading ? (
           <p className="empty-state">Cargando rutinas...</p>
