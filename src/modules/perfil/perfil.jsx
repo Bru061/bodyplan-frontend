@@ -3,7 +3,7 @@ import DashboardLayout from "../../layout/DashboardLayout";
 import "../../styles/perfil.css";
 import { Link, useNavigate } from "react-router-dom";
 import { FiUser, FiCreditCard, FiEdit2 } from "react-icons/fi";
-import { MdAccountBalance } from "react-icons/md";
+import { MdAccountBalance, MdTrendingUp } from "react-icons/md";
 import api from "../../services/axios";
 import LoadingScreen from "../../components/ui/LoadingScreen";
 import Toast from "../../components/ui/Toast";
@@ -13,16 +13,77 @@ function Perfil() {
 
   const navigate = useNavigate();
 
-  const [user, setUser]       = useState(null);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [toast, setToast]     = useState(null);
-  const [planActivo, setPlanActivo]   = useState(null);
+  const [toast, setToast] = useState(null);
+
+  const [planActivo, setPlanActivo] = useState(null);
   const [historialPlanes, setHistorialPlanes] = useState([]);
-  const [clabe, setClabe]         = useState(null);
+
+  const [clabe, setClabe] = useState(null);
   const [editandoClabe, setEditandoClabe] = useState(false);
   const [clabeForm, setClabeForm] = useState({ clabe: "", banco: "", titular: "" });
   const [clabeErrors, setClabeErrors] = useState({});
   const [clabeLoading, setClabeLoading] = useState(false);
+
+  const [balance, setBalance] = useState([]);
+  const [editandoPerfil, setEditandoPerfil] = useState(false);
+  const [perfilForm, setPerfilForm] = useState({});
+  const [perfilErrors, setPerfilErrors] = useState({});
+  const [perfilLoading, setPerfilLoading] = useState(false);
+
+  const abrirEditarPerfil = () => {
+    setPerfilForm({
+      nombre: user.nombre || "",
+      apellido_paterno: user.apellido_paterno || "",
+      apellido_materno: user.apellido_materno || "",
+      telefono: user.telefono || ""
+    });
+    setPerfilErrors({});
+    setEditandoPerfil(true);
+  };
+
+  const handleGuardarPerfil = async () => {
+    const errors = {};
+    const onlyLetters = (v) => /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(v.trim());
+
+    if (!perfilForm.nombre.trim())
+      errors.nombre = "El nombre es obligatorio";
+    else if (!onlyLetters(perfilForm.nombre))
+      errors.nombre = "Solo se permiten letras";
+
+    if (!perfilForm.apellido_paterno.trim())
+      errors.apellido_paterno = "El apellido paterno es obligatorio";
+    else if (!onlyLetters(perfilForm.apellido_paterno))
+      errors.apellido_paterno = "Solo se permiten letras";
+
+    if (!perfilForm.apellido_materno.trim())
+      errors.apellido_materno = "El apellido materno es obligatorio";
+    else if (!onlyLetters(perfilForm.apellido_materno))
+      errors.apellido_materno = "Solo se permiten letras";
+
+    if (perfilForm.telefono && !/^\d{10}$/.test(perfilForm.telefono))
+      errors.telefono = "El teléfono debe tener 10 dígitos";
+
+    if (Object.keys(errors).length > 0) { setPerfilErrors(errors); return; }
+
+    try {
+      setPerfilLoading(true);
+      await api.put("/user/me", {
+        nombre:  perfilForm.nombre.trim(),
+        apellido_paterno: perfilForm.apellido_paterno.trim(),
+        apellido_materno: perfilForm.apellido_materno.trim(),
+        telefono: perfilForm.telefono.trim() || null
+      });
+      showToast("Perfil actualizado correctamente.");
+      setEditandoPerfil(false);
+      fetchAll();
+    } catch (err) {
+      showToast(err?.response?.data?.error || "Error actualizando perfil.", "error");
+    } finally {
+      setPerfilLoading(false);
+    }
+  };
 
   const [confirmCambio, setConfirmCambio] = useState(false);
 
@@ -30,10 +91,11 @@ function Perfil() {
 
   const fetchAll = async () => {
     try {
-      const [resUser, resPlan, resClabe] = await Promise.allSettled([
+      const [resUser, resPlan, resClabe, resBalance] = await Promise.allSettled([
         api.get("/user/me"),
         api.get("/proveedor/mi-plan"),
-        api.get("/referencias/mia")
+        api.get("/referencias/mia"),
+        api.get("/proveedor/balance")
       ]);
 
       if (resUser.status === "fulfilled") {
@@ -50,6 +112,10 @@ function Perfil() {
         const ref = resClabe.value.data.referencia;
         setClabe(ref || null);
         if (ref) setClabeForm({ clabe: ref.clabe, banco: ref.banco, titular: ref.titular });
+      }
+
+      if (resBalance.status === "fulfilled") {
+        setBalance(resBalance.value.data.balance || []);
       }
 
     } catch (err) {
@@ -152,9 +218,14 @@ function Perfil() {
       <section className="content-grid">
 
         <article className="panel">
-          <h2 className="panel-icon-title">
-            <FiUser size={18} /> Información personal
-          </h2>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+            <h2 className="panel-icon-title" style={{ margin: 0 }}>
+              <FiUser size={18} /> Información personal
+            </h2>
+            <button className="btn btn-ghost" onClick={abrirEditarPerfil}>
+              <FiEdit2 size={14} /> Editar
+            </button>
+          </div>
           <div className="panel-body">
             <p><strong>Nombre: </strong>{user.nombre} {user.apellido_paterno} {user.apellido_materno}</p>
             <p><strong>Teléfono: </strong>{user.telefono || "No registrado"}</p>
@@ -163,83 +234,6 @@ function Perfil() {
         </article>
 
         <article className="panel">
-          <h2 className="panel-icon-title">
-            <FiCreditCard size={18} /> Mi plan
-          </h2>
-
-          {planActivo ? (
-            <div className="mi-plan-card">
-              <div className="mi-plan-info">
-                <h3>{planActivo.plan?.nombre}</h3>
-                <p>
-                  Vence el {new Date(planActivo.fecha_fin).toLocaleDateString("es-MX", {
-                    day: "numeric", month: "long", year: "numeric"
-                  })}
-                </p>
-              </div>
-
-              <span className={`mi-plan-dias ${diasClass()}`}>
-                {dias <= 0 ? "Vencido" : `${dias} día${dias !== 1 ? "s" : ""} restante${dias !== 1 ? "s" : ""}`}
-              </span>
-
-              <div className="mi-plan-acciones">
-                <button className="btn btn-primary" onClick={handleRenovar}>
-                  Renovar
-                </button>
-                <button className="btn btn-ghost" onClick={() => setConfirmCambio(true)}>
-                  Cambiar plan
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="mi-plan-sin">
-              <p>No tienes un plan activo actualmente.</p>
-              <Link to="/planes" className="btn btn-primary" style={{ display: "inline-flex" }}>
-                Ver planes
-              </Link>
-            </div>
-          )}
-
-          <p className="panel-description">Historial de pagos hacia la plataforma BodyPlan.</p>
-          <div className="table-wrap">
-            <table className="history-table">
-              <thead>
-                <tr>
-                  <th>Plan</th>
-                  <th>Inicio</th>
-                  <th>Fin</th>
-                  <th>Precio</th>
-                  <th>Estado</th>
-                </tr>
-              </thead>
-              <tbody>
-                {historialPlanes.length === 0 ? (
-                  <tr>
-                    <td colSpan="5" style={{ textAlign: "center", color: "var(--text-secondary)", padding: "1rem" }}>
-                      Sin historial de planes
-                    </td>
-                  </tr>
-                ) : (
-                  historialPlanes.map((h, i) => (
-                    <tr key={i}>
-                      <td>{h.plan?.nombre || "—"}</td>
-                      <td>{h.fecha_inicio ? new Date(h.fecha_inicio).toLocaleDateString("es-MX") : "—"}</td>
-                      <td>{h.fecha_fin   ? new Date(h.fecha_fin).toLocaleDateString("es-MX")   : "—"}</td>
-                      <td>${h.plan?.precio?.toLocaleString("es-MX") || "—"}</td>
-                      <td>
-                        <span className={`badge ${h.estado === "activa" ? "badge-success" : "badge-danger"}`}>
-                          {h.estado}
-                        </span>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </article>
-
-        <article className="panel" style={{ gridColumn: "1 / -1" }}>
           <h2 className="panel-icon-title">
             <MdAccountBalance size={18} /> Datos bancarios (CLABE)
           </h2>
@@ -335,7 +329,215 @@ function Perfil() {
           )}
         </article>
 
+        <article className="panel" style={{ gridColumn: "1 / -1" }}>
+          <h2 className="panel-icon-title">
+            <FiCreditCard size={18} /> Mi plan
+          </h2>
+
+          {planActivo ? (
+            <div className="mi-plan-card">
+              <div className="mi-plan-info">
+                <h3>{planActivo.plan?.nombre}</h3>
+                <p>
+                  Vence el {new Date(planActivo.fecha_fin).toLocaleDateString("es-MX", {
+                    day: "numeric", month: "long", year: "numeric"
+                  })}
+                </p>
+              </div>
+
+              <span className={`mi-plan-dias ${diasClass()}`}>
+                {dias <= 0 ? "Vencido" : `${dias} día${dias !== 1 ? "s" : ""} restante${dias !== 1 ? "s" : ""}`}
+              </span>
+
+              <div className="mi-plan-acciones">
+                <button className="btn btn-primary" onClick={handleRenovar}>
+                  Renovar
+                </button>
+                <button className="btn btn-ghost" onClick={() => setConfirmCambio(true)}>
+                  Cambiar plan
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="mi-plan-sin">
+              <p>No tienes un plan activo actualmente.</p>
+              <Link to="/planes" className="btn btn-primary" style={{ display: "inline-flex" }}>
+                Ver planes
+              </Link>
+            </div>
+          )}
+
+          <p className="panel-description">Historial de pagos hacia la plataforma BodyPlan.</p>
+          <div className="table-wrap">
+            <table className="history-table">
+              <thead>
+                <tr>
+                  <th>Plan</th>
+                  <th>Inicio</th>
+                  <th>Fin</th>
+                  <th>Precio</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {historialPlanes.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" style={{ textAlign: "center", color: "var(--text-secondary)", padding: "1rem" }}>
+                      Sin historial de planes
+                    </td>
+                  </tr>
+                ) : (
+                  historialPlanes.map((h, i) => (
+                    <tr key={i}>
+                      <td>{h.plan?.nombre || "—"}</td>
+                      <td>{h.fecha_inicio ? new Date(h.fecha_inicio).toLocaleDateString("es-MX") : "—"}</td>
+                      <td>{h.fecha_fin   ? new Date(h.fecha_fin).toLocaleDateString("es-MX")   : "—"}</td>
+                      <td>${h.plan?.precio?.toLocaleString("es-MX") || "—"}</td>
+                      <td>
+                        <span className={`badge ${h.estado === "activa" ? "badge-success" : "badge-danger"}`}>
+                          {h.estado}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </article>
+
       </section>
+
+      {balance.length > 0 && (
+        <section style={{ marginTop: "1.5rem" }}>
+          <article className="panel">
+            <h2 className="panel-icon-title">
+              <MdTrendingUp size={18} /> Mi balance
+            </h2>
+            <p className="panel-description">
+              Dinero generado por membresías de tus clientes, pendiente de transferir a tu cuenta.
+            </p>
+            <div className="table-wrap">
+              <table className="history-table">
+                <thead>
+                  <tr>
+                    <th>Gimnasio</th>
+                    <th>Total generado</th>
+                    <th>Transferido</th>
+                    <th>Pendiente de cobrar</th>
+                    <th>CLABE</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {balance.map((g, i) => (
+                    <tr key={g.id_gimnasio ?? i}>
+                      <td><strong>{g.nombre}</strong></td>
+                      <td>${parseFloat(g.total_generado || 0).toLocaleString("es-MX")}</td>
+                      <td>${parseFloat(g.total_transferido || 0).toLocaleString("es-MX")}</td>
+                      <td>
+                        <span style={{ fontWeight: 700, color: g.pendiente_cobrar > 0 ? "#16a34a" : "var(--text-secondary)" }}>
+                          ${parseFloat(g.pendiente_cobrar || 0).toLocaleString("es-MX")}
+                        </span>
+                      </td>
+                      <td>
+                        {g.referencia_bancaria?.verificado
+                          ? <span className="clabe-verificado">Verificada</span>
+                          : <span className="clabe-pendiente">Sin verificar</span>
+                        }
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+      )}
+
+      {editandoPerfil && (
+        <ModalPortal>
+          <div className="modal-overlay">
+            <div className="modal-card">
+              <h2 className="modal-title">Editar información personal</h2>
+
+              <div className="modal-form">
+
+                <div className="form-group">
+                  <label>Nombre *</label>
+                  <input
+                    value={perfilForm.nombre}
+                    onChange={e => {
+                      setPerfilForm(prev => ({ ...prev, nombre: e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "") }));
+                      setPerfilErrors(prev => ({ ...prev, nombre: "" }));
+                    }}
+                    maxLength={40}
+                  />
+                  {perfilErrors.nombre && <span className="field-error-msg">{perfilErrors.nombre}</span>}
+                </div>
+
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label>Apellido paterno *</label>
+                    <input
+                      value={perfilForm.apellido_paterno}
+                      onChange={e => {
+                        setPerfilForm(prev => ({ ...prev, apellido_paterno: e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ]/g, "") }));
+                        setPerfilErrors(prev => ({ ...prev, apellido_paterno: "" }));
+                      }}
+                      maxLength={30}
+                    />
+                    {perfilErrors.apellido_paterno && <span className="field-error-msg">{perfilErrors.apellido_paterno}</span>}
+                  </div>
+
+                  <div className="form-group">
+                    <label>Apellido materno *</label>
+                    <input
+                      value={perfilForm.apellido_materno}
+                      onChange={e => {
+                        setPerfilForm(prev => ({ ...prev, apellido_materno: e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ]/g, "") }));
+                        setPerfilErrors(prev => ({ ...prev, apellido_materno: "" }));
+                      }}
+                      maxLength={30}
+                    />
+                    {perfilErrors.apellido_materno && <span className="field-error-msg">{perfilErrors.apellido_materno}</span>}
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Teléfono <span style={{ fontWeight: 400, color: "var(--text-secondary)" }}>(opcional)</span></label>
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    value={perfilForm.telefono}
+                    onChange={e => {
+                      setPerfilForm(prev => ({ ...prev, telefono: e.target.value.replace(/\D/g, "").slice(0, 10) }));
+                      setPerfilErrors(prev => ({ ...prev, telefono: "" }));
+                    }}
+                    placeholder="10 dígitos"
+                    maxLength={10}
+                  />
+                  {perfilErrors.telefono && <span className="field-error-msg">{perfilErrors.telefono}</span>}
+                </div>
+
+                <p style={{ fontSize: "0.78rem", color: "var(--text-secondary)", margin: 0 }}>
+                  El correo electrónico no se puede modificar desde aquí.
+                </p>
+
+              </div>
+
+              <div className="modal-actions">
+                <button className="btn btn-ghost" onClick={() => setEditandoPerfil(false)}>
+                  Cancelar
+                </button>
+                <button className="btn btn-primary" onClick={handleGuardarPerfil} disabled={perfilLoading}>
+                  {perfilLoading ? "Guardando..." : "Guardar cambios"}
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </ModalPortal>
+      )}
 
       {confirmCambio && (
         <ModalPortal>

@@ -3,18 +3,19 @@ import { MdNotificationsNone } from "react-icons/md";
 import { useAuth } from "../core/context/AuthContext";
 
 const PAGE_TITLES = {
-  "/admin/dashboard":     "Dashboard",
-  "/admin/planes":        "Gestión de planes",
-  "/admin/movimientos":   "Movimientos y pagos",
-  "/admin/reembolsos":    "Reembolsos",
-  "/admin/suscripciones": "Suscripciones"
+  "/admin/dashboard": "Dashboard",
+  "/admin/planes": "Gestión de planes",
+  "/admin/finanzas": "Movimientos y balance",
+  "/admin/referencias": "Referencias bancarias (CLABE)",
+  "/admin/actividad": "Reembolsos y suscripciones",
+  "/admin/usuarios": "Usuarios"
 };
 
 function AdminNavbar() {
 
   const { pathname } = useLocation();
-  const { user }     = useAuth();
-  const pageTitle    = PAGE_TITLES[pathname] || "Admin";
+  const { user } = useAuth();
+  const pageTitle = PAGE_TITLES[pathname] || "Admin";
 
   return (
     <header className="navbar admin-topbar">

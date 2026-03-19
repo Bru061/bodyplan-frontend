@@ -1,8 +1,9 @@
+import React from "react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../core/context/AuthContext";
 import {
-  MdDashboard, MdCreditCard, MdSwapHoriz,
-  MdAssignment, MdLogout, MdSubscriptions
+  MdDashboard, MdCreditCard, MdSwapHoriz, MdAssignment,
+  MdLogout, MdVerifiedUser, MdPeople
 } from "react-icons/md";
 import logo from "../assets/logo.png";
 import "../styles/admin.css";
@@ -17,10 +18,16 @@ const NAV_GROUPS = [
   {
     label: "Finanzas",
     items: [
-      { to: "/admin/planes",        icon: <MdCreditCard size={20} />,    label: "Planes"        },
-      { to: "/admin/movimientos",   icon: <MdSwapHoriz size={20} />,     label: "Movimientos"   },
-      { to: "/admin/reembolsos",    icon: <MdAssignment size={20} />,    label: "Reembolsos"    },
-      { to: "/admin/suscripciones", icon: <MdSubscriptions size={20} />, label: "Suscripciones" }
+      { to: "/admin/planes", icon: <MdCreditCard size={20} />, label: "Planes" },
+      { to: "/admin/finanzas", icon: <MdSwapHoriz size={20} />, label: "Finanzas" },
+      { to: "/admin/referencias", icon: <MdVerifiedUser size={20} />, label: "CLABEs" },
+      { to: "/admin/actividad", icon: <MdAssignment size={20} />, label: "Actividad" },
+    ]
+  },
+  {
+    label: "Usuarios",
+    items: [
+      { to: "/admin/usuarios", icon: <MdPeople size={20} />, label: "Usuarios" }
     ]
   }
 ];
@@ -47,8 +54,8 @@ function AdminSidebar() {
       <nav className="admin-nav">
         <ul>
           {NAV_GROUPS.map(group => (
-            <>
-              <li key={group.label} className="admin-nav-label">{group.label}</li>
+            <React.Fragment key={group.label}>
+              <li className="admin-nav-label">{group.label}</li>
               {group.items.map(item => (
                 <li key={item.to}>
                   <NavLink
@@ -62,7 +69,7 @@ function AdminSidebar() {
                   </NavLink>
                 </li>
               ))}
-            </>
+            </React.Fragment>
           ))}
         </ul>
       </nav>

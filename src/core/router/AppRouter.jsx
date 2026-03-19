@@ -20,10 +20,11 @@ import Planes from "../../modules/planes/Planes";
 import Checkout from "../../modules/planes/Checkout";
 import PagoExitoso from "../../modules/planes/PagoExitoso";
 import AdminDashboard from "../../modules/admin/AdminDashboard";
-import AdminMovimientos from "../../modules/admin/AdminMovimientos";
+import AdminFinanzas from "../../modules/admin/AdminFinanzas";
 import AdminPlanes from "../../modules/admin/AdminPlanes";
-import AdminReembolsos from "../../modules/admin/AdminReembolsos";
-import AdminSuscripciones from "../../modules/admin/AdminSuscripciones";
+import AdminReferencias from "../../modules/admin/AdminReferencias";
+import AdminActividad from "../../modules/admin/AdminActividad";
+import AdminUsuarios from "../../modules/admin/AdminUsuarios";
 import AppOnly from "../../modules/public/AppOnly";
 import PublicRoute from "../guards/PublicRoute";
 import PrivateRoute from "../guards/PrivateRoute";
@@ -75,10 +76,11 @@ function AppRouter() {
         {/* Admin */}
         <Route element={<RoleRoute allowedRoles={["admin"]} />}>
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/movimientos" element={<AdminMovimientos />} />
+          <Route path="/admin/finanzas" element={<AdminFinanzas />} />
           <Route path="/admin/planes" element={<AdminPlanes />} />
-          <Route path="/admin/reembolsos" element={<AdminReembolsos />} />
-          <Route path="/admin/suscripciones" element={<AdminSuscripciones />} />
+          <Route path="/admin/referencias" element={<AdminReferencias />} />
+          <Route path="/admin/actividad" element={<AdminActividad />} />
+          <Route path="/admin/usuarios" element={<AdminUsuarios />} />
         </Route>
 
         {/* Usuario app */}

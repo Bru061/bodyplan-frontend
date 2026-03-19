@@ -1,20 +1,16 @@
 function Footer() {
-    return (
-        <footer className="footer">
-      <div className="footer-content">
-        <div>
-          <h3>BodyPlan</h3>
-          <h3>Transformando la gestión deportiva.</h3>
-        </div>
-
-        <div>
-          <h3>📞 (+52) 245 114 0474</h3>
-          <h3>✉ devnest.contacto@gmail.com</h3>
-        </div>
-      </div>
-      <p className="footer-copy">© 2026 DevNest - Todos los derechos reservados.</p>
+  return (
+    <footer style={{
+      background: "#0f172a",
+      borderTop: "1px solid rgba(255,255,255,0.07)",
+      padding: "1.5rem 20px",
+      textAlign: "center"
+    }}>
+      <p style={{ margin: 0, fontSize: "0.8rem", color: "rgba(255,255,255,0.3)" }}>
+        © {new Date().getFullYear()} DevNest — Todos los derechos reservados.
+      </p>
     </footer>
-    )
+  );
 }
 
-export default Footer
+export default Footer;
