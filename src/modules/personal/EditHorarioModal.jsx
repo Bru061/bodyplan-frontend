@@ -5,19 +5,22 @@ import ModalPortal from "../../components/ui/ModalPortal";
 function EditHorarioModal({ data, onClose, onUpdated }) {
 
   const [form, setForm] = useState({
-    hora_entrada: data.hora_entrada?.slice(0,5) || "",
-    hora_salida: data.hora_salida?.slice(0,5) || ""
+    hora_entrada: data.hora_entrada?.slice(0, 5) || "",
+    hora_salida:  data.hora_salida?.slice(0, 5)  || ""
   });
 
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors]   = useState({});
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError]     = useState("");
 
   const horaEsValida = (entrada, salida) => {
-    if (!entrada || !salida) return false;
+    if (!entrada || !salida) return { valida: false, msg: "" };
     const [h1, m1] = entrada.split(":").map(Number);
     const [h2, m2] = salida.split(":").map(Number);
-    return (h2 * 60 + m2) > (h1 * 60 + m1);
+    const diff = (h2 * 60 + m2) - (h1 * 60 + m1);
+    if (diff <= 0)   return { valida: false, msg: "La hora de salida debe ser mayor a la entrada" };
+    if (diff < 180)  return { valida: false, msg: "El turno debe ser de mínimo 3 horas" };
+    return { valida: true, msg: "" };
   };
 
   const handleChange = (e) => {
@@ -30,20 +33,13 @@ function EditHorarioModal({ data, onClose, onUpdated }) {
     const newErrors = {};
 
     if (!form.hora_entrada) newErrors.hora_entrada = "Indica la hora de entrada";
-    if (!form.hora_salida) newErrors.hora_salida = "Indica la hora de salida";
-
-    if (
-      form.hora_entrada &&
-      form.hora_salida &&
-      !horaEsValida(form.hora_entrada, form.hora_salida)
-    ) {
-      newErrors.hora_salida = "La hora de salida debe ser mayor a la entrada";
+    if (!form.hora_salida)  newErrors.hora_salida  = "Indica la hora de salida";
+    if (form.hora_entrada && form.hora_salida) {
+      const { valida, msg } = horaEsValida(form.hora_entrada, form.hora_salida);
+      if (!valida) newErrors.hora_salida = msg;
     }
 
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
+    if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
 
     try {
       setLoading(true);
@@ -55,7 +51,7 @@ function EditHorarioModal({ data, onClose, onUpdated }) {
         `/personal/${data.personalId}/gimnasios/${data.gimnasioId}/${data.dia}`,
         {
           hora_entrada: toTime(form.hora_entrada),
-          hora_salida: toTime(form.hora_salida)
+          hora_salida:  toTime(form.hora_salida)
         }
       );
 
@@ -87,8 +83,8 @@ function EditHorarioModal({ data, onClose, onUpdated }) {
           {error && <div className="modal-error" style={{ marginTop: "12px" }}>{error}</div>}
 
           <div className="modal-form" style={{ marginTop: "1rem" }}>
-
             <div className="modal-grid">
+
               <div className="form-group">
                 <label>Hora entrada *</label>
                 <input
@@ -110,8 +106,8 @@ function EditHorarioModal({ data, onClose, onUpdated }) {
                 />
                 {errors.hora_salida && <span className="field-error-msg">{errors.hora_salida}</span>}
               </div>
-            </div>
 
+            </div>
           </div>
 
           <div className="modal-actions">

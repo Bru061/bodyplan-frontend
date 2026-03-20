@@ -102,7 +102,7 @@ function AssignRutinaModal({ cliente, onClose, onAssigned }) {
 
     if (!form.duracion_min) e.duracion_min = "La duración es obligatoria";
     else if (Number(form.duracion_min) <= 0)  e.duracion_min = "Debe ser mayor a 0";
-    else if (Number(form.duracion_min) > 300) e.duracion_min = "Máximo 300 minutos";
+    else if (Number(form.duracion_min) > 180) e.duracion_min = "Máximo 180 minutos";
 
     if (!form.calorias_estimadas) e.calorias_estimadas = "Las calorías son obligatorias";
     else if (Number(form.calorias_estimadas) <= 0)   e.calorias_estimadas = "Debe ser mayor a 0";

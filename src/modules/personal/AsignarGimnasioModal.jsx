@@ -30,10 +30,13 @@ function AsignarGimnasioModal({ personal, onClose, onAsignado }) {
   }, []);
 
   const horaEsValida = (entrada, salida) => {
-    if (!entrada || !salida) return false;
+    if (!entrada || !salida) return { valida: false, msg: "" };
     const [h1, m1] = entrada.split(":").map(Number);
     const [h2, m2] = salida.split(":").map(Number);
-    return (h2 * 60 + m2) > (h1 * 60 + m1);
+    const diff = (h2 * 60 + m2) - (h1 * 60 + m1);
+    if (diff <= 0)   return { valida: false, msg: "La hora de salida debe ser mayor a la entrada" };
+    if (diff < 180)  return { valida: false, msg: "El turno debe ser de mínimo 3 horas" };
+    return { valida: true, msg: "" };
   };
 
   const handleChange = (e) => {
@@ -46,11 +49,13 @@ function AsignarGimnasioModal({ personal, onClose, onAsignado }) {
     const newErrors = {};
 
     if (!form.id_gimnasio) newErrors.id_gimnasio = "Selecciona un gimnasio";
-    if (!form.dia_semana) newErrors.dia_semana = "Selecciona un día";
+    if (!form.dia_semana)  newErrors.dia_semana  = "Selecciona un día";
     if (!form.hora_entrada) newErrors.hora_entrada = "Indica la hora de entrada";
-    if (!form.hora_salida) newErrors.hora_salida = "Indica la hora de salida";
-    if (form.hora_entrada && form.hora_salida && !horaEsValida(form.hora_entrada, form.hora_salida))
-      newErrors.hora_salida = "La hora de salida debe ser mayor a la entrada";
+    if (!form.hora_salida)  newErrors.hora_salida  = "Indica la hora de salida";
+    if (form.hora_entrada && form.hora_salida) {
+      const { valida, msg } = horaEsValida(form.hora_entrada, form.hora_salida);
+      if (!valida) newErrors.hora_salida = msg;
+    }
 
     if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
 
@@ -61,10 +66,10 @@ function AsignarGimnasioModal({ personal, onClose, onAsignado }) {
       const toTime = (t) => t.length === 5 ? t + ":00" : t;
 
       await api.post(`/personal/${personal.id_personal}/gimnasios`, {
-        id_gimnasio: Number(form.id_gimnasio),
-        dia_semana: form.dia_semana,
+        id_gimnasio:  Number(form.id_gimnasio),
+        dia_semana:   form.dia_semana,
         hora_entrada: toTime(form.hora_entrada),
-        hora_salida: toTime(form.hora_salida)
+        hora_salida:  toTime(form.hora_salida)
       });
 
       onAsignado();
