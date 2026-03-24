@@ -16,11 +16,13 @@ function DetalleCliente() {
   const [rutinas, setRutinas] = useState([]);
   const [historial, setHistorial] = useState([]);
   const [showAssignModal, setShowAssignModal] = useState(false);
-
   const [confirmModal, setConfirmModal] = useState(null);
   const [cancelando, setCancelando] = useState(false);
   const [cancelError, setCancelError] = useState("");
   const [gymError, setGymError] = useState("");
+
+  const [tabSubs, setTabSubs] = useState("activa");
+  const [tabRutinas, setTabRutinas] = useState("activas");
 
   const fetchRutinasCliente = async () => {
     try {
@@ -116,7 +118,10 @@ function DetalleCliente() {
 
   if (!cliente) return <LoadingScreen message="Cargando información del cliente..." />;
 
-  const rutinasCompletadas = rutinas.filter(r => r.estado === "completada").length;
+  const subsActiva = historial.filter(s => s.estado === "activa");
+  const subsHistorial = historial.filter(s => s.estado !== "activa");
+  const rutinasActivas = rutinas.filter(r => ["pendiente", "iniciada"].includes(r.estado));
+  const rutinasHistorial = rutinas.filter(r => !["pendiente", "iniciada"].includes(r.estado));
 
   return (
     <DashboardLayout>
@@ -152,11 +157,11 @@ function DetalleCliente() {
         <article className="panel client-stats">
           <h2>Actividad</h2>
           <div className="stat-box">
-            <p className="stat-number">{rutinas.length}</p>
-            <span>Rutinas asignadas</span>
+            <p className="stat-number">{rutinasActivas.length}</p>
+            <span>Rutinas activas</span>
           </div>
           <div className="stat-box">
-            <p className="stat-number">{rutinasCompletadas}</p>
+            <p className="stat-number">{rutinasHistorial.filter(r => r.estado === "completada").length}</p>
             <span>Rutinas completadas</span>
           </div>
         </article>
@@ -164,86 +169,171 @@ function DetalleCliente() {
       </section>
 
       <article className="panel">
-        <h2>Historial de suscripciones</h2>
-        {historial.length === 0 ? (
-          <p className="empty-state">Este cliente no tiene suscripciones registradas.</p>
-        ) : (
-          historial.map((s, index) => (
-            <div className="row-item" key={index}>
-              <div>
-                <strong>{s.gimnasio.nombre}</strong> — {s.membresia?.nombre || "Sin membresía"}
-                <p>Inicio: {new Date(s.fecha_inicio).toLocaleDateString()}</p>
-              </div>
-              <span className={`badge ${s.estado === "activa" ? "badge-success" : "badge-danger"}`}>
-                {s.estado}
-              </span>
-            </div>
-          ))
-        )}
+        <div className="detalle-tabs-header">
+          <h2>Suscripciones</h2>
+          <div className="detalle-tabs">
+            <button
+              className={`detalle-tab ${tabSubs === "activa" ? "detalle-tab-active" : ""}`}
+              onClick={() => setTabSubs("activa")}
+            >
+              Activa ({subsActiva.length})
+            </button>
+            <button
+              className={`detalle-tab ${tabSubs === "historial" ? "detalle-tab-active" : ""}`}
+              onClick={() => setTabSubs("historial")}
+            >
+              Historial ({subsHistorial.length})
+            </button>
+          </div>
+        </div>
+
+        <div className="detalle-scroll-area">
+          {tabSubs === "activa" && (
+            subsActiva.length === 0 ? (
+              <p className="empty-state">Este cliente no tiene suscripción activa.</p>
+            ) : (
+              subsActiva.map((s, i) => (
+                <div className="row-item" key={i}>
+                  <div>
+                    <strong>{s.gimnasio?.nombre || "Sin gimnasio"}</strong> — {s.membresia?.nombre || "Sin membresía"}
+                    <p style={{ margin: "4px 0 0", fontSize: "0.82rem", color: "var(--text-secondary)" }}>
+                      Inicio: {new Date(s.fecha_inicio).toLocaleDateString()} ·
+                      Vence: {s.fecha_fin ? new Date(s.fecha_fin).toLocaleDateString() : "—"}
+                    </p>
+                  </div>
+                  <span className="badge badge-success">activa</span>
+                </div>
+              ))
+            )
+          )}
+
+          {tabSubs === "historial" && (
+            subsHistorial.length === 0 ? (
+              <p className="empty-state">Sin historial de suscripciones.</p>
+            ) : (
+              subsHistorial.map((s, i) => (
+                <div className="row-item" key={i}>
+                  <div>
+                    <strong>{s.gimnasio?.nombre || "Sin gimnasio"}</strong> — {s.membresia?.nombre || "Sin membresía"}
+                    <p style={{ margin: "4px 0 0", fontSize: "0.82rem", color: "var(--text-secondary)" }}>
+                      Inicio: {new Date(s.fecha_inicio).toLocaleDateString()} ·
+                      Fin: {s.fecha_fin ? new Date(s.fecha_fin).toLocaleDateString() : "—"}
+                    </p>
+                  </div>
+                  <span className={`badge ${s.estado === "vencida" ? "badge-danger" : "badge-secondary"}`}>
+                    {s.estado}
+                  </span>
+                </div>
+              ))
+            )
+          )}
+        </div>
       </article>
 
       <article className="panel routines-panel">
-        <div className="panel-head">
-          <h2>Rutinas asignadas</h2>
-          <button
-            className="btn btn-primary"
-            onClick={() => {
-              if (!cliente.id_gimnasio) {
-                setGymError("El cliente no tiene gimnasio activo");
-                return;
-              }
-              setGymError("");
-              setShowAssignModal(true);
-            }}
-          >
-            Asignar rutina
-          </button>
+        <div className="detalle-tabs-header">
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+            <h2 style={{ margin: 0 }}>Rutinas asignadas</h2>
+            <button
+              className="btn btn-primary"
+              onClick={() => {
+                if (!cliente.id_gimnasio) { setGymError("El cliente no tiene gimnasio activo"); return; }
+                setGymError("");
+                setShowAssignModal(true);
+              }}
+            >
+              Asignar rutina
+            </button>
+          </div>
+          <div className="detalle-tabs">
+            <button
+              className={`detalle-tab ${tabRutinas === "activas" ? "detalle-tab-active" : ""}`}
+              onClick={() => setTabRutinas("activas")}
+            >
+              Activas ({rutinasActivas.length})
+            </button>
+            <button
+              className={`detalle-tab ${tabRutinas === "historial" ? "detalle-tab-active" : ""}`}
+              onClick={() => setTabRutinas("historial")}
+            >
+              Historial ({rutinasHistorial.length})
+            </button>
+          </div>
         </div>
 
         {gymError && (
           <div className="modal-error" style={{ marginBottom: "12px" }}>{gymError}</div>
         )}
 
-        {rutinas.length === 0 ? (
-          <p className="empty-state">Este cliente aún no tiene rutinas asignadas.</p>
-        ) : (
-          rutinas.map(rutina => (
-            <div className="routine-card" key={rutina.id_asignacion ?? rutina.id_rutina}>
-              <div>
-                <h2>{rutina.nombre}</h2>
-                <p>{rutina.descripcion}</p>
-                <p>
-                  Nivel: {rutina.nivel || "N/A"} ·
-                  Duración: {rutina.duracion_min || 0} min ·
-                  Tipo: {rutina.tipo_rutina} ·
-                  Categoría: {rutina.categoria}
-                </p>
-                <p>Instrucciones: {rutina.instrucciones}</p>
+        <div className="detalle-scroll-area">
+          {tabRutinas === "activas" && (
+            rutinasActivas.length === 0 ? (
+              <p className="empty-state">Este cliente no tiene rutinas activas.</p>
+            ) : (
+              rutinasActivas.map(rutina => (
+                <div className="routine-card" key={rutina.id_asignacion ?? rutina.id_rutina}>
+                  <div>
+                    <h2>{rutina.nombre}</h2>
+                    <p>{rutina.descripcion}</p>
+                    <p>
+                      Nivel: {rutina.nivel || "N/A"} ·
+                      Duración: {rutina.duracion_min || 0} min ·
+                      Tipo: {rutina.tipo_rutina} ·
+                      Categoría: {rutina.categoria}
+                    </p>
+                    {rutina.encargadoNombre && (
+                      <p className="routine-instructor">
+                        👤 Instructor: <strong>{rutina.encargadoNombre}</strong>
+                      </p>
+                    )}
+                  </div>
+                  <div className="routine-card-actions">
+                    <span className={`badge ${rutina.estado === "iniciada" ? "badge-primary" : "badge-secondary"}`}>
+                      {rutina.estado}
+                    </span>
+                    <button
+                      className="btn btn-danger"
+                      onClick={() => { setCancelError(""); setConfirmModal({ id_asignacion: rutina.id_asignacion, nombre: rutina.nombre }); }}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              ))
+            )
+          )}
 
-                {rutina.encargadoNombre && (
-                  <p className="routine-instructor">
-                    👤 Instructor: <strong>{rutina.encargadoNombre}</strong>
-                  </p>
-                )}
-              </div>
-
-              <div className="routine-card-actions">
-                <span className="badge badge-secondary">{rutina.estado}</span>
-                {(rutina.estado === "pendiente" || rutina.estado === "iniciada") && (
-                  <button
-                    className="btn btn-danger"
-                    onClick={() => {
-                      setCancelError("");
-                      setConfirmModal({ id_asignacion: rutina.id_asignacion, nombre: rutina.nombre });
-                    }}
-                  >
-                    Cancelar rutina
-                  </button>
-                )}
-              </div>
-            </div>
-          ))
-        )}
+          {tabRutinas === "historial" && (
+            rutinasHistorial.length === 0 ? (
+              <p className="empty-state">Sin historial de rutinas.</p>
+            ) : (
+              rutinasHistorial.map(rutina => (
+                <div className="routine-card" key={rutina.id_asignacion ?? rutina.id_rutina}>
+                  <div>
+                    <h2>{rutina.nombre}</h2>
+                    <p>{rutina.descripcion}</p>
+                    <p>
+                      Nivel: {rutina.nivel || "N/A"} ·
+                      Duración: {rutina.duracion_min || 0} min ·
+                      Tipo: {rutina.tipo_rutina} ·
+                      Categoría: {rutina.categoria}
+                    </p>
+                    {rutina.encargadoNombre && (
+                      <p className="routine-instructor">
+                        👤 Instructor: <strong>{rutina.encargadoNombre}</strong>
+                      </p>
+                    )}
+                  </div>
+                  <div className="routine-card-actions">
+                    <span className={`badge ${rutina.estado === "completada" ? "badge-success" : "badge-danger"}`}>
+                      {rutina.estado}
+                    </span>
+                  </div>
+                </div>
+              ))
+            )
+          )}
+        </div>
       </article>
 
       {showAssignModal && (
@@ -261,18 +351,14 @@ function DetalleCliente() {
               <h3 className="modal-title">Cancelar rutina</h3>
               <p className="modal-body">
                 ¿Estás seguro de que deseas cancelar la rutina
-                <strong> {confirmModal.nombre}</strong> para este cliente?
+                <strong> {confirmModal.nombre}</strong>?
                 Esta acción no se puede deshacer.
               </p>
               {cancelError && (
                 <div className="modal-error" style={{ marginBottom: "12px" }}>{cancelError}</div>
               )}
               <div className="modal-actions">
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => { setConfirmModal(null); setCancelError(""); }}
-                  disabled={cancelando}
-                >
+                <button className="btn btn-ghost" onClick={() => { setConfirmModal(null); setCancelError(""); }} disabled={cancelando}>
                   Volver
                 </button>
                 <button className="btn btn-danger" onClick={handleCancelar} disabled={cancelando}>

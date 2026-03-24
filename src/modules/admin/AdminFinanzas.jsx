@@ -4,25 +4,24 @@ import api from "../../services/axios";
 import Toast from "../../components/ui/Toast";
 import ModalPortal from "../../components/ui/ModalPortal";
 
+const POR_PAGINA = 10;
 function TabMovimientos() {
 
+  const [todos, setTodos] = useState([]);
   const [movimientos, setMovimientos] = useState([]);
   const [resumen, setResumen] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [pagina, setPagina] = useState(1);
   const [filtros, setFiltros] = useState({
     tipo_pago: "", estado: "", fecha_inicio: "", fecha_fin: ""
   });
+  const POR_PAGINA = 10;
 
   const fetchMovimientos = async () => {
     try {
       setLoading(true);
-      const params = {};
-      if (filtros.tipo_pago) params.tipo_pago = filtros.tipo_pago;
-      if (filtros.estado) params.estado = filtros.estado;
-      if (filtros.fecha_inicio) params.fecha_inicio = filtros.fecha_inicio;
-      if (filtros.fecha_fin) params.fecha_fin = filtros.fecha_fin;
-      const res = await api.get("/admin/movimientos", { params });
-      setMovimientos(res.data.pagos || []);
+      const res = await api.get("/admin/movimientos", { params: { limit: 9999 } });
+      setTodos(res.data.pagos   || []);
       setResumen(res.data.resumen || null);
     } catch (err) {
       console.error("Error cargando movimientos", err);
@@ -33,8 +32,27 @@ function TabMovimientos() {
 
   useEffect(() => { fetchMovimientos(); }, []);
 
+  useEffect(() => {
+    let resultado = [...todos];
+
+    if (filtros.tipo_pago)
+      resultado = resultado.filter(m => m.tipo_pago === filtros.tipo_pago);
+    if (filtros.estado)
+      resultado = resultado.filter(m => m.estado === filtros.estado);
+    if (filtros.fecha_inicio)
+      resultado = resultado.filter(m => m.fecha_pago >= filtros.fecha_inicio);
+    if (filtros.fecha_fin)
+      resultado = resultado.filter(m => m.fecha_pago <= filtros.fecha_fin + "T23:59:59");
+
+    setMovimientos(resultado);
+    setPagina(1);
+  }, [filtros, todos]);
+
   const handleFiltro = (e) =>
     setFiltros(prev => ({ ...prev, [e.target.name]: e.target.value }));
+
+  const totalPaginas   = Math.ceil(movimientos.length / POR_PAGINA);
+  const movimientosPag = movimientos.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
 
   return (
     <>
@@ -57,7 +75,7 @@ function TabMovimientos() {
 
       <div className="admin-table-panel">
         <div className="admin-table-header">
-          <h2>Pagos</h2>
+          <h2>Pagos ({movimientos.length})</h2>
           <div className="admin-filters">
             <select name="tipo_pago" value={filtros.tipo_pago} onChange={handleFiltro}>
               <option value="">Todos los tipos</option>
@@ -72,9 +90,6 @@ function TabMovimientos() {
             </select>
             <input type="date" name="fecha_inicio" value={filtros.fecha_inicio} onChange={handleFiltro} title="Fecha inicio" />
             <input type="date" name="fecha_fin"    value={filtros.fecha_fin}    onChange={handleFiltro} title="Fecha fin" />
-            <button className="btn btn-primary" onClick={fetchMovimientos} style={{ fontSize: "0.85rem" }}>
-              Aplicar
-            </button>
           </div>
         </div>
 
@@ -97,7 +112,7 @@ function TabMovimientos() {
               ) : movimientos.length === 0 ? (
                 <tr><td colSpan="7" className="admin-empty">No hay movimientos con esos filtros.</td></tr>
               ) : (
-                movimientos.map((m, i) => (
+                movimientosPag.map((m, i) => (
                   <tr key={m.id_pago ?? i}>
                     <td>#{m.id_pago}</td>
                     <td>
@@ -121,6 +136,17 @@ function TabMovimientos() {
             </tbody>
           </table>
         </div>
+
+        {totalPaginas > 1 && (
+          <div className="admin-paginador">
+            <button className="admin-pag-btn" onClick={() => setPagina(p => Math.max(1, p - 1))} disabled={pagina === 1}>←</button>
+            {Array.from({ length: totalPaginas }, (_, i) => i + 1).map(n => (
+              <button key={n} className={`admin-pag-btn ${pagina === n ? "admin-pag-active" : ""}`} onClick={() => setPagina(n)}>{n}</button>
+            ))}
+            <button className="admin-pag-btn" onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))} disabled={pagina === totalPaginas}>→</button>
+            <span className="admin-pag-info">{movimientos.length} registros</span>
+          </div>
+        )}
       </div>
     </>
   );
@@ -137,7 +163,7 @@ function TabBalance({ showToast }) {
   const fetchBalance = async () => {
     try {
       setLoading(true);
-      const res = await api.get("/admin/balance/detallado");
+      const res = await api.get("/admin/balance");
       setBalance(res.data.balance || []);
     } catch (err) {
       showToast("Error cargando balance.", "error");
@@ -147,19 +173,6 @@ function TabBalance({ showToast }) {
   };
 
   useEffect(() => { fetchBalance(); }, []);
-
-  const togglePago = (id) =>
-    setSeleccionados(prev =>
-      prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
-    );
-
-  const toggleTodos = (pagos) => {
-    const ids = pagos.map(p => p.id_pago);
-    const todos = ids.every(id => seleccionados.includes(id));
-    setSeleccionados(prev =>
-      todos ? prev.filter(id => !ids.includes(id)) : [...new Set([...prev, ...ids])]
-    );
-  };
 
   const handleTransferir = async () => {
     try {
@@ -176,18 +189,18 @@ function TabBalance({ showToast }) {
     }
   };
 
-  const totalGlobal = balance.reduce((acc, p) => acc + (p.total_pendiente || 0), 0);
+  const totalPendiente = balance.reduce((acc, g) => acc + (g.pendiente_transferir || 0), 0);
 
   return (
     <>
       <div className="admin-stats" style={{ gridTemplateColumns: "repeat(2, 1fr)" }}>
         <div className="admin-stat-card">
           <p className="admin-stat-label">Total pendiente global</p>
-          <p className="admin-stat-value">${totalGlobal.toLocaleString("es-MX")} MXN</p>
+          <p className="admin-stat-value">${totalPendiente.toLocaleString("es-MX")} MXN</p>
         </div>
         <div className="admin-stat-card">
-          <p className="admin-stat-label">Proveedores con saldo pendiente</p>
-          <p className="admin-stat-value">{balance.filter(p => p.total_pendiente > 0).length}</p>
+          <p className="admin-stat-label">Gimnasios con saldo pendiente</p>
+          <p className="admin-stat-value">{balance.filter(g => g.pendiente_transferir > 0).length}</p>
         </div>
       </div>
 
@@ -204,72 +217,55 @@ function TabBalance({ showToast }) {
       ) : balance.length === 0 ? (
         <p className="empty-state">No hay pagos pendientes de transferir.</p>
       ) : (
-        balance.map((prov, i) => (
-          <div key={i} className="admin-table-panel" style={{ marginBottom: "1.5rem" }}>
-            <div className="admin-table-header">
-              <div>
-                <h2>{prov.nombre_proveedor}</h2>
-                <span style={{ fontSize: "0.82rem", color: "var(--text-secondary)" }}>{prov.correo_proveedor}</span>
-              </div>
-              <span style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 800, fontSize: "1.1rem", color: "var(--primary-hover)" }}>
-                ${(prov.total_pendiente || 0).toLocaleString("es-MX")} MXN pendiente
-              </span>
-            </div>
-
-            {prov.gimnasios?.map((gym, j) => (
-              <div key={j}>
-                <div style={{ padding: "0.6rem 1.25rem", background: "#f8fafc", borderBottom: "1px solid var(--border)", fontSize: "0.85rem", fontWeight: 600, color: "var(--primary-hover)" }}>
-                  {gym.nombre_gimnasio} — ${(gym.subtotal_pendiente || 0).toLocaleString("es-MX")} MXN
-                </div>
-                <div style={{ overflowX: "auto" }}>
-                  <table className="admin-table">
-                    <thead>
-                      <tr>
-                        <th style={{ width: 40 }}>
-                          <input
-                            type="checkbox"
-                            onChange={() => toggleTodos(gym.pagos_pendientes)}
-                            checked={gym.pagos_pendientes?.every(p => seleccionados.includes(p.id_pago))}
-                          />
-                        </th>
-                        <th>Cliente</th>
-                        <th>Membresía</th>
-                        <th>Monto base</th>
-                        <th>Monto proveedor</th>
-                        <th>Fecha</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {!gym.pagos_pendientes?.length ? (
-                        <tr><td colSpan="6" className="admin-empty">Sin pagos pendientes</td></tr>
+        <div className="admin-table-panel">
+          <div style={{ overflowX: "auto" }}>
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Gimnasio</th>
+                  <th>Proveedor</th>
+                  <th>CLABE</th>
+                  <th>Total generado</th>
+                  <th>Transferido</th>
+                  <th>Pendiente</th>
+                </tr>
+              </thead>
+              <tbody>
+                {balance.map((g, i) => (
+                  <tr key={g.id_gimnasio ?? i}>
+                    <td><p style={{ margin: 0, fontWeight: 600 }}>{g.nombre_gimnasio}</p></td>
+                    <td>
+                      <p style={{ margin: 0, fontWeight: 600 }}>{g.proveedor?.nombre}</p>
+                      <span style={{ fontSize: "0.78rem", color: "var(--text-secondary)" }}>{g.proveedor?.correo}</span>
+                    </td>
+                    <td>
+                      {g.referencia_bancaria ? (
+                        <div>
+                          <p style={{ margin: 0, fontFamily: "monospace", fontSize: "0.82rem" }}>{g.referencia_bancaria.clabe}</p>
+                          <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>
+                            {g.referencia_bancaria.banco} — {g.referencia_bancaria.titular}
+                          </span>
+                          <span className={`badge ${g.referencia_bancaria.verificado ? "badge-success" : "badge-secondary"}`} style={{ marginLeft: 6, fontSize: "0.7rem" }}>
+                            {g.referencia_bancaria.verificado ? "✓ Verificada" : "Pendiente"}
+                          </span>
+                        </div>
                       ) : (
-                        gym.pagos_pendientes.map((pago, k) => (
-                          <tr key={k}>
-                            <td>
-                              <input
-                                type="checkbox"
-                                checked={seleccionados.includes(pago.id_pago)}
-                                onChange={() => togglePago(pago.id_pago)}
-                              />
-                            </td>
-                            <td>
-                              <p style={{ margin: 0, fontWeight: 600 }}>{pago.cliente}</p>
-                              <span style={{ fontSize: "0.78rem", color: "var(--text-secondary)" }}>{pago.correo_cliente}</span>
-                            </td>
-                            <td>{pago.membresia}</td>
-                            <td>${parseFloat(pago.monto_base || 0).toLocaleString("es-MX")}</td>
-                            <td>${parseFloat(pago.monto_proveedor || 0).toLocaleString("es-MX")}</td>
-                            <td>{pago.fecha_pago ? new Date(pago.fecha_pago).toLocaleDateString("es-MX") : "—"}</td>
-                          </tr>
-                        ))
+                        <span className="badge badge-danger">Sin CLABE</span>
                       )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            ))}
+                    </td>
+                    <td>${parseFloat(g.total_generado || 0).toLocaleString("es-MX")}</td>
+                    <td>${parseFloat(g.total_transferido || 0).toLocaleString("es-MX")}</td>
+                    <td>
+                      <span style={{ fontWeight: 700, color: g.pendiente_transferir > 0 ? "#dc2626" : "#16a34a" }}>
+                        ${parseFloat(g.pendiente_transferir || 0).toLocaleString("es-MX")}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        ))
+        </div>
       )}
 
       {confirmModal && (
@@ -317,16 +313,10 @@ function AdminFinanzas() {
       </section>
 
       <div className="admin-tabs">
-        <button
-          className={`admin-tab ${tab === "movimientos" ? "admin-tab-active" : ""}`}
-          onClick={() => setTab("movimientos")}
-        >
+        <button className={`admin-tab ${tab === "movimientos" ? "admin-tab-active" : ""}`} onClick={() => setTab("movimientos")}>
           Movimientos
         </button>
-        <button
-          className={`admin-tab ${tab === "balance" ? "admin-tab-active" : ""}`}
-          onClick={() => setTab("balance")}
-        >
+        <button className={`admin-tab ${tab === "balance" ? "admin-tab-active" : ""}`} onClick={() => setTab("balance")}>
           Balance
         </button>
       </div>

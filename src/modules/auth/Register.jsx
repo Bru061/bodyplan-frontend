@@ -4,7 +4,7 @@ import { MdAssignmentInd } from "react-icons/md";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import "../../styles/login.css";
 import { useAuth } from "../../core/context/AuthContext";
-import { auth, provider, signInWithPopup } from "../../services/firebase";
+import { auth, provider, signInWithPopup } from "../../config/firebase";
 import { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 

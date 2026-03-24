@@ -13,31 +13,34 @@ function Perfil() {
 
   const navigate = useNavigate();
 
-  const [user, setUser] = useState(null);
+  const [user, setUser]       = useState(null);
   const [loading, setLoading] = useState(true);
-  const [toast, setToast] = useState(null);
+  const [toast, setToast]     = useState(null);
 
-  const [planActivo, setPlanActivo] = useState(null);
+  // ── Plan ──
+  const [planActivo, setPlanActivo]   = useState(null);
   const [historialPlanes, setHistorialPlanes] = useState([]);
 
-  const [clabe, setClabe] = useState(null);
+  // ── CLABE ──
+  const [clabe, setClabe]         = useState(null);
   const [editandoClabe, setEditandoClabe] = useState(false);
   const [clabeForm, setClabeForm] = useState({ clabe: "", banco: "", titular: "" });
   const [clabeErrors, setClabeErrors] = useState({});
   const [clabeLoading, setClabeLoading] = useState(false);
 
+  // ── Balance del proveedor ──
   const [balance, setBalance] = useState([]);
   const [editandoPerfil, setEditandoPerfil] = useState(false);
-  const [perfilForm, setPerfilForm] = useState({});
-  const [perfilErrors, setPerfilErrors] = useState({});
-  const [perfilLoading, setPerfilLoading] = useState(false);
+  const [perfilForm, setPerfilForm]         = useState({});
+  const [perfilErrors, setPerfilErrors]     = useState({});
+  const [perfilLoading, setPerfilLoading]   = useState(false);
 
   const abrirEditarPerfil = () => {
     setPerfilForm({
-      nombre: user.nombre || "",
-      apellido_paterno: user.apellido_paterno || "",
-      apellido_materno: user.apellido_materno || "",
-      telefono: user.telefono || ""
+      nombre:           user.nombre           || "",
+      apellido_paterno: user.apellido_paterno  || "",
+      apellido_materno: user.apellido_materno  || "",
+      telefono:         user.telefono          || ""
     });
     setPerfilErrors({});
     setEditandoPerfil(true);
@@ -70,10 +73,10 @@ function Perfil() {
     try {
       setPerfilLoading(true);
       await api.put("/user/me", {
-        nombre:  perfilForm.nombre.trim(),
+        nombre:           perfilForm.nombre.trim(),
         apellido_paterno: perfilForm.apellido_paterno.trim(),
         apellido_materno: perfilForm.apellido_materno.trim(),
-        telefono: perfilForm.telefono.trim() || null
+        telefono:         perfilForm.telefono.trim() || null
       });
       showToast("Perfil actualizado correctamente.");
       setEditandoPerfil(false);
@@ -85,6 +88,7 @@ function Perfil() {
     }
   };
 
+  // ── Modal confirmar cambio de plan ──
   const [confirmCambio, setConfirmCambio] = useState(false);
 
   const showToast = (message, type = "success") => setToast({ message, type });
@@ -127,6 +131,7 @@ function Perfil() {
 
   useEffect(() => { fetchAll(); }, []);
 
+  // ── Días restantes del plan ──
   const diasRestantes = () => {
     if (!planActivo?.fecha_fin) return 0;
     const hoy = new Date();
@@ -141,6 +146,7 @@ function Perfil() {
     return "";
   };
 
+  // ── Renovar plan (mismo plan) ──
   const handleRenovar = async () => {
     if (!planActivo?.plan) return;
     try {
@@ -164,6 +170,7 @@ function Perfil() {
     }
   };
 
+  // ── Guardar / actualizar CLABE ──
   const handleGuardarClabe = async () => {
     const errors = {};
     if (!clabeForm.clabe.trim() || clabeForm.clabe.length !== 18)
@@ -176,10 +183,18 @@ function Perfil() {
     try {
       setClabeLoading(true);
       if (clabe?.id_referencia) {
-        await api.put(`/referencias/${clabe.id_referencia}`, clabeForm);
+        await api.put(`/referencias/${clabe.id_referencia}`, {
+          banco:         clabeForm.banco,
+          numero_cuenta: clabeForm.clabe,
+          titular:       clabeForm.titular
+        });
         showToast("CLABE actualizada. Pendiente de verificación.");
       } else {
-        await api.post("/referencias", clabeForm);
+        await api.post("/referencias", {
+          banco:         clabeForm.banco,
+          numero_cuenta: clabeForm.clabe,
+          titular:       clabeForm.titular
+        });
         showToast("CLABE registrada. Pendiente de verificación.");
       }
       setEditandoClabe(false);
@@ -217,6 +232,7 @@ function Perfil() {
 
       <section className="content-grid">
 
+        {/* ── Información personal ── */}
         <article className="panel">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
             <h2 className="panel-icon-title" style={{ margin: 0 }}>
@@ -233,6 +249,7 @@ function Perfil() {
           </div>
         </article>
 
+        {/* ── CLABE bancaria ── */}
         <article className="panel">
           <h2 className="panel-icon-title">
             <MdAccountBalance size={18} /> Datos bancarios (CLABE)
@@ -329,6 +346,7 @@ function Perfil() {
           )}
         </article>
 
+        {/* ── Mi Plan ── */}
         <article className="panel" style={{ gridColumn: "1 / -1" }}>
           <h2 className="panel-icon-title">
             <FiCreditCard size={18} /> Mi plan
@@ -367,6 +385,7 @@ function Perfil() {
             </div>
           )}
 
+          {/* ── Historial ── */}
           <p className="panel-description">Historial de pagos hacia la plataforma BodyPlan.</p>
           <div className="table-wrap">
             <table className="history-table">
@@ -408,6 +427,7 @@ function Perfil() {
 
       </section>
 
+      {/* ── Balance por gimnasio ── */}
       {balance.length > 0 && (
         <section style={{ marginTop: "1.5rem" }}>
           <article className="panel">
@@ -441,8 +461,8 @@ function Perfil() {
                       </td>
                       <td>
                         {g.referencia_bancaria?.verificado
-                          ? <span className="clabe-verificado">Verificada</span>
-                          : <span className="clabe-pendiente">Sin verificar</span>
+                          ? <span className="clabe-verificado">✓ Verificada</span>
+                          : <span className="clabe-pendiente">⏳ Sin verificar</span>
                         }
                       </td>
                     </tr>
@@ -454,6 +474,7 @@ function Perfil() {
         </section>
       )}
 
+      {/* ── Modal editar perfil ── */}
       {editandoPerfil && (
         <ModalPortal>
           <div className="modal-overlay">
@@ -539,6 +560,7 @@ function Perfil() {
         </ModalPortal>
       )}
 
+      {/* ── Modal confirmar cambio de plan ── */}
       {confirmCambio && (
         <ModalPortal>
           <div className="modal-overlay">

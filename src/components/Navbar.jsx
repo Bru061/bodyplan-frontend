@@ -1,6 +1,7 @@
-import { MdNotifications, MdMenu } from "react-icons/md";
 import { Link, useLocation } from "react-router-dom";
 import logo from "../assets/logo.png";
+import NotificationBell from "./ui/NotificationBell";
+import { MdMenu } from "react-icons/md";
 
 const PAGE_TITLES = {
   "/dashboard":     "Dashboard",
@@ -40,9 +41,7 @@ function Navbar({ onMenuToggle }) {
         </div>
 
         <div className="navbar-right">
-          <Link to="/notificaciones" className="navbar-icon-btn" aria-label="Notificaciones">
-            <MdNotifications size={22} />
-          </Link>
+          <NotificationBell />
         </div>
 
       </div>

@@ -9,7 +9,6 @@ import ModalPortal from "../../components/ui/ModalPortal";
 import CreatePersonalModal from "./CreatePersonalModal";
 import EditPersonalModal from "./EditPersonalModal";
 import AsignarGimnasioModal from "./AsignarGimnasioModal";
-import EditHorarioModal from "./EditHorarioModal";
 
 const getInitials = (p) =>
   `${p.nombre?.[0] ?? ""}${p.apellido_paterno?.[0] ?? ""}`.toUpperCase();
@@ -22,8 +21,10 @@ function Personal() {
   const [personal, setPersonal] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("activos");
+  const [tabDetalle, setTabDetalle] = useState("horarios");
   const [seleccionado, setSeleccionado] = useState(null);
   const [toast, setToast] = useState(null);
+
   const [showCreate, setShowCreate] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showAsignar, setShowAsignar] = useState(false);
@@ -38,17 +39,7 @@ function Personal() {
     try {
       setLoading(true);
       const res = await api.get("/personal");
-      const nuevos = res.data.personal || [];
-
-      setPersonal(nuevos);
-
-      if (seleccionado) {
-        const actualizado = nuevos.find(
-          p => p.id_personal === seleccionado.id_personal
-        );
-        setSeleccionado(actualizado || null);
-      }
-
+      setPersonal(res.data.personal || []);
     } catch (err) {
       console.error("Error cargando personal", err);
       showToast("Error cargando el personal.", "error");
@@ -74,27 +65,19 @@ function Personal() {
       for (const r of todas) {
         const clientesRes = await api.get(`/rutinas/${r.id_rutina}/clientes`);
         const asignaciones = clientesRes.data?.clientes || [];
-
         asignaciones.forEach(a => {
           if (a.encargado?.id_personal === personalId) {
-
-            const cliente =
-              a.cliente ||
-              a.usuario ||
-              a.Cliente ||
-              a.Usuario ||
-              null;
-
+            const cliente = a.cliente || a.usuario || a.Cliente || a.Usuario || null;
             resultado.push({
               ...r,
-              cliente
+              cliente,
+              estado_asignacion: a.estado || "pendiente"
             });
           }
         });
       }
 
       setRutinasInstructor(resultado);
-
     } catch (err) {
       console.error("Error cargando rutinas del instructor", err);
     } finally {
@@ -105,13 +88,14 @@ function Personal() {
   useEffect(() => {
     if (seleccionado) {
       fetchRutinasInstructor(seleccionado.id_personal);
+      setTabDetalle("horarios");
     } else {
       setRutinasInstructor([]);
     }
   }, [seleccionado?.id_personal]);
 
-  const activos = personal.filter(p => p.activo !== false);
-  const inactivos = personal.filter(p => p.activo === false);
+  const activos    = personal.filter(p => p.activo !== false);
+  const inactivos  = personal.filter(p => p.activo === false);
   const listaActual = tab === "activos" ? activos : inactivos;
 
   const handleToggle = async () => {
@@ -176,6 +160,7 @@ function Personal() {
 
       <div className="personal-layout">
 
+        {/* ── Lista ── */}
         <div className="personal-list">
           <div className="personal-tabs">
             <button
@@ -274,99 +259,146 @@ function Personal() {
 
               <div className="personal-detail-body">
 
-                {!seleccionado.horarios || seleccionado.horarios.length === 0 ? (
-                  <p className="personal-no-gyms">
-                    Este instructor aún no está asignado a ningún gimnasio.
-                  </p>
-                ) : (
-                  (() => {
-                    const porGimnasio = seleccionado.horarios.reduce((acc, h) => {
-                      const key = h.id_gimnasio;
-                      if (!acc[key]) acc[key] = { nombre: h.Gimnasio?.nombre || `Gimnasio ${key}`, dias: [] };
-                      acc[key].dias.push(h);
-                      return acc;
-                    }, {});
+                <div className="personal-tabs" style={{ marginBottom: "1rem" }}>
+                  <button
+                    className={`personal-tab ${tabDetalle === "horarios" ? "active" : ""}`}
+                    onClick={() => setTabDetalle("horarios")}
+                  >
+                    Horarios
+                  </button>
+                  <button
+                    className={`personal-tab ${tabDetalle === "rutinas" ? "active" : ""}`}
+                    onClick={() => setTabDetalle("rutinas")}
+                  >
+                    Rutinas ({rutinasInstructor.filter(r => ["pendiente","iniciada"].includes(r.estado_asignacion)).length})
+                  </button>
+                  <button
+                    className={`personal-tab ${tabDetalle === "historial" ? "active" : ""}`}
+                    onClick={() => setTabDetalle("historial")}
+                  >
+                    Historial ({rutinasInstructor.filter(r => r.estado_asignacion === "completada").length})
+                  </button>
+                </div>
 
-                    return Object.entries(porGimnasio).map(([gymId, { nombre, dias }]) => (
-                      <div key={gymId} className="personal-gym-section">
-                        <div className="personal-gym-title">
-                          <span>{nombre}</span>
-                          <button onClick={() => setShowAsignar(true)}>+ Agregar día</button>
-                        </div>
-                        {dias.map((h, i) => (
-                          <div key={i} className="personal-horario-row">
-                            <span className="personal-horario-dia">{h.dia_semana}</span>
-                            <span className="personal-horario-horas">
-                              {h.hora_entrada?.slice(0, 5)} — {h.hora_salida?.slice(0, 5)}
-                            </span>
-                            <div className="personal-horario-actions">
-                              <button
-                                className="icon-btn"
-                                title="Editar horario"
-                                onClick={() =>
-                                  setEditHorario({
+                {tabDetalle === "horarios" && (
+                  !seleccionado.horarios || seleccionado.horarios.length === 0 ? (
+                    <p className="personal-no-gyms">Este instructor aún no está asignado a ningún gimnasio.</p>
+                  ) : (
+                    (() => {
+                      const porGimnasio = seleccionado.horarios.reduce((acc, h) => {
+                        const key = h.id_gimnasio;
+                        if (!acc[key]) acc[key] = { nombre: h.Gimnasio?.nombre || `Gimnasio ${key}`, dias: [] };
+                        acc[key].dias.push(h);
+                        return acc;
+                      }, {});
+
+                      return Object.entries(porGimnasio).map(([gymId, { nombre, dias }]) => (
+                        <div key={gymId} className="personal-gym-section">
+                          <div className="personal-gym-title">
+                            <span>{nombre}</span>
+                            <button onClick={() => setShowAsignar(true)}>+ Agregar día</button>
+                          </div>
+                          {dias.map((h, i) => (
+                            <div key={i} className="personal-horario-row">
+                              <span className="personal-horario-dia">{h.dia_semana}</span>
+                              <span className="personal-horario-horas">
+                                {h.hora_entrada?.slice(0, 5)} — {h.hora_salida?.slice(0, 5)}
+                              </span>
+                              <div className="personal-horario-actions">
+                                <button
+                                  className="icon-btn"
+                                  title="Editar horario"
+                                  onClick={() => setEditHorario({
                                     personalId: seleccionado.id_personal,
                                     gimnasioId: gymId,
                                     dia: h.dia_semana,
                                     hora_entrada: h.hora_entrada,
                                     hora_salida: h.hora_salida
-                                  })
-                                }
-                              >
-                                <FiEdit2 size={13} />
-                              </button>
-
-                              <button
-                                className="icon-btn"
-                                title="Eliminar este día"
-                                onClick={() =>
-                                  handleEliminarDia(seleccionado.id_personal, gymId, h.dia_semana)
-                                }
-                              >
-                                <FiTrash2 size={13} />
-                              </button>
+                                  })}
+                                >
+                                  <FiEdit2 size={13} />
+                                </button>
+                                <button
+                                  className="icon-btn"
+                                  title="Eliminar este día"
+                                  onClick={() => handleEliminarDia(seleccionado.id_personal, gymId, h.dia_semana)}
+                                >
+                                  <FiTrash2 size={13} />
+                                </button>
+                              </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    ));
-                  })()
+                          ))}
+                        </div>
+                      ));
+                    })()
+                  )
                 )}
 
-                <div className="personal-gym-section" style={{ marginTop: "1.5rem" }}>
-                  <div className="personal-gym-title">
-                    <span>Rutinas que supervisa</span>
+                {tabDetalle === "rutinas" && (
+                  <div className="personal-gym-section">
+                    {loadingRutinas ? (
+                      <p className="personal-no-gyms">Cargando...</p>
+                    ) : rutinasInstructor.filter(r => ["pendiente","iniciada"].includes(r.estado_asignacion)).length === 0 ? (
+                      <p className="personal-no-gyms">No supervisa ninguna rutina activa actualmente.</p>
+                    ) : (
+                      rutinasInstructor
+                        .filter(r => ["pendiente","iniciada"].includes(r.estado_asignacion))
+                        .map((r, i) => (
+                          <div key={i} className="personal-horario-row">
+                            <span style={{ flex: 1, fontWeight: 600, fontSize: "0.88rem" }}>
+                              {r.nombre}
+                              <br />
+                              <small style={{ fontWeight: 400 }}>
+                                Cliente: {r.cliente
+                                  ? `${r.cliente.nombre || ""} ${r.cliente.apellido_paterno || ""}`.trim()
+                                  : "Sin cliente"}
+                              </small>
+                            </span>
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+                              <span className="personal-horario-horas">
+                                {r.tipo_rutina} · {r.nivel || "N/A"} · {r.duracion_min || 0} min
+                              </span>
+                              <span className={`badge ${r.estado_asignacion === "iniciada" ? "badge-primary" : "badge-secondary"}`}>
+                                {r.estado_asignacion}
+                              </span>
+                            </div>
+                          </div>
+                        ))
+                    )}
                   </div>
-                  {loadingRutinas ? (
-                    <p className="personal-no-gyms">Cargando...</p>
-                  ) : rutinasInstructor.length === 0 ? (
-                    <p className="personal-no-gyms">No supervisa ninguna rutina actualmente.</p>
-                  ) : (
-                    rutinasInstructor.map((r, i) => (
-                      <div key={i} className="personal-horario-row">
-                        
-                        <span style={{ flex: 1, fontWeight: 600, fontSize: "0.88rem" }}>
-                          {r.nombre}
+                )}
 
-                          <br />
-
-                          <small style={{ fontWeight: 400 }}>
-                            Cliente: {
-                              r.cliente
-                                ? `${r.cliente.nombre || ""} ${r.cliente.apellido_paterno || ""}`
-                                : "Sin cliente"
-                            }
-                          </small>
-                        </span>
-
-                        <span className="personal-horario-horas">
-                          {r.tipo_rutina} · {r.nivel || "N/A"} · {r.duracion_min || 0} min
-                        </span>
-
-                      </div>
-                    ))
-                  )}
-                </div>
+                {tabDetalle === "historial" && (
+                  <div className="personal-gym-section">
+                    {loadingRutinas ? (
+                      <p className="personal-no-gyms">Cargando...</p>
+                    ) : rutinasInstructor.filter(r => r.estado_asignacion === "completada").length === 0 ? (
+                      <p className="personal-no-gyms">Sin rutinas completadas aún.</p>
+                    ) : (
+                      rutinasInstructor
+                        .filter(r => r.estado_asignacion === "completada")
+                        .map((r, i) => (
+                          <div key={i} className="personal-horario-row">
+                            <span style={{ flex: 1, fontWeight: 600, fontSize: "0.88rem" }}>
+                              {r.nombre}
+                              <br />
+                              <small style={{ fontWeight: 400 }}>
+                                Cliente: {r.cliente
+                                  ? `${r.cliente.nombre || ""} ${r.cliente.apellido_paterno || ""}`.trim()
+                                  : "Sin cliente"}
+                              </small>
+                            </span>
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+                              <span className="personal-horario-horas">
+                                {r.tipo_rutina} · {r.nivel || "N/A"} · {r.duracion_min || 0} min
+                              </span>
+                              <span className="badge badge-success">Completada</span>
+                            </div>
+                          </div>
+                        ))
+                    )}
+                  </div>
+                )}
 
               </div>
             </>
@@ -403,17 +435,6 @@ function Personal() {
           onAsignado={async () => {
             await fetchPersonal();
             showToast("Horario asignado correctamente.");
-          }}
-        />
-      )}
-
-      {editHorario && (
-        <EditHorarioModal
-          data={editHorario}
-          onClose={() => setEditHorario(null)}
-          onUpdated={async () => {
-            await fetchPersonal();
-            showToast("Horario actualizado correctamente.");
           }}
         />
       )}

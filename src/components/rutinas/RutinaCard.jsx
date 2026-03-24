@@ -5,6 +5,13 @@ import ModalPortal from "../ui/ModalPortal";
 
 function RutinaCard({ rutina, onEdit, clientesCount, refresh, refreshStats }) {
 
+  const tipo = (rutina.tipo_rutina || "").toString().toLowerCase();
+  const esPersonalizada = tipo.includes("personal");
+
+  if (esPersonalizada && clientesCount === 0) {
+    return null;
+  }
+
   const [modal, setModal] = useState(false);
   const [toast, setToast] = useState("");
   const [loading, setLoading] = useState(false);

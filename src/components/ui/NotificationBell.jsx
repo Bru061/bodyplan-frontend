@@ -1,0 +1,109 @@
+import { useState, useEffect, useRef } from "react";
+import { MdNotificationsNone, MdNotifications } from "react-icons/md";
+import { useNotificaciones } from "../../hooks/useNotificaciones";
+import { marcarLeida } from "../../services/notificationService";
+import api from "../../services/axios";
+
+function NotificationBell() {
+
+  const { noLeidas, resetNoLeidas } = useNotificaciones();
+  const [open, setOpen]             = useState(false);
+  const [notifs, setNotifs]         = useState([]);
+  const [loading, setLoading]       = useState(false);
+  const ref = useRef(null);
+
+  // Cerrar al hacer click fuera
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const fetchNotificaciones = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get("/notificaciones", { params: { canal: "web", limit: 20 } });
+      setNotifs(res.data.notificaciones || []);
+    } catch (err) {
+      console.error("Error cargando notificaciones", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOpen = () => {
+    setOpen(prev => !prev);
+    if (!open) {
+      fetchNotificaciones();
+      resetNoLeidas();
+    }
+  };
+
+  const handleMarcarLeida = async (id) => {
+    await marcarLeida(id);
+    setNotifs(prev => prev.map(n => n.id_notificacion === id ? { ...n, leida: true } : n));
+  };
+
+  return (
+    <div className="notif-bell-wrapper" ref={ref}>
+
+      <button className="navbar-icon-btn notif-bell-btn" onClick={handleOpen} title="Notificaciones">
+        {noLeidas > 0 ? <MdNotifications size={20} /> : <MdNotificationsNone size={20} />}
+        {noLeidas > 0 && (
+          <span className="notif-badge">{noLeidas > 99 ? "99+" : noLeidas}</span>
+        )}
+      </button>
+
+      {open && (
+        <div className="notif-dropdown">
+          <div className="notif-dropdown-header">
+            <span>Notificaciones</span>
+            {notifs.some(n => !n.leida) && (
+              <button
+                className="notif-mark-all"
+                onClick={async () => {
+                  for (const n of notifs.filter(n => !n.leida)) {
+                    await marcarLeida(n.id_notificacion);
+                  }
+                  setNotifs(prev => prev.map(n => ({ ...n, leida: true })));
+                }}
+              >
+                Marcar todas como leídas
+              </button>
+            )}
+          </div>
+
+          <div className="notif-list">
+            {loading ? (
+              <p className="notif-empty">Cargando...</p>
+            ) : notifs.length === 0 ? (
+              <p className="notif-empty">Sin notificaciones</p>
+            ) : (
+              notifs.map(n => (
+                <div
+                  key={n.id_notificacion}
+                  className={`notif-item ${!n.leida ? "notif-item-unread" : ""}`}
+                  onClick={() => !n.leida && handleMarcarLeida(n.id_notificacion)}
+                >
+                  <p className="notif-item-title">{n.titulo}</p>
+                  {n.mensaje && <p className="notif-item-msg">{n.mensaje}</p>}
+                  <span className="notif-item-time">
+                    {n.fecha_creacion
+                      ? new Date(n.fecha_creacion).toLocaleDateString("es-MX", {
+                          day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"
+                        })
+                      : ""}
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default NotificationBell;

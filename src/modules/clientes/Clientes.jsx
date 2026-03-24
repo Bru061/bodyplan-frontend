@@ -9,7 +9,7 @@ import "../../styles/clientes.css";
 import AddClienteModal from "./AddClienteModal";
 import * as XLSX from "xlsx";
 
-const LIMIT = 10;
+const LIMIT = 5;
 
 function Clientes() {
 
@@ -21,6 +21,7 @@ function Clientes() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [gimnasios, setGimnasios] = useState([]);
   const [membresias, setMembresias] = useState([]);
+
   const estadoParam = searchParams.get("estado") || "";
   const [filtroEstado, setFiltroEstado] = useState(
     ["activa", "inactiva"].includes(estadoParam) ? estadoParam : ""
@@ -42,8 +43,8 @@ function Clientes() {
       const res = await api.get("/clientes", { params: { limit: 9999 } });
       const estadisticas = res.data.estadisticas || {};
       setStats({
-        activos: estadisticas.clientes_activos   || 0,
-        inactivos: estadisticas.clientes_inactivos || 0,
+        activos:      estadisticas.clientes_activos   || 0,
+        inactivos:    estadisticas.clientes_inactivos || 0,
         conMembresia: estadisticas.membresias_activas || 0
       });
     } catch (error) {
@@ -60,7 +61,23 @@ function Clientes() {
       const res = await api.get("/clientes", { params });
       const data = res.data;
 
-      const clientesFormateados = data.clientes.map(c => ({
+      const clientesRaw = data.clientes || [];
+
+      const mapaClientes = new Map();
+      for (const c of clientesRaw) {
+        const existente = mapaClientes.get(c.id_usuario);
+        if (!existente) {
+          mapaClientes.set(c.id_usuario, c);
+        } else {
+          const existenteActivo = existente.estado === "activa";
+          const nuevoActivo     = c.estado === "activa";
+          if (!existenteActivo && nuevoActivo) {
+            mapaClientes.set(c.id_usuario, c);
+          }
+        }
+      }
+
+      const clientesFormateados = Array.from(mapaClientes.values()).map(c => ({
         id: c.id_usuario,
         nombre: c.nombre,
         correo: c.correo,
@@ -274,8 +291,8 @@ function Clientes() {
                   </td>
                 </tr>
               ) : (
-                clientesFiltrados.map((cliente, index) => (
-                  <tr key={`${cliente.id}-${index}`}>
+                clientesFiltrados.map((cliente) => (
+                  <tr key={cliente.id}>
 
                     <td>
                       <Link to={`/detalle-cliente/${cliente.id}`} className="client-name client-name-link">

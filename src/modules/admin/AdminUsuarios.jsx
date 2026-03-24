@@ -16,6 +16,9 @@ function AdminUsuarios() {
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
 
+  const [pagina, setPagina] = useState(1);
+  const POR_PAGINA = 10;
+
   const showToast = (message, type = "success") => setToast({ message, type });
 
   useEffect(() => {
@@ -52,6 +55,7 @@ function AdminUsuarios() {
     }
 
     setUsuarios(resultado);
+    setPagina(1);
   }, [filtroRol, search, todos]);
 
   useEffect(() => {
@@ -63,8 +67,8 @@ function AdminUsuarios() {
 
   const STATS = [
     { label: "Proveedores", value: "3", count: contarPorRol(3) },
-    { label: "Clientes",    value: "2", count: contarPorRol(2) },
-    { label: "Admin",       value: "1", count: contarPorRol(1) }
+    { label: "Clientes", value: "2", count: contarPorRol(2) },
+    { label: "Admin", value: "1", count: contarPorRol(1) }
   ];
 
   const tituloTabla = () => {
@@ -141,7 +145,7 @@ function AdminUsuarios() {
               ) : usuarios.length === 0 ? (
                 <tr><td colSpan="6" className="admin-empty">No hay usuarios con esos filtros.</td></tr>
               ) : (
-                usuarios.map(u => (
+                usuarios.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA).map(u => (
                   <tr key={u.id_usuario}>
                     <td>#{u.id_usuario}</td>
                     <td><p style={{ margin: 0, fontWeight: 600 }}>{u.nombre}</p></td>
@@ -167,6 +171,17 @@ function AdminUsuarios() {
             </tbody>
           </table>
         </div>
+
+        {Math.ceil(usuarios.length / POR_PAGINA) > 1 && (
+          <div className="admin-paginador">
+            <button className="admin-pag-btn" onClick={() => setPagina(p => Math.max(1, p - 1))} disabled={pagina === 1}>←</button>
+            {Array.from({ length: Math.ceil(usuarios.length / POR_PAGINA) }, (_, i) => i + 1).map(n => (
+              <button key={n} className={`admin-pag-btn ${pagina === n ? "admin-pag-active" : ""}`} onClick={() => setPagina(n)}>{n}</button>
+            ))}
+            <button className="admin-pag-btn" onClick={() => setPagina(p => Math.min(Math.ceil(usuarios.length / POR_PAGINA), p + 1))} disabled={pagina === Math.ceil(usuarios.length / POR_PAGINA)}>→</button>
+            <span className="admin-pag-info">{usuarios.length} usuarios</span>
+          </div>
+        )}
       </div>
 
     </AdminLayout>

@@ -5,7 +5,7 @@ import { FiEye, FiEyeOff } from "react-icons/fi";
 import "../../styles/login.css";
 import { useState } from "react";
 import { useAuth } from "../../core/context/AuthContext";
-import { auth, provider, signInWithPopup } from "../../services/firebase";
+import { auth, provider, signInWithPopup } from "../../config/firebase";
 import { FcGoogle } from "react-icons/fc";
 import api from "../../services/axios";
 

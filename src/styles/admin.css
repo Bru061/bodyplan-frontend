@@ -474,3 +474,52 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* ═══════════════════════════════════════════
+   PAGINADOR ADMIN
+═══════════════════════════════════════════ */
+
+.admin-paginador {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.admin-pag-btn {
+  min-width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--text-main);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+  padding: 0 0.5rem;
+}
+
+.admin-pag-btn:hover:not(:disabled) {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.admin-pag-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.admin-pag-active {
+  background: var(--primary) !important;
+  border-color: var(--primary) !important;
+  color: #fff !important;
+}
+
+.admin-pag-info {
+  margin-left: auto;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}

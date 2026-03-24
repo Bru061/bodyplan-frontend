@@ -184,6 +184,24 @@
   margin-top: 2px;
 }
 
+.routines-list {
+  max-height: 520px;
+  overflow-y: auto;
+  padding-right: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.routines-list::-webkit-scrollbar {
+  width: 8px;
+}
+.routines-list::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.15);
+  border-radius: 4px;
+}
+
+
 /* RESPONSIVE */
 @media (max-width: 680px) {
   .routine-item {

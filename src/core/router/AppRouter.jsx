@@ -25,6 +25,7 @@ import AdminPlanes from "../../modules/admin/AdminPlanes";
 import AdminReferencias from "../../modules/admin/AdminReferencias";
 import AdminActividad from "../../modules/admin/AdminActividad";
 import AdminUsuarios from "../../modules/admin/AdminUsuarios";
+import AdminPerfil from "../../modules/admin/AdminPerfil";
 import AppOnly from "../../modules/public/AppOnly";
 import PublicRoute from "../guards/PublicRoute";
 import PrivateRoute from "../guards/PrivateRoute";
@@ -81,6 +82,7 @@ function AppRouter() {
           <Route path="/admin/referencias" element={<AdminReferencias />} />
           <Route path="/admin/actividad" element={<AdminActividad />} />
           <Route path="/admin/usuarios" element={<AdminUsuarios />} />
+          <Route path="/admin/perfil" element={<AdminPerfil />} />
         </Route>
 
         {/* Usuario app */}

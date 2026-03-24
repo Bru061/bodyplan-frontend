@@ -8,19 +8,15 @@ function TabReembolsos({ showToast }) {
 
   const [reembolsos, setReembolsos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filtroEstado, setFiltroEstado] = useState("pendiente_revision");
-  const [modalRechazar, setModalRechazar] = useState(null);
-  const [motivoRechazo, setMotivoRechazo] = useState("");
-  const [motivoError, setMotivoError] = useState("");
-  const [procesando, setProcesando] = useState(null);
+  const [pagina, setPagina] = useState(1);
+  const POR_PAGINA = 10;
 
   const fetchReembolsos = async () => {
     try {
       setLoading(true);
-      const params = {};
-      if (filtroEstado) params.estado = filtroEstado;
-      const res = await api.get("/admin/reembolsos", { params });
+      const res = await api.get("/admin/reembolsos");
       setReembolsos(res.data.reembolsos || []);
+      setPagina(1);
     } catch (err) {
       showToast("Error cargando reembolsos.", "error");
     } finally {
@@ -28,38 +24,10 @@ function TabReembolsos({ showToast }) {
     }
   };
 
-  useEffect(() => { fetchReembolsos(); }, [filtroEstado]);
+  useEffect(() => { fetchReembolsos(); }, []);
 
-  const handleAprobar = async (id) => {
-    try {
-      setProcesando(id);
-      await api.patch(`/admin/reembolsos/${id}/aprobar`);
-      showToast("Reembolso aprobado correctamente.");
-      fetchReembolsos();
-    } catch (err) {
-      showToast(err?.response?.data?.message || "Error aprobando reembolso.", "error");
-    } finally {
-      setProcesando(null);
-    }
-  };
-
-  const handleRechazar = async () => {
-    if (!motivoRechazo.trim()) { setMotivoError("El motivo es obligatorio"); return; }
-    try {
-      setProcesando(modalRechazar.id_reembolso);
-      await api.patch(`/admin/reembolsos/${modalRechazar.id_reembolso}/rechazar`, {
-        motivo_rechazo: motivoRechazo.trim()
-      });
-      showToast("Reembolso rechazado.");
-      setModalRechazar(null);
-      setMotivoRechazo("");
-      fetchReembolsos();
-    } catch (err) {
-      showToast(err?.response?.data?.message || "Error rechazando reembolso.", "error");
-    } finally {
-      setProcesando(null);
-    }
-  };
+  const totalPaginas  = Math.ceil(reembolsos.length / POR_PAGINA);
+  const reembolsosPag = reembolsos.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
 
   const estadoBadge = (estado) => ({
     pendiente_revision: "badge-secondary",
@@ -69,126 +37,80 @@ function TabReembolsos({ showToast }) {
   }[estado] || "badge-secondary");
 
   return (
-    <>
-      <div className="admin-table-panel">
-        <div className="admin-table-header">
-          <h2>Solicitudes de reembolso</h2>
-          <div className="admin-filters">
-            <select value={filtroEstado} onChange={e => setFiltroEstado(e.target.value)}>
-              <option value="">Todas</option>
-              <option value="pendiente_revision">Pendiente revisión</option>
-              <option value="aprobado">Aprobado</option>
-              <option value="aprobado_auto">Aprobado automático</option>
-              <option value="rechazado">Rechazado</option>
-            </select>
-          </div>
-        </div>
-
-        <div style={{ overflowX: "auto" }}>
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Usuario</th>
-                <th>Monto pago</th>
-                <th>Motivo</th>
-                <th>Estado</th>
-                <th>Fecha</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr><td colSpan="7" className="admin-empty">Cargando...</td></tr>
-              ) : reembolsos.length === 0 ? (
-                <tr><td colSpan="7" className="admin-empty">No hay solicitudes con ese estado.</td></tr>
-              ) : (
-                reembolsos.map(r => (
-                  <tr key={r.id_reembolso}>
-                    <td>#{r.id_reembolso}</td>
-                    <td>
-                      <p style={{ margin: 0, fontWeight: 600 }}>{r.Usuario?.nombre}</p>
-                      <span style={{ fontSize: "0.78rem", color: "var(--text-secondary)" }}>{r.Usuario?.correo}</span>
-                    </td>
-                    <td>
-                      <p style={{ margin: 0 }}>${parseFloat(r.Pago?.monto || 0).toLocaleString("es-MX")}</p>
-                      <span style={{ fontSize: "0.78rem", color: "var(--text-secondary)" }}>
-                        Stripe: ${parseFloat(r.Pago?.monto_comision_stripe || 0).toLocaleString("es-MX")}
-                      </span>
-                    </td>
-                    <td>
-                      <p className="reembolso-motivo" title={r.motivo}>{r.motivo}</p>
-                      {r.motivo_rechazo && (
-                        <span style={{ fontSize: "0.75rem", color: "#dc2626" }}>Rechazo: {r.motivo_rechazo}</span>
-                      )}
-                    </td>
-                    <td><span className={`badge ${estadoBadge(r.estado)}`}>{r.estado}</span></td>
-                    <td>{r.fecha_solicitud ? new Date(r.fecha_solicitud).toLocaleDateString("es-MX") : "—"}</td>
-                    <td>
-                      {r.estado === "pendiente_revision" && (
-                        <div style={{ display: "flex", gap: "0.4rem" }}>
-                          <button
-                            className="btn btn-success"
-                            style={{ fontSize: "0.78rem", padding: "0.35rem 0.75rem" }}
-                            onClick={() => handleAprobar(r.id_reembolso)}
-                            disabled={procesando === r.id_reembolso}
-                          >
-                            Aprobar
-                          </button>
-                          <button
-                            className="btn btn-danger"
-                            style={{ fontSize: "0.78rem", padding: "0.35rem 0.75rem" }}
-                            onClick={() => { setModalRechazar(r); setMotivoRechazo(""); setMotivoError(""); }}
-                            disabled={procesando === r.id_reembolso}
-                          >
-                            Rechazar
-                          </button>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+    <div className="admin-table-panel">
+      <div className="admin-table-header">
+        <h2>Solicitudes de reembolso ({reembolsos.length})</h2>
       </div>
 
-      {modalRechazar && (
-        <ModalPortal>
-          <div className="modal-overlay">
-            <div className="modal-card">
-              <h2 className="modal-title">Rechazar reembolso</h2>
-              <p className="modal-body">
-                Solicitud #{modalRechazar.id_reembolso} de <strong>{modalRechazar.Usuario?.nombre}</strong>.
-              </p>
-              <div className="modal-form">
-                <div className="form-group">
-                  <label>Motivo de rechazo *</label>
-                  <textarea
-                    value={motivoRechazo}
-                    onChange={e => { setMotivoRechazo(e.target.value); setMotivoError(""); }}
-                    placeholder="Ej. Membresía utilizada por más de 48 horas"
-                    rows={3}
-                  />
-                  {motivoError && <span className="field-error-msg">{motivoError}</span>}
-                </div>
-              </div>
-              <div className="modal-actions">
-                <button className="btn btn-ghost" onClick={() => setModalRechazar(null)}>Cancelar</button>
-                <button
-                  className="btn btn-danger"
-                  onClick={handleRechazar}
-                  disabled={procesando === modalRechazar.id_reembolso}
-                >
-                  {procesando === modalRechazar.id_reembolso ? "Rechazando..." : "Confirmar rechazo"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </ModalPortal>
+      <div style={{ overflowX: "auto" }}>
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Usuario</th>
+              <th>Monto pago</th>
+              <th>Motivo</th>
+              <th>Estado</th>
+              <th>Fecha</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr><td colSpan="6" className="admin-empty">Cargando...</td></tr>
+            ) : reembolsos.length === 0 ? (
+              <tr><td colSpan="6" className="admin-empty">No hay solicitudes de reembolso.</td></tr>
+            ) : (
+              reembolsosPag.map(r => (
+                <tr key={r.id_reembolso}>
+                  <td>#{r.id_reembolso}</td>
+                  <td>
+                    <p style={{ margin: 0, fontWeight: 600 }}>{r.Usuario?.nombre}</p>
+                    <span style={{ fontSize: "0.78rem", color: "var(--text-secondary)" }}>{r.Usuario?.correo}</span>
+                  </td>
+                  <td>
+                    <p style={{ margin: 0 }}>${parseFloat(r.Pago?.monto || 0).toLocaleString("es-MX")}</p>
+                    <span style={{ fontSize: "0.78rem", color: "var(--text-secondary)" }}>
+                      Stripe: ${parseFloat(r.Pago?.monto_comision_stripe || 0).toLocaleString("es-MX")}
+                    </span>
+                  </td>
+                  <td>
+                    <p className="reembolso-motivo" title={r.motivo}>{r.motivo}</p>
+                    {r.motivo_rechazo && (
+                      <span style={{ fontSize: "0.75rem", color: "#dc2626" }}>Rechazo: {r.motivo_rechazo}</span>
+                    )}
+                  </td>
+                  <td><span className={`badge ${estadoBadge(r.estado)}`}>{r.estado}</span></td>
+                  <td>{r.fecha_solicitud ? new Date(r.fecha_solicitud).toLocaleDateString("es-MX") : "—"}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {totalPaginas > 1 && (
+        <div className="admin-paginador">
+          <button
+            className="admin-pag-btn"
+            onClick={() => setPagina(p => Math.max(1, p - 1))}
+            disabled={pagina === 1}
+          >←</button>
+          {Array.from({ length: totalPaginas }, (_, i) => i + 1).map(n => (
+            <button
+              key={n}
+              className={`admin-pag-btn ${pagina === n ? "admin-pag-active" : ""}`}
+              onClick={() => setPagina(n)}
+            >{n}</button>
+          ))}
+          <button
+            className="admin-pag-btn"
+            onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))}
+            disabled={pagina === totalPaginas}
+          >→</button>
+          <span className="admin-pag-info">{reembolsos.length} registros</span>
+        </div>
       )}
-    </>
+    </div>
   );
 }
 
@@ -198,6 +120,9 @@ function TabSuscripciones() {
   const [loading, setLoading]             = useState(true);
   const [filtroEstado, setFiltroEstado]   = useState("activa");
 
+  const [pagina, setPagina] = useState(1);
+  const POR_PAGINA = 10;
+
   const fetchSuscripciones = async () => {
     try {
       setLoading(true);
@@ -205,6 +130,7 @@ function TabSuscripciones() {
       if (filtroEstado) params.estado = filtroEstado;
       const res = await api.get("/admin/suscripciones", { params });
       setSuscripciones(res.data.suscripciones || []);
+      setPagina(1);
     } catch (err) {
       console.error("Error cargando suscripciones", err);
     } finally {
@@ -213,6 +139,9 @@ function TabSuscripciones() {
   };
 
   useEffect(() => { fetchSuscripciones(); }, [filtroEstado]);
+
+  const totalPaginas    = Math.ceil(suscripciones.length / POR_PAGINA);
+  const suscripcionesPag = suscripciones.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
 
   return (
     <div className="admin-table-panel">
@@ -246,7 +175,7 @@ function TabSuscripciones() {
             ) : suscripciones.length === 0 ? (
               <tr><td colSpan="6" className="admin-empty">No hay suscripciones con ese estado.</td></tr>
             ) : (
-              suscripciones.map(s => (
+              suscripcionesPag.map(s => (
                 <tr key={s.id_suscripcion}>
                   <td>#{s.id_suscripcion}</td>
                   <td><p style={{ margin: 0, fontWeight: 600 }}>{s.Usuario?.nombre}</p></td>
@@ -259,7 +188,7 @@ function TabSuscripciones() {
                   </td>
                   <td>
                     <span className={`badge ${
-                      s.estado === "activa"  ? "badge-success"
+                      s.estado === "activa"    ? "badge-success"
                       : s.estado === "vencida" ? "badge-danger"
                       : "badge-secondary"
                     }`}>{s.estado}</span>
@@ -270,6 +199,29 @@ function TabSuscripciones() {
           </tbody>
         </table>
       </div>
+
+      {totalPaginas > 1 && (
+        <div className="admin-paginador">
+          <button
+            className="admin-pag-btn"
+            onClick={() => setPagina(p => Math.max(1, p - 1))}
+            disabled={pagina === 1}
+          >←</button>
+          {Array.from({ length: totalPaginas }, (_, i) => i + 1).map(n => (
+            <button
+              key={n}
+              className={`admin-pag-btn ${pagina === n ? "admin-pag-active" : ""}`}
+              onClick={() => setPagina(n)}
+            >{n}</button>
+          ))}
+          <button
+            className="admin-pag-btn"
+            onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))}
+            disabled={pagina === totalPaginas}
+          >→</button>
+          <span className="admin-pag-info">{suscripciones.length} registros</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -290,7 +242,7 @@ function AdminActividad() {
         <div>
           <p className="eyebrow">Actividad</p>
           <h1>Reembolsos y suscripciones</h1>
-          <p className="subtitle">Gestiona solicitudes de reembolso y revisa las membresías activas.</p>
+          <p className="subtitle">Historial de reembolsos automáticos y membresías activas.</p>
         </div>
       </section>
 

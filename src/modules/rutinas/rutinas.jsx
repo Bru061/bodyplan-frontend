@@ -21,8 +21,11 @@ function Rutinas() {
     asignadas: 0
   });
 
+  // ── Vista: generales | personalizadas | desactivadas ──
   const [vista, setVista] = useState("generales");
   const [clientesPorRutina, setClientesPorRutina] = useState({});
+
+  const [countsLoading, setCountsLoading] = useState(false);
 
   const contarAsignacionesActivas = (asignaciones) =>
     asignaciones.filter(a => a.estado === "pendiente" || a.estado === "iniciada").length;
@@ -36,34 +39,24 @@ function Rutinas() {
         conteo[r.id_rutina] = contarAsignacionesActivas(asignaciones);
       }
       setClientesPorRutina(conteo);
+      return conteo;
     } catch (err) {
       console.error("Error obteniendo clientes por rutina", err);
+      return {};
     }
   };
 
   const fetchStats = async () => {
     try {
-      const [resGenerales, resPersonalizadas] = await Promise.all([
-        api.get("/rutinas/generales"),
-        api.get("/rutinas/personalizadas")
-      ]);
-
-      const generales = resGenerales.data.rutinas     || [];
-      const personalizadas = resPersonalizadas.data.rutinas || [];
-      const todas = [...generales, ...personalizadas];
-
-      const conteo = {};
-      for (const r of todas) {
-        const clientesRes = await api.get(`/rutinas/${r.id_rutina}/clientes`);
-        conteo[r.id_rutina] = contarAsignacionesActivas(clientesRes.data?.clientes || []);
-      }
-
-      const asignadas = todas.filter(r => (conteo[r.id_rutina] || 0) > 0).length;
+      const res = await api.get("/rutinas");
+      const todas = res.data.rutinas || [];
+      const generales     = todas.filter(r => !r.es_personalizada);
+      const personalizadas = todas.filter(r => r.es_personalizada);
 
       setStats({
-        generales: generales.length,
+        generales:      generales.length,
         personalizadas: personalizadas.length,
-        asignadas
+        asignadas:      0
       });
     } catch (err) {
       console.error("Error obteniendo stats", err);
@@ -73,17 +66,46 @@ function Rutinas() {
   const fetchRutinas = async () => {
     try {
       setLoading(true);
-      const endpoints = {
-        generales: "/rutinas/generales",
-        personalizadas: "/rutinas/personalizadas",
-        desactivadas: "/rutinas/desactivadas"
-      };
-      const res = await api.get(endpoints[vista]);
-      const data = res.data.rutinas || [];
-      setRutinas(data);
-      fetchClientesPorRutina(data);
+      if (vista === "desactivadas") {
+        const res = await api.get("/rutinas/desactivadas");
+        const data = res.data.rutinas || [];
+        setRutinas(data);
+        fetchClientesPorRutina(data);
+        return;
+      }
+
+      let data = [];
+
+      try {
+        const endpoints = {
+          generales:      "/rutinas/generales",
+          personalizadas: "/rutinas/personalizadas"
+        };
+        const res = await api.get(endpoints[vista]);
+        data = res.data.rutinas || [];
+      } catch {
+        // Fallback: cargar todas y filtrar en frontend
+        const res = await api.get("/rutinas");
+        const todas = res.data.rutinas || [];
+        data = vista === "generales"
+          ? todas.filter(r => !r.es_personalizada)
+          : todas.filter(r => r.es_personalizada);
+      }
+
+      // En personalizadas filtramos las que no tienen clientes asignados
+      if (vista === "personalizadas") {
+        setCountsLoading(true);
+        const conteo = await fetchClientesPorRutina(data);
+        setCountsLoading(false);
+        setRutinas(data.filter(r => (conteo[r.id_rutina] || 0) > 0));
+      } else {
+        setRutinas(data);
+        fetchClientesPorRutina(data);
+      }
+
     } catch (err) {
       console.error(err);
+      setRutinas([]);
     } finally {
       setLoading(false);
     }
@@ -115,9 +137,9 @@ function Rutinas() {
   };
 
   const emptyMsg = {
-    generales: "No hay rutinas generales activas.",
+    generales:      "No hay rutinas generales activas.",
     personalizadas: "No hay rutinas personalizadas.",
-    desactivadas: "No hay rutinas desactivadas."
+    desactivadas:   "No hay rutinas desactivadas."
   };
 
   return (
@@ -140,6 +162,7 @@ function Rutinas() {
         </div>
       )}
 
+      {/* ── Stats ── */}
       <section className="stats-grid">
         <article className="stat-card">
           <p className="stat-label">Rutinas generales</p>
@@ -155,6 +178,7 @@ function Rutinas() {
         </article>
       </section>
 
+      {/* ── Tabs ── */}
       <div className="tabs">
         <button
           className={`tab ${vista === "generales" ? "active" : ""}`}
@@ -176,8 +200,9 @@ function Rutinas() {
         </button>
       </div>
 
+      {/* ── Lista ── */}
       <article className="panel">
-        {loading ? (
+        {loading || countsLoading ? (
           <p className="empty-state">Cargando rutinas...</p>
         ) : rutinas.length === 0 ? (
           <p className="empty-state">{emptyMsg[vista]}</p>

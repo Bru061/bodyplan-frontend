@@ -1,10 +1,7 @@
 import React from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, Link } from "react-router-dom";
 import { useAuth } from "../core/context/AuthContext";
-import {
-  MdDashboard, MdCreditCard, MdSwapHoriz, MdAssignment,
-  MdLogout, MdVerifiedUser, MdPeople
-} from "react-icons/md";
+import { MdDashboard, MdCreditCard, MdSwapHoriz, MdAssignment, MdLogout, MdVerifiedUser, MdPeople } from "react-icons/md";
 import logo from "../assets/logo.png";
 import "../styles/admin.css";
 
@@ -75,7 +72,7 @@ function AdminSidebar() {
       </nav>
 
       <div className="admin-sidebar-footer">
-        <div className="admin-sidebar-user">
+        <div className="admin-sidebar-user"> 
           <div className="admin-sidebar-avatar">
             {user?.nombre?.[0]}{user?.apellido_paterno?.[0]}
           </div>
@@ -86,6 +83,7 @@ function AdminSidebar() {
             <span className="admin-sidebar-user-role">Administrador</span>
           </div>
         </div>
+
         <button className="admin-logout" onClick={signOut}>
           <MdLogout size={18} /> Cerrar sesión
         </button>

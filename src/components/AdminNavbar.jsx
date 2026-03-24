@@ -1,6 +1,6 @@
 import { useLocation } from "react-router-dom";
-import { MdNotificationsNone } from "react-icons/md";
 import { useAuth } from "../core/context/AuthContext";
+import NotificationBell from "../components/ui/NotificationBell";
 
 const PAGE_TITLES = {
   "/admin/dashboard": "Dashboard",
@@ -9,6 +9,7 @@ const PAGE_TITLES = {
   "/admin/referencias": "Referencias bancarias (CLABE)",
   "/admin/actividad": "Reembolsos y suscripciones",
   "/admin/usuarios": "Usuarios"
+  //"/admin/perfil":  "Perfil"
 };
 
 function AdminNavbar() {
@@ -26,12 +27,7 @@ function AdminNavbar() {
         </div>
 
         <div className="navbar-right">
-          <button className="navbar-icon-btn" title="Notificaciones">
-            <MdNotificationsNone size={20} />
-          </button>
-          <div className="navbar-icon-btn navbar-avatar admin-topbar-avatar">
-            {user?.nombre?.[0]}{user?.apellido_paterno?.[0]}
-          </div>
+          <NotificationBell />
         </div>
 
       </div>

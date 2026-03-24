@@ -525,3 +525,77 @@
     min-width: 140px;
   }
 }
+
+/* ═══════════════════════════════════════════
+   DETALLE CLIENTE — TABS Y SCROLL
+═══════════════════════════════════════════ */
+
+.detalle-tabs-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.detalle-tabs-header h2 { margin: 0; }
+
+.detalle-tabs {
+  display: flex;
+  gap: 4px;
+  background: #f1f5f9;
+  border-radius: 10px;
+  padding: 3px;
+}
+
+.detalle-tab {
+  padding: 0.4rem 1rem;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+  white-space: nowrap;
+}
+
+.detalle-tab:hover {
+  background: rgba(255,255,255,0.7);
+  color: var(--text-main);
+}
+
+.detalle-tab-active {
+  background: #fff;
+  color: var(--primary-hover);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+.detalle-scroll-area {
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.detalle-scroll-area::-webkit-scrollbar {
+  width: 5px;
+}
+
+.detalle-scroll-area::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+.detalle-scroll-area::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+.detalle-scroll-area::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
