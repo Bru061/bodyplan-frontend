@@ -630,3 +630,36 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ── Destacado ── */
+.gym-destacado-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 20px;
+  background: #fef3c7;
+  color: #92400e;
+  margin-left: 0.6rem;
+  vertical-align: middle;
+}
+
+.gym-destacado-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text-secondary);
+  border-color: var(--border);
+}
+
+.gym-destacado-btn.active {
+  color: #92400e;
+  background: #fef3c7;
+  border-color: #fde68a;
+}
+
+.gym-destacado-btn.active:hover {
+  background: #fde68a;
+}

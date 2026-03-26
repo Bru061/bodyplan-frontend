@@ -119,6 +119,23 @@
   flex-wrap: wrap;
 }
 
+.panel {
+  max-height: 60vh;  /* ajusta a lo que necesites */
+  overflow-y: auto;
+  padding-right: 0.25rem; /* evita que el scrollbar tape el borde de las cards */
+}
+
+.panel::-webkit-scrollbar {
+  width: 4px;
+}
+.panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+.panel::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
 /* FORMULARIOS DE MODAL */
 .form-container {
   display: flex;

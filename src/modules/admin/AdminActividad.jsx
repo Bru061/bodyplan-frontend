@@ -4,12 +4,13 @@ import api from "../../services/axios";
 import Toast from "../../components/ui/Toast";
 import ModalPortal from "../../components/ui/ModalPortal";
 
+const POR_PAGINA = 10;
+
 function TabReembolsos({ showToast }) {
 
   const [reembolsos, setReembolsos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [pagina, setPagina] = useState(1);
-  const POR_PAGINA = 10;
+  const [loading, setLoading]       = useState(true);
+  const [pagina, setPagina]         = useState(1);
 
   const fetchReembolsos = async () => {
     try {
@@ -26,14 +27,14 @@ function TabReembolsos({ showToast }) {
 
   useEffect(() => { fetchReembolsos(); }, []);
 
-  const totalPaginas  = Math.ceil(reembolsos.length / POR_PAGINA);
+  const totalPaginas  = Math.max(1, Math.ceil(reembolsos.length / POR_PAGINA));
   const reembolsosPag = reembolsos.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
 
   const estadoBadge = (estado) => ({
     pendiente_revision: "badge-secondary",
-    aprobado: "badge-success",
-    aprobado_auto: "badge-success",
-    rechazado: "badge-danger"
+    aprobado:           "badge-success",
+    aprobado_auto:      "badge-success",
+    rechazado:          "badge-danger"
   }[estado] || "badge-secondary");
 
   return (
@@ -90,23 +91,11 @@ function TabReembolsos({ showToast }) {
 
       {totalPaginas > 1 && (
         <div className="admin-paginador">
-          <button
-            className="admin-pag-btn"
-            onClick={() => setPagina(p => Math.max(1, p - 1))}
-            disabled={pagina === 1}
-          >←</button>
+          <button className="admin-pag-btn" onClick={() => setPagina(p => Math.max(1, p - 1))} disabled={pagina === 1}>←</button>
           {Array.from({ length: totalPaginas }, (_, i) => i + 1).map(n => (
-            <button
-              key={n}
-              className={`admin-pag-btn ${pagina === n ? "admin-pag-active" : ""}`}
-              onClick={() => setPagina(n)}
-            >{n}</button>
+            <button key={n} className={`admin-pag-btn ${pagina === n ? "admin-pag-active" : ""}`} onClick={() => setPagina(n)}>{n}</button>
           ))}
-          <button
-            className="admin-pag-btn"
-            onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))}
-            disabled={pagina === totalPaginas}
-          >→</button>
+          <button className="admin-pag-btn" onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))} disabled={pagina === totalPaginas}>→</button>
           <span className="admin-pag-info">{reembolsos.length} registros</span>
         </div>
       )}
@@ -116,21 +105,18 @@ function TabReembolsos({ showToast }) {
 
 function TabSuscripciones() {
 
-  const [suscripciones, setSuscripciones] = useState([]);
-  const [loading, setLoading]             = useState(true);
-  const [filtroEstado, setFiltroEstado]   = useState("activa");
-
-  const [pagina, setPagina] = useState(1);
-  const POR_PAGINA = 10;
+  // ── Traemos TODO de una vez y filtramos/paginamos en frontend ──
+  const [todos, setTodos]             = useState([]);
+  const [loading, setLoading]         = useState(true);
+  const [filtroEstado, setFiltroEstado] = useState("activa");
+  const [pagina, setPagina]           = useState(1);
 
   const fetchSuscripciones = async () => {
     try {
       setLoading(true);
-      const params = {};
-      if (filtroEstado) params.estado = filtroEstado;
-      const res = await api.get("/admin/suscripciones", { params });
-      setSuscripciones(res.data.suscripciones || []);
-      setPagina(1);
+      // limit=9999 para evitar que el backend corte los resultados
+      const res = await api.get("/admin/suscripciones", { params: { limit: 9999 } });
+      setTodos(res.data.suscripciones || []);
     } catch (err) {
       console.error("Error cargando suscripciones", err);
     } finally {
@@ -138,10 +124,22 @@ function TabSuscripciones() {
     }
   };
 
-  useEffect(() => { fetchSuscripciones(); }, [filtroEstado]);
+  useEffect(() => { fetchSuscripciones(); }, []);
 
-  const totalPaginas    = Math.ceil(suscripciones.length / POR_PAGINA);
-  const suscripcionesPag = suscripciones.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
+  // Volver a página 1 cada vez que cambia el filtro
+  useEffect(() => { setPagina(1); }, [filtroEstado]);
+
+  // Filtrado en frontend
+  const suscripciones = filtroEstado
+    ? todos.filter(s => s.estado === filtroEstado)
+    : todos;
+
+  const totalPaginas     = Math.max(1, Math.ceil(suscripciones.length / POR_PAGINA));
+  const paginaSegura     = Math.min(pagina, totalPaginas);
+  const suscripcionesPag = suscripciones.slice((paginaSegura - 1) * POR_PAGINA, paginaSegura * POR_PAGINA);
+
+  // Conteos para el select (informativos)
+  const countEstado = (e) => todos.filter(s => s.estado === e).length;
 
   return (
     <div className="admin-table-panel">
@@ -149,10 +147,10 @@ function TabSuscripciones() {
         <h2>Suscripciones ({suscripciones.length})</h2>
         <div className="admin-filters">
           <select value={filtroEstado} onChange={e => setFiltroEstado(e.target.value)}>
-            <option value="">Todas</option>
-            <option value="activa">Activas</option>
-            <option value="vencida">Vencidas</option>
-            <option value="cancelada">Canceladas</option>
+            <option value="">Todas ({todos.length})</option>
+            <option value="activa">Activas ({countEstado("activa")})</option>
+            <option value="vencida">Vencidas ({countEstado("vencida")})</option>
+            <option value="cancelada">Canceladas ({countEstado("cancelada")})</option>
           </select>
         </div>
       </div>
@@ -172,13 +170,16 @@ function TabSuscripciones() {
           <tbody>
             {loading ? (
               <tr><td colSpan="6" className="admin-empty">Cargando...</td></tr>
-            ) : suscripciones.length === 0 ? (
+            ) : suscripcionesPag.length === 0 ? (
               <tr><td colSpan="6" className="admin-empty">No hay suscripciones con ese estado.</td></tr>
             ) : (
               suscripcionesPag.map(s => (
                 <tr key={s.id_suscripcion}>
                   <td>#{s.id_suscripcion}</td>
-                  <td><p style={{ margin: 0, fontWeight: 600 }}>{s.Usuario?.nombre}</p></td>
+                  <td>
+                    <p style={{ margin: 0, fontWeight: 600 }}>{s.Usuario?.nombre}</p>
+                    <span style={{ fontSize: "0.78rem", color: "var(--text-secondary)" }}>{s.Usuario?.correo}</span>
+                  </td>
                   <td>{s.Gimnasio?.nombre || "—"}</td>
                   <td>{s.membresia?.nombre || "—"}</td>
                   <td>
@@ -202,23 +203,11 @@ function TabSuscripciones() {
 
       {totalPaginas > 1 && (
         <div className="admin-paginador">
-          <button
-            className="admin-pag-btn"
-            onClick={() => setPagina(p => Math.max(1, p - 1))}
-            disabled={pagina === 1}
-          >←</button>
+          <button className="admin-pag-btn" onClick={() => setPagina(p => Math.max(1, p - 1))} disabled={paginaSegura === 1}>←</button>
           {Array.from({ length: totalPaginas }, (_, i) => i + 1).map(n => (
-            <button
-              key={n}
-              className={`admin-pag-btn ${pagina === n ? "admin-pag-active" : ""}`}
-              onClick={() => setPagina(n)}
-            >{n}</button>
+            <button key={n} className={`admin-pag-btn ${paginaSegura === n ? "admin-pag-active" : ""}`} onClick={() => setPagina(n)}>{n}</button>
           ))}
-          <button
-            className="admin-pag-btn"
-            onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))}
-            disabled={pagina === totalPaginas}
-          >→</button>
+          <button className="admin-pag-btn" onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))} disabled={paginaSegura === totalPaginas}>→</button>
           <span className="admin-pag-info">{suscripciones.length} registros</span>
         </div>
       )}

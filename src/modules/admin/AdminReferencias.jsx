@@ -7,10 +7,14 @@ import ModalPortal from "../../components/ui/ModalPortal";
 function AdminReferencias() {
 
   const [referencias, setReferencias] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [toast, setToast] = useState(null);
+  const [loading, setLoading]         = useState(true);
+  const [toast, setToast]             = useState(null);
   const [verificando, setVerificando] = useState(null);
-  const [filtro, setFiltro] = useState("");
+  const [toggling, setToggling]       = useState(null);
+  const [filtro, setFiltro]           = useState("");
+
+  // Modal confirmar desactivar
+  const [confirmModal, setConfirmModal] = useState(null); // ref a desactivar
 
   const showToast = (message, type = "success") => setToast({ message, type });
 
@@ -41,9 +45,30 @@ function AdminReferencias() {
     }
   };
 
+  const handleToggleActivo = async (ref) => {
+    try {
+      setToggling(ref.id_referencia);
+      if (ref.activo) {
+        await api.patch(`/admin/referencias/${ref.id_referencia}/desactivar`);
+        showToast(`CLABE de ${ref.Usuario?.nombre} desactivada.`);
+      } else {
+        await api.patch(`/admin/referencias/${ref.id_referencia}/activar`);
+        showToast(`CLABE de ${ref.Usuario?.nombre} activada.`);
+      }
+      setConfirmModal(null);
+      fetchReferencias();
+    } catch (err) {
+      showToast(err?.response?.data?.message || "Error actualizando estado.", "error");
+    } finally {
+      setToggling(null);
+    }
+  };
+
   const referenciasFiltradas = referencias.filter(r => {
-    if (filtro === "verificado") return r.verificado === true;
-    if (filtro === "pendiente")  return r.verificado === false;
+    if (filtro === "verificado")  return r.verificado === true;
+    if (filtro === "pendiente")   return r.verificado === false;
+    if (filtro === "activo")      return r.activo === true;
+    if (filtro === "inactivo")    return r.activo === false;
     return true;
   });
 
@@ -77,8 +102,10 @@ function AdminReferencias() {
           <div className="admin-filters">
             <select value={filtro} onChange={e => setFiltro(e.target.value)}>
               <option value="">Todas</option>
-              <option value="pendiente">Pendientes</option>
+              <option value="pendiente">Pendientes de verificar</option>
               <option value="verificado">Verificadas</option>
+              <option value="activo">Activas</option>
+              <option value="inactivo">Inactivas</option>
             </select>
           </div>
         </div>
@@ -91,46 +118,78 @@ function AdminReferencias() {
                 <th>CLABE</th>
                 <th>Banco</th>
                 <th>Titular</th>
+                <th>Verificación</th>
                 <th>Estado</th>
-                <th>Acción</th>
+                <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan="6" className="admin-empty">Cargando...</td></tr>
+                <tr><td colSpan="7" className="admin-empty">Cargando...</td></tr>
               ) : referenciasFiltradas.length === 0 ? (
-                <tr><td colSpan="6" className="admin-empty">No hay referencias con ese filtro.</td></tr>
+                <tr><td colSpan="7" className="admin-empty">No hay referencias con ese filtro.</td></tr>
               ) : (
                 referenciasFiltradas.map(ref => (
                   <tr key={ref.id_referencia}>
+
                     <td>
                       <p style={{ margin: 0, fontWeight: 600 }}>{ref.Usuario?.nombre}</p>
                       <span style={{ fontSize: "0.78rem", color: "var(--text-secondary)" }}>{ref.Usuario?.correo}</span>
                     </td>
+
+                    {/* ── numero_cuenta es el campo real del backend ── */}
                     <td style={{ fontFamily: "monospace", letterSpacing: "0.05em" }}>
-                      {ref.clabe}
+                      {ref.numero_cuenta || ref.clabe || "—"}
                     </td>
+
                     <td>{ref.banco}</td>
                     <td>{ref.titular}</td>
+
                     <td>
                       {ref.verificado ? (
-                        <span className="badge badge-success">Verificada</span>
+                        <span className="badge badge-success">✓ Verificada</span>
                       ) : (
-                        <span className="badge badge-secondary">Pendiente</span>
+                        <span className="badge badge-secondary">⏳ Pendiente</span>
                       )}
                     </td>
+
                     <td>
-                      {!ref.verificado && (
-                        <button
-                          className="btn btn-primary"
-                          style={{ fontSize: "0.78rem", padding: "0.35rem 0.75rem" }}
-                          onClick={() => handleVerificar(ref)}
-                          disabled={verificando === ref.id_referencia}
-                        >
-                          {verificando === ref.id_referencia ? "Verificando..." : "Verificar"}
-                        </button>
+                      {ref.activo ? (
+                        <span className="badge badge-success">Activa</span>
+                      ) : (
+                        <span className="badge badge-danger">Inactiva</span>
                       )}
                     </td>
+
+                    <td>
+                      <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+                        {/* Verificar — solo si no está verificada */}
+                        {!ref.verificado && (
+                          <button
+                            className="btn btn-primary"
+                            style={{ fontSize: "0.78rem", padding: "0.35rem 0.75rem" }}
+                            onClick={() => handleVerificar(ref)}
+                            disabled={verificando === ref.id_referencia || toggling === ref.id_referencia}
+                          >
+                            {verificando === ref.id_referencia ? "Verificando..." : "Verificar"}
+                          </button>
+                        )}
+
+                        {/* Activar / Desactivar */}
+                        <button
+                          className={ref.activo ? "btn btn-danger" : "btn btn-success"}
+                          style={{ fontSize: "0.78rem", padding: "0.35rem 0.75rem" }}
+                          onClick={() => ref.activo ? setConfirmModal(ref) : handleToggleActivo(ref)}
+                          disabled={toggling === ref.id_referencia || verificando === ref.id_referencia}
+                        >
+                          {toggling === ref.id_referencia
+                            ? "Procesando..."
+                            : ref.activo ? "Desactivar" : "Activar"
+                          }
+                        </button>
+                      </div>
+                    </td>
+
                   </tr>
                 ))
               )}
@@ -138,6 +197,34 @@ function AdminReferencias() {
           </table>
         </div>
       </div>
+
+      {/* ── Modal confirmar desactivar ── */}
+      {confirmModal && (
+        <ModalPortal>
+          <div className="modal-overlay">
+            <div className="modal-box">
+              <h3 className="modal-title">Desactivar CLABE</h3>
+              <p className="modal-body">
+                ¿Deseas desactivar la CLABE <strong>{confirmModal.numero_cuenta || confirmModal.clabe}</strong> de{" "}
+                <strong>{confirmModal.Usuario?.nombre}</strong>?
+                El proveedor no podrá recibir transferencias mientras esté inactiva.
+              </p>
+              <div className="modal-actions">
+                <button className="btn btn-ghost" onClick={() => setConfirmModal(null)}>
+                  Cancelar
+                </button>
+                <button
+                  className="btn btn-danger"
+                  onClick={() => handleToggleActivo(confirmModal)}
+                  disabled={toggling === confirmModal.id_referencia}
+                >
+                  {toggling === confirmModal.id_referencia ? "Procesando..." : "Desactivar"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </ModalPortal>
+      )}
 
     </AdminLayout>
   );

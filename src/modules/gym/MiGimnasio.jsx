@@ -8,20 +8,27 @@ import "../../styles/gimnasio.css";
 import api from "../../services/axios";
 import { useParams, useNavigate } from "react-router-dom";
 import LoadingScreen from "../../components/ui/LoadingScreen";
-import { Pencil } from "lucide-react";
+import { Pencil, Star } from "lucide-react";
+import Toast from "../../components/ui/Toast";
 
 function MiGimnasio() {
 
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [gym, setGym] = useState(null);
+  const [gym, setGym]           = useState(null);
   const [imgIndex, setImgIndex] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [openEdit, setOpenEdit] = useState(false);
-  const [openHorarios, setOpenHorarios] = useState(false);
+  const [loading, setLoading]   = useState(true);
+  const [openEdit, setOpenEdit]           = useState(false);
+  const [openHorarios, setOpenHorarios]   = useState(false);
   const [openMembresias, setOpenMembresias] = useState(false);
-  const [openFotos, setOpenFotos] = useState(false);
+  const [openFotos, setOpenFotos]         = useState(false);
+
+  // ── Destacado ──
+  const [destacando, setDestacando] = useState(false);
+  const [toast, setToast]           = useState(null);
+
+  const showToast = (message, type = "success") => setToast({ message, type });
 
   const fetchGym = async () => {
     try {
@@ -35,9 +42,7 @@ function MiGimnasio() {
     }
   };
 
-  useEffect(() => {
-    fetchGym();
-  }, [id]);
+  useEffect(() => { fetchGym(); }, [id]);
 
   useEffect(() => {
     if (!gym?.fotos || gym.fotos.length <= 1) return;
@@ -52,9 +57,22 @@ function MiGimnasio() {
     if (imgIndex >= gym.fotos.length) setImgIndex(0);
   }, [gym, imgIndex]);
 
-  if (loading) {
-    return <LoadingScreen message="Cargando gimnasio..." />;
-  }
+  const handleToggleDestacado = async () => {
+    try {
+      setDestacando(true);
+      const res = await api.patch(`/gym/${id}/destacar`);
+      const ahora = res.data.destacado;
+      showToast(ahora ? "Gimnasio destacado correctamente." : "Gimnasio quitado de destacados.");
+      fetchGym();
+    } catch (err) {
+      const msg = err?.response?.data?.error || "No se pudo actualizar el estado destacado.";
+      showToast(msg, "error");
+    } finally {
+      setDestacando(false);
+    }
+  };
+
+  if (loading) return <LoadingScreen message="Cargando gimnasio..." />;
 
   if (!gym) {
     return (
@@ -69,6 +87,8 @@ function MiGimnasio() {
   return (
     <DashboardLayout>
 
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
       <section className="page-header">
         <div className="page-header-row">
           <button
@@ -79,10 +99,28 @@ function MiGimnasio() {
           </button>
           <div>
             <p className="eyebrow">Gestión de negocio</p>
-            <h1>{gym.nombre}</h1>
+            <h1>
+              {gym.nombre}
+              {gym.destacado && (
+                <span className="gym-destacado-badge">
+                  <Star size={13} fill="currentColor" /> Destacado
+                </span>
+              )}
+            </h1>
             <p className="subtitle">Administra la información de tu gimnasio.</p>
           </div>
         </div>
+
+        {/* ── Botón destacar ── */}
+        <button
+          className={gym.destacado ? "btn btn-ghost gym-destacado-btn active" : "btn btn-ghost gym-destacado-btn"}
+          onClick={handleToggleDestacado}
+          disabled={destacando}
+          title={gym.destacado ? "Quitar de destacados" : "Destacar gimnasio (requiere Plan Web activo)"}
+        >
+          <Star size={15} fill={gym.destacado ? "currentColor" : "none"} />
+          {destacando ? "Procesando..." : gym.destacado ? "Quitar destacado" : "Destacar"}
+        </button>
       </section>
 
       <section className="service-list">
@@ -106,15 +144,11 @@ function MiGimnasio() {
                     <button
                       className="slider-btn left"
                       onClick={() => setImgIndex(i => i === 0 ? gym.fotos.length - 1 : i - 1)}
-                    >
-                      ‹
-                    </button>
+                    >‹</button>
                     <button
                       className="slider-btn right"
                       onClick={() => setImgIndex(i => i === gym.fotos.length - 1 ? 0 : i + 1)}
-                    >
-                      ›
-                    </button>
+                    >›</button>
                   </>
                 )}
 
@@ -202,32 +236,16 @@ function MiGimnasio() {
       </section>
 
       {openEdit && (
-        <EditGymModal
-          gym={gym}
-          onClose={() => setOpenEdit(false)}
-          onUpdated={fetchGym}
-        />
+        <EditGymModal gym={gym} onClose={() => setOpenEdit(false)} onUpdated={fetchGym} />
       )}
       {openHorarios && (
-        <EditHorariosModal
-          gym={gym}
-          onClose={() => setOpenHorarios(false)}
-          onUpdated={fetchGym}
-        />
+        <EditHorariosModal gym={gym} onClose={() => setOpenHorarios(false)} onUpdated={fetchGym} />
       )}
       {openMembresias && (
-        <EditMembresiasModal
-          gym={gym}
-          onClose={() => setOpenMembresias(false)}
-          onUpdated={fetchGym}
-        />
+        <EditMembresiasModal gym={gym} onClose={() => setOpenMembresias(false)} onUpdated={fetchGym} />
       )}
       {openFotos && (
-        <EditFotosModal
-          gym={gym}
-          onClose={() => setOpenFotos(false)}
-          onUpdated={fetchGym}
-        />
+        <EditFotosModal gym={gym} onClose={() => setOpenFotos(false)} onUpdated={fetchGym} />
       )}
 
     </DashboardLayout>

@@ -18,18 +18,18 @@ function Perfil() {
   const [toast, setToast]     = useState(null);
 
   // ── Plan ──
-  const [planActivo, setPlanActivo]   = useState(null);
+  const [planActivo, setPlanActivo]         = useState(null);
   const [historialPlanes, setHistorialPlanes] = useState([]);
 
   // ── CLABE ──
-  const [clabe, setClabe]         = useState(null);
+  const [clabe, setClabe]               = useState(null);
   const [editandoClabe, setEditandoClabe] = useState(false);
-  const [clabeForm, setClabeForm] = useState({ clabe: "", banco: "", titular: "" });
-  const [clabeErrors, setClabeErrors] = useState({});
-  const [clabeLoading, setClabeLoading] = useState(false);
+  const [clabeForm, setClabeForm]         = useState({ clabe: "", banco: "", titular: "" });
+  const [clabeErrors, setClabeErrors]     = useState({});
+  const [clabeLoading, setClabeLoading]   = useState(false);
 
   // ── Balance del proveedor ──
-  const [balance, setBalance] = useState([]);
+  const [balance, setBalance]             = useState([]);
   const [editandoPerfil, setEditandoPerfil] = useState(false);
   const [perfilForm, setPerfilForm]         = useState({});
   const [perfilErrors, setPerfilErrors]     = useState({});
@@ -113,9 +113,20 @@ function Perfil() {
       }
 
       if (resClabe.status === "fulfilled") {
-        const ref = resClabe.value.data.referencia;
-        setClabe(ref || null);
-        if (ref) setClabeForm({ clabe: ref.clabe, banco: ref.banco, titular: ref.titular });
+        const data = resClabe.value.data;
+        // El endpoint devuelve { referencias: [...] } — tomamos la activa del usuario
+        const lista = data.referencias || (data.referencia ? [data.referencia] : []);
+        const ref   = lista.find(r => r.activo) || null;
+        if (ref) {
+          setClabe(ref);
+          setClabeForm({
+            clabe:   ref.numero_cuenta || "",
+            banco:   ref.banco         || "",
+            titular: ref.titular       || ""
+          });
+        } else {
+          setClabe(null);
+        }
       }
 
       if (resBalance.status === "fulfilled") {
@@ -175,8 +186,8 @@ function Perfil() {
     const errors = {};
     if (!clabeForm.clabe.trim() || clabeForm.clabe.length !== 18)
       errors.clabe = "La CLABE debe tener 18 dígitos";
-    if (!clabeForm.banco.trim())    errors.banco   = "El banco es obligatorio";
-    if (!clabeForm.titular.trim())  errors.titular = "El titular es obligatorio";
+    if (!clabeForm.banco.trim())   errors.banco   = "El banco es obligatorio";
+    if (!clabeForm.titular.trim()) errors.titular = "El titular es obligatorio";
 
     if (Object.keys(errors).length > 0) { setClabeErrors(errors); return; }
 
@@ -206,6 +217,15 @@ function Perfil() {
     }
   };
 
+  // ── Helpers de balance ──
+  const formatMXN = (val) =>
+    `$${parseFloat(val || 0).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  const clabeVerificada = (gym) =>
+    gym.referencia_bancaria?.verificado ??
+    gym.clabe_verificada ??
+    false;
+
   if (loading) return <LoadingScreen message="Cargando perfil..." />;
 
   if (!user) {
@@ -217,6 +237,9 @@ function Perfil() {
   }
 
   const dias = diasRestantes();
+
+  // Número de CLABE a mostrar en la card (normaliza numero_cuenta / clabe)
+  const clabeDisplay = clabe?.numero_cuenta || clabe?.clabe || "";
 
   return (
     <DashboardLayout>
@@ -262,10 +285,10 @@ function Perfil() {
             <div className="clabe-card">
               <div className="clabe-row">
                 <div className="clabe-info">
-                  <p><strong>{clabe.clabe}</strong></p>
+                  <p><strong>{clabeDisplay}</strong></p>
                   <span>{clabe.banco} — {clabe.titular}</span>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
                   <span className={clabe.verificado ? "clabe-verificado" : "clabe-pendiente"}>
                     {clabe.verificado ? "✓ Verificada" : "⏳ Pendiente verificación"}
                   </span>
@@ -410,8 +433,8 @@ function Perfil() {
                     <tr key={i}>
                       <td>{h.plan?.nombre || "—"}</td>
                       <td>{h.fecha_inicio ? new Date(h.fecha_inicio).toLocaleDateString("es-MX") : "—"}</td>
-                      <td>{h.fecha_fin   ? new Date(h.fecha_fin).toLocaleDateString("es-MX")   : "—"}</td>
-                      <td>${h.plan?.precio?.toLocaleString("es-MX") || "—"}</td>
+                      <td>{h.fecha_fin    ? new Date(h.fecha_fin).toLocaleDateString("es-MX")    : "—"}</td>
+                      <td>{h.plan?.precio != null ? `$${h.plan.precio.toLocaleString("es-MX")}` : "—"}</td>
                       <td>
                         <span className={`badge ${h.estado === "activa" ? "badge-success" : "badge-danger"}`}>
                           {h.estado}
@@ -445,25 +468,27 @@ function Perfil() {
                     <th>Total generado</th>
                     <th>Transferido</th>
                     <th>Pendiente de cobrar</th>
-                    <th>CLABE</th>
+                    <th>Transacciones</th>
                   </tr>
                 </thead>
                 <tbody>
                   {balance.map((g, i) => (
                     <tr key={g.id_gimnasio ?? i}>
-                      <td><strong>{g.nombre}</strong></td>
-                      <td>${parseFloat(g.total_generado || 0).toLocaleString("es-MX")}</td>
-                      <td>${parseFloat(g.total_transferido || 0).toLocaleString("es-MX")}</td>
+                      <td><strong>{g.nombre_gimnasio || "—"}</strong></td>
+                      <td>{formatMXN(g.total_generado)}</td>
+                      <td>{formatMXN(g.total_transferido)}</td>
                       <td>
-                        <span style={{ fontWeight: 700, color: g.pendiente_cobrar > 0 ? "#16a34a" : "var(--text-secondary)" }}>
-                          ${parseFloat(g.pendiente_cobrar || 0).toLocaleString("es-MX")}
+                        <span style={{
+                          fontWeight: 700,
+                          color: parseFloat(g.pendiente_transferir || 0) > 0 ? "#16a34a" : "var(--text-secondary)"
+                        }}>
+                          {formatMXN(g.pendiente_transferir)}
                         </span>
                       </td>
                       <td>
-                        {g.referencia_bancaria?.verificado
-                          ? <span className="clabe-verificado">✓ Verificada</span>
-                          : <span className="clabe-pendiente">⏳ Sin verificar</span>
-                        }
+                        <span className="badge badge-secondary">
+                          {g.total_transacciones ?? 0} transacción{g.total_transacciones !== 1 ? "es" : ""}
+                        </span>
                       </td>
                     </tr>
                   ))}

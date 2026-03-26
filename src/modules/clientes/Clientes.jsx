@@ -11,11 +11,26 @@ import * as XLSX from "xlsx";
 
 const LIMIT = 5;
 
+function deduplicarClientes(clientesRaw) {
+  const mapa = new Map();
+  for (const c of clientesRaw) {
+    const existente = mapa.get(c.id_usuario);
+    if (!existente) {
+      mapa.set(c.id_usuario, c);
+    } else {
+      if (existente.estado !== "activa" && c.estado === "activa") {
+        mapa.set(c.id_usuario, c);
+      }
+    }
+  }
+  return Array.from(mapa.values());
+}
+
 function Clientes() {
 
   const [searchParams] = useSearchParams();
 
-  const [clientes, setClientes] = useState([]);
+  const [todosClientes, setTodosClientes] = useState([]);
   const [search, setSearch] = useState("");
   const [gymError, setGymError] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
@@ -29,55 +44,38 @@ function Clientes() {
   const [filtroGym, setFiltroGym] = useState("");
 
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
 
   const [stats, setStats] = useState({
     activos: 0,
     inactivos: 0,
-    conMembresia: 0
+    conMembresia: 0,
   });
 
   const cargarStats = async () => {
     try {
       const res = await api.get("/clientes", { params: { limit: 9999 } });
-      const estadisticas = res.data.estadisticas || {};
-      setStats({
-        activos:      estadisticas.clientes_activos   || 0,
-        inactivos:    estadisticas.clientes_inactivos || 0,
-        conMembresia: estadisticas.membresias_activas || 0
-      });
+      const raw = res.data.clientes || [];
+      const unicos = deduplicarClientes(raw);
+
+      const activos      = unicos.filter(c => c.estado === "activa").length;
+      const inactivos    = unicos.filter(c => c.estado !== "activa").length;
+      const conMembresia = unicos.filter(
+        c => c.estado === "activa" && c.membresia?.nombre
+      ).length;
+
+      setStats({ activos, inactivos, conMembresia });
     } catch (error) {
       console.error("Error cargando stats", error);
     }
   };
 
-  const cargarClientes = async (searchTerm = "", estado = "", pagina = 1) => {
+  const cargarClientes = async () => {
     try {
-      const params = { limit: LIMIT, page: pagina };
-      if (searchTerm) params.search = searchTerm;
-      if (estado === "activa") params.estado = "activa";
+      const res = await api.get("/clientes", { params: { limit: 9999 } });
+      const raw = res.data.clientes || [];
+      const unicos = deduplicarClientes(raw);
 
-      const res = await api.get("/clientes", { params });
-      const data = res.data;
-
-      const clientesRaw = data.clientes || [];
-
-      const mapaClientes = new Map();
-      for (const c of clientesRaw) {
-        const existente = mapaClientes.get(c.id_usuario);
-        if (!existente) {
-          mapaClientes.set(c.id_usuario, c);
-        } else {
-          const existenteActivo = existente.estado === "activa";
-          const nuevoActivo     = c.estado === "activa";
-          if (!existenteActivo && nuevoActivo) {
-            mapaClientes.set(c.id_usuario, c);
-          }
-        }
-      }
-
-      const clientesFormateados = Array.from(mapaClientes.values()).map(c => ({
+      const formateados = unicos.map(c => ({
         id: c.id_usuario,
         nombre: c.nombre,
         correo: c.correo,
@@ -86,13 +84,10 @@ function Clientes() {
         fechaInicio: new Date(c.fecha_inicio).toLocaleDateString(),
         membresia: c.membresia?.nombre || "Sin membresía",
         gimnasio: c.gimnasio?.nombre || "Sin gimnasio",
-        id_gimnasio: c.gimnasio?.id_gimnasio || null
+        id_gimnasio: c.gimnasio?.id_gimnasio || null,
       }));
 
-      setClientes(clientesFormateados);
-      setTotalPages(data.totalPages || 1);
-      setTotal(data.total || 0);
-
+      setTodosClientes(formateados);
     } catch (error) {
       console.error("Error cargando clientes", error);
     }
@@ -105,21 +100,8 @@ function Clientes() {
   }, []);
 
   useEffect(() => {
-    const delay = setTimeout(() => {
-      setPage(1);
-      cargarClientes(search, filtroEstado, 1);
-    }, 400);
-    return () => clearTimeout(delay);
-  }, [search]);
-
-  useEffect(() => {
     setPage(1);
-    cargarClientes(search, filtroEstado, 1);
-  }, [filtroEstado]);
-
-  useEffect(() => {
-    cargarClientes(search, filtroEstado, page);
-  }, [page]);
+  }, [search, filtroEstado, filtroGym]);
 
   const fetchGimnasios = async () => {
     try {
@@ -143,21 +125,22 @@ function Clientes() {
   const exportClientes = async () => {
     try {
       const res = await api.get("/clientes", { params: { limit: 9999 } });
-      const todos = res.data.clientes || [];
-      if (todos.length === 0) return;
+      const raw = res.data.clientes || [];
+      const unicos = deduplicarClientes(raw);
+      if (unicos.length === 0) return;
 
-      const data = todos.map(c => ({
+      const data = unicos.map(c => ({
         Nombre: c.nombre,
         Correo: c.correo,
         Telefono: c.telefono || "-",
         Gimnasio: c.gimnasio?.nombre || "Sin gimnasio",
         Estado: c.estado,
         "Fecha inicio": new Date(c.fecha_inicio).toLocaleDateString(),
-        Membresia: c.membresia?.nombre || "Sin membresía"
+        Membresia: c.membresia?.nombre || "Sin membresía",
       }));
 
       const worksheet = XLSX.utils.json_to_sheet(data);
-      const workbook = XLSX.utils.book_new();
+      const workbook  = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Clientes");
       XLSX.writeFile(workbook, "reporte_clientes_bodyplan.xlsx");
     } catch (err) {
@@ -165,12 +148,20 @@ function Clientes() {
     }
   };
 
-  const clientesFiltrados = clientes.filter(c => {
+  const clientesFiltrados = todosClientes.filter(c => {
     if (search && !c.nombre.toLowerCase().includes(search.toLowerCase())) return false;
-    if (filtroEstado === "inactiva" && c.estado === "activa") return false;
-    if (filtroGym && c.id_gimnasio !== Number(filtroGym)) return false;
+    if (filtroEstado === "activa"   && c.estado !== "activa")   return false;
+    if (filtroEstado === "inactiva" && c.estado === "activa")   return false;
+    if (filtroGym && c.id_gimnasio !== Number(filtroGym))       return false;
     return true;
   });
+
+  const totalPages    = Math.max(1, Math.ceil(clientesFiltrados.length / LIMIT));
+  const paginaSegura  = Math.min(page, totalPages);
+  const clientesPagina = clientesFiltrados.slice(
+    (paginaSegura - 1) * LIMIT,
+    paginaSegura * LIMIT
+  );
 
   const handleAbrirModal = async () => {
     try {
@@ -284,14 +275,14 @@ function Clientes() {
             </thead>
 
             <tbody>
-              {clientesFiltrados.length === 0 ? (
+              {clientesPagina.length === 0 ? (
                 <tr>
                   <td colSpan="6" className="empty-table">
                     No hay clientes que coincidan con el filtro
                   </td>
                 </tr>
               ) : (
-                clientesFiltrados.map((cliente) => (
+                clientesPagina.map((cliente) => (
                   <tr key={cliente.id}>
 
                     <td>
@@ -376,7 +367,7 @@ function Clientes() {
             <button
               className="pagination-btn"
               onClick={() => setPage(p => Math.max(1, p - 1))}
-              disabled={page === 1}
+              disabled={paginaSegura === 1}
             >
               <FiChevronLeft size={16} />
             </button>
@@ -384,7 +375,7 @@ function Clientes() {
             {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
               <button
                 key={n}
-                className={`pagination-btn ${page === n ? "pagination-active" : ""}`}
+                className={`pagination-btn ${paginaSegura === n ? "pagination-active" : ""}`}
                 onClick={() => setPage(n)}
               >
                 {n}
@@ -394,13 +385,13 @@ function Clientes() {
             <button
               className="pagination-btn"
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages}
+              disabled={paginaSegura === totalPages}
             >
               <FiChevronRight size={16} />
             </button>
 
             <span className="pagination-info">
-              {total} cliente{total !== 1 ? "s" : ""} en total
+              {clientesFiltrados.length} cliente{clientesFiltrados.length !== 1 ? "s" : ""} en total
             </span>
           </div>
         )}
@@ -415,7 +406,7 @@ function Clientes() {
           onClose={() => setShowAddModal(false)}
           onCreated={() => {
             cargarStats();
-            cargarClientes(search, filtroEstado, page);
+            cargarClientes();
           }}
         />
       )}

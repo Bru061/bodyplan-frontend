@@ -134,31 +134,52 @@ function AdminPlanes() {
       ) : planes.length === 0 ? (
         <p className="empty-state">No hay planes registrados.</p>
       ) : (
-        planes.map(plan => (
-          <div key={plan.id_plan} className="plan-admin-card">
-            <div className="plan-admin-info">
-              <h3>{plan.nombre}</h3>
-              <p>{plan.descripcion || "Sin descripción"} · {plan.duracion_dias} días · {plan.tipo_origen}</p>
-            </div>
-            <span className="plan-admin-precio">
-              ${parseFloat(plan.precio).toLocaleString("es-MX")}
-            </span>
-            <span className={`badge ${plan.activo ? "badge-success" : "badge-danger"}`}>
-              {plan.activo ? "Activo" : "Inactivo"}
-            </span>
-            <div className="plan-admin-actions">
-              <button className="btn btn-ghost" onClick={() => abrirEditar(plan)}>
-                Editar
-              </button>
-              <button
-                className={`btn ${plan.activo ? "btn-danger" : "btn-success"}`}
-                onClick={() => setConfirmToggle(plan)}
-              >
-                {plan.activo ? "Desactivar" : "Activar"}
-              </button>
-            </div>
+        <div className="admin-table-panel">
+          <div style={{ overflowX: "auto" }}>
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Descripción</th>
+                <th>Duración</th>
+                <th>Origen</th>
+                <th>Precio</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {planes.map(plan => (
+                <tr key={plan.id_plan}>
+                  <td>{plan.nombre}</td>
+                  <td>{plan.descripcion || "Sin descripción"}</td>
+                  <td>{plan.duracion_dias} días</td>
+                  <td>{plan.tipo_origen}</td>
+                  <td>
+                    ${parseFloat(plan.precio).toLocaleString("es-MX")}
+                  </td>
+                  <td>
+                    <span className={`badge ${plan.activo ? "badge-success" : "badge-danger"}`}>
+                      {plan.activo ? "Activo" : "Inactivo"}
+                    </span>
+                  </td>
+                  <td className="actions-cell">
+                    <button className="btn btn-ghost" onClick={() => abrirEditar(plan)}>
+                      Editar
+                    </button>
+                    <button
+                      className={`btn ${plan.activo ? "btn-danger" : "btn-success"}`}
+                      onClick={() => setConfirmToggle(plan)}
+                    >
+                      {plan.activo ? "Desactivar" : "Activar"}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
           </div>
-        ))
+        </div>
       )}
 
       {modal && (

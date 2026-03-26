@@ -5,23 +5,30 @@ import Toast from "../../components/ui/Toast";
 import ModalPortal from "../../components/ui/ModalPortal";
 
 const POR_PAGINA = 10;
+
+// Etiquetas legibles por tipo_pago
+const TIPO_LABEL = {
+  membresia: "Membresía",
+  plan_web:  "Plan Web",
+};
+
 function TabMovimientos() {
 
-  const [todos, setTodos] = useState([]);
-  const [movimientos, setMovimientos] = useState([]);
+  const [todos, setTodos]     = useState([]);
   const [resumen, setResumen] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [pagina, setPagina] = useState(1);
-  const [filtros, setFiltros] = useState({
-    tipo_pago: "", estado: "", fecha_inicio: "", fecha_fin: ""
-  });
-  const POR_PAGINA = 10;
+  const [pagina, setPagina]   = useState(1);
+
+  // Sub-tab: "todos" | "membresia" | "plan_web"
+  const [subTab, setSubTab] = useState("todos");
+
+  const [filtros, setFiltros] = useState({ estado: "", fecha_inicio: "", fecha_fin: "" });
 
   const fetchMovimientos = async () => {
     try {
       setLoading(true);
       const res = await api.get("/admin/movimientos", { params: { limit: 9999 } });
-      setTodos(res.data.pagos   || []);
+      setTodos(res.data.pagos    || []);
       setResumen(res.data.resumen || null);
     } catch (err) {
       console.error("Error cargando movimientos", err);
@@ -32,27 +39,26 @@ function TabMovimientos() {
 
   useEffect(() => { fetchMovimientos(); }, []);
 
-  useEffect(() => {
-    let resultado = [...todos];
-
-    if (filtros.tipo_pago)
-      resultado = resultado.filter(m => m.tipo_pago === filtros.tipo_pago);
-    if (filtros.estado)
-      resultado = resultado.filter(m => m.estado === filtros.estado);
-    if (filtros.fecha_inicio)
-      resultado = resultado.filter(m => m.fecha_pago >= filtros.fecha_inicio);
-    if (filtros.fecha_fin)
-      resultado = resultado.filter(m => m.fecha_pago <= filtros.fecha_fin + "T23:59:59");
-
-    setMovimientos(resultado);
-    setPagina(1);
-  }, [filtros, todos]);
+  // Resetear página al cambiar sub-tab o filtros
+  useEffect(() => { setPagina(1); }, [subTab, filtros]);
 
   const handleFiltro = (e) =>
     setFiltros(prev => ({ ...prev, [e.target.name]: e.target.value }));
 
-  const totalPaginas   = Math.ceil(movimientos.length / POR_PAGINA);
-  const movimientosPag = movimientos.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
+  // Filtrado: primero por sub-tab, luego por filtros secundarios
+  const movimientos = todos.filter(m => {
+    if (subTab !== "todos" && m.tipo_pago !== subTab)                          return false;
+    if (filtros.estado       && m.estado     !== filtros.estado)               return false;
+    if (filtros.fecha_inicio && m.fecha_pago < filtros.fecha_inicio)           return false;
+    if (filtros.fecha_fin    && m.fecha_pago > filtros.fecha_fin + "T23:59:59") return false;
+    return true;
+  });
+
+  const totalPaginas   = Math.max(1, Math.ceil(movimientos.length / POR_PAGINA));
+  const paginaSegura   = Math.min(pagina, totalPaginas);
+  const movimientosPag = movimientos.slice((paginaSegura - 1) * POR_PAGINA, paginaSegura * POR_PAGINA);
+
+  const countTipo = (tipo) => todos.filter(m => m.tipo_pago === tipo).length;
 
   return (
     <>
@@ -60,28 +66,41 @@ function TabMovimientos() {
         <div className="admin-stats">
           <div className="admin-stat-card">
             <p className="admin-stat-label">Total cobrado</p>
-            <p className="admin-stat-value">${resumen.total_cobrado?.toLocaleString("es-MX")}</p>
+            <p className="admin-stat-value">${parseFloat(resumen.total_cobrado || 0).toLocaleString("es-MX")}</p>
           </div>
           <div className="admin-stat-card">
             <p className="admin-stat-label">Comisión plataforma</p>
-            <p className="admin-stat-value">${resumen.total_comision_plataforma?.toLocaleString("es-MX")}</p>
+            <p className="admin-stat-value">${parseFloat(resumen.total_comision_plataforma || 0).toLocaleString("es-MX")}</p>
           </div>
           <div className="admin-stat-card">
             <p className="admin-stat-label">Comisión Stripe</p>
-            <p className="admin-stat-value">${resumen.total_comision_stripe?.toLocaleString("es-MX")}</p>
+            <p className="admin-stat-value">${parseFloat(resumen.total_comision_stripe || 0).toLocaleString("es-MX")}</p>
           </div>
         </div>
       )}
+
+      {/* ── Sub-tabs por tipo de pago ── */}
+      <div className="admin-subtabs">
+        {[
+          { key: "todos",     label: "Todos",     count: todos.length        },
+          { key: "membresia", label: "Membresía", count: countTipo("membresia") },
+          { key: "plan_web",  label: "Plan Web",  count: countTipo("plan_web")  },
+        ].map(({ key, label, count }) => (
+          <button
+            key={key}
+            className={`admin-subtab ${subTab === key ? "admin-subtab-active" : ""}`}
+            onClick={() => setSubTab(key)}
+          >
+            {label}
+            <span className="admin-subtab-count">{count}</span>
+          </button>
+        ))}
+      </div>
 
       <div className="admin-table-panel">
         <div className="admin-table-header">
           <h2>Pagos ({movimientos.length})</h2>
           <div className="admin-filters">
-            <select name="tipo_pago" value={filtros.tipo_pago} onChange={handleFiltro}>
-              <option value="">Todos los tipos</option>
-              <option value="membresia">Membresía</option>
-              <option value="plataforma">Plataforma</option>
-            </select>
             <select name="estado" value={filtros.estado} onChange={handleFiltro}>
               <option value="">Todos los estados</option>
               <option value="pagado">Pagado</option>
@@ -100,6 +119,7 @@ function TabMovimientos() {
                 <th>ID</th>
                 <th>Usuario</th>
                 <th>Gimnasio</th>
+                <th>Tipo</th>
                 <th>Monto base</th>
                 <th>Comisión Stripe</th>
                 <th>Estado</th>
@@ -108,9 +128,9 @@ function TabMovimientos() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan="7" className="admin-empty">Cargando...</td></tr>
-              ) : movimientos.length === 0 ? (
-                <tr><td colSpan="7" className="admin-empty">No hay movimientos con esos filtros.</td></tr>
+                <tr><td colSpan="8" className="admin-empty">Cargando...</td></tr>
+              ) : movimientosPag.length === 0 ? (
+                <tr><td colSpan="8" className="admin-empty">No hay movimientos con esos filtros.</td></tr>
               ) : (
                 movimientosPag.map((m, i) => (
                   <tr key={m.id_pago ?? i}>
@@ -120,6 +140,11 @@ function TabMovimientos() {
                       <span style={{ fontSize: "0.78rem", color: "var(--text-secondary)" }}>{m.Usuario?.correo}</span>
                     </td>
                     <td>{m.Gimnasio?.nombre || "—"}</td>
+                    <td>
+                      <span className={`badge ${m.tipo_pago === "membresia" ? "badge-primary" : "badge-secondary"}`}>
+                        {TIPO_LABEL[m.tipo_pago] || m.tipo_pago}
+                      </span>
+                    </td>
                     <td>${parseFloat(m.monto_base || 0).toLocaleString("es-MX")}</td>
                     <td>${parseFloat(m.monto_comision_stripe || 0).toLocaleString("es-MX")}</td>
                     <td>
@@ -139,11 +164,11 @@ function TabMovimientos() {
 
         {totalPaginas > 1 && (
           <div className="admin-paginador">
-            <button className="admin-pag-btn" onClick={() => setPagina(p => Math.max(1, p - 1))} disabled={pagina === 1}>←</button>
+            <button className="admin-pag-btn" onClick={() => setPagina(p => Math.max(1, p - 1))} disabled={paginaSegura === 1}>←</button>
             {Array.from({ length: totalPaginas }, (_, i) => i + 1).map(n => (
-              <button key={n} className={`admin-pag-btn ${pagina === n ? "admin-pag-active" : ""}`} onClick={() => setPagina(n)}>{n}</button>
+              <button key={n} className={`admin-pag-btn ${paginaSegura === n ? "admin-pag-active" : ""}`} onClick={() => setPagina(n)}>{n}</button>
             ))}
-            <button className="admin-pag-btn" onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))} disabled={pagina === totalPaginas}>→</button>
+            <button className="admin-pag-btn" onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))} disabled={paginaSegura === totalPaginas}>→</button>
             <span className="admin-pag-info">{movimientos.length} registros</span>
           </div>
         )}
