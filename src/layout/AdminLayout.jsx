@@ -1,13 +1,17 @@
+import { useState } from "react";
 import AdminSidebar from "../components/AdminSidebar";
 import AdminNavbar  from "../components/AdminNavbar";
 import "../styles/admin.css";
-
+ 
 function AdminLayout({ children }) {
+ 
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+ 
   return (
     <div className="admin-layout">
-      <AdminSidebar />
+      <AdminSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="admin-body">
-        <AdminNavbar />
+        <AdminNavbar onMenuToggle={() => setSidebarOpen(prev => !prev)} />
         <main className="admin-main">
           {children}
         </main>
@@ -15,5 +19,5 @@ function AdminLayout({ children }) {
     </div>
   );
 }
-
+ 
 export default AdminLayout;

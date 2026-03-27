@@ -7,14 +7,13 @@ import ModalPortal from "../../components/ui/ModalPortal";
 function AdminReferencias() {
 
   const [referencias, setReferencias] = useState([]);
-  const [loading, setLoading]         = useState(true);
-  const [toast, setToast]             = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState(null);
   const [verificando, setVerificando] = useState(null);
-  const [toggling, setToggling]       = useState(null);
-  const [filtro, setFiltro]           = useState("");
+  const [toggling, setToggling] = useState(null);
+  const [filtro, setFiltro] = useState("");
 
-  // Modal confirmar desactivar
-  const [confirmModal, setConfirmModal] = useState(null); // ref a desactivar
+  const [confirmModal, setConfirmModal] = useState(null);
 
   const showToast = (message, type = "success") => setToast({ message, type });
 
@@ -65,10 +64,10 @@ function AdminReferencias() {
   };
 
   const referenciasFiltradas = referencias.filter(r => {
-    if (filtro === "verificado")  return r.verificado === true;
-    if (filtro === "pendiente")   return r.verificado === false;
-    if (filtro === "activo")      return r.activo === true;
-    if (filtro === "inactivo")    return r.activo === false;
+    if (filtro === "verificado") return r.verificado === true;
+    if (filtro === "pendiente") return r.verificado === false;
+    if (filtro === "activo") return r.activo === true;
+    if (filtro === "inactivo") return r.activo === false;
     return true;
   });
 
@@ -137,7 +136,6 @@ function AdminReferencias() {
                       <span style={{ fontSize: "0.78rem", color: "var(--text-secondary)" }}>{ref.Usuario?.correo}</span>
                     </td>
 
-                    {/* ── numero_cuenta es el campo real del backend ── */}
                     <td style={{ fontFamily: "monospace", letterSpacing: "0.05em" }}>
                       {ref.numero_cuenta || ref.clabe || "—"}
                     </td>
@@ -163,7 +161,6 @@ function AdminReferencias() {
 
                     <td>
                       <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
-                        {/* Verificar — solo si no está verificada */}
                         {!ref.verificado && (
                           <button
                             className="btn btn-primary"
@@ -175,7 +172,6 @@ function AdminReferencias() {
                           </button>
                         )}
 
-                        {/* Activar / Desactivar */}
                         <button
                           className={ref.activo ? "btn btn-danger" : "btn btn-success"}
                           style={{ fontSize: "0.78rem", padding: "0.35rem 0.75rem" }}
@@ -198,7 +194,6 @@ function AdminReferencias() {
         </div>
       </div>
 
-      {/* ── Modal confirmar desactivar ── */}
       {confirmModal && (
         <ModalPortal>
           <div className="modal-overlay">

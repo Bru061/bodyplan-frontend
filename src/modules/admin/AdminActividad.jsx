@@ -2,15 +2,14 @@ import { useEffect, useState } from "react";
 import AdminLayout from "../../layout/AdminLayout";
 import api from "../../services/axios";
 import Toast from "../../components/ui/Toast";
-import ModalPortal from "../../components/ui/ModalPortal";
 
 const POR_PAGINA = 10;
 
 function TabReembolsos({ showToast }) {
 
   const [reembolsos, setReembolsos] = useState([]);
-  const [loading, setLoading]       = useState(true);
-  const [pagina, setPagina]         = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [pagina, setPagina] = useState(1);
 
   const fetchReembolsos = async () => {
     try {
@@ -32,9 +31,9 @@ function TabReembolsos({ showToast }) {
 
   const estadoBadge = (estado) => ({
     pendiente_revision: "badge-secondary",
-    aprobado:           "badge-success",
-    aprobado_auto:      "badge-success",
-    rechazado:          "badge-danger"
+    aprobado: "badge-success",
+    aprobado_auto: "badge-success",
+    rechazado: "badge-danger"
   }[estado] || "badge-secondary");
 
   return (
@@ -105,16 +104,14 @@ function TabReembolsos({ showToast }) {
 
 function TabSuscripciones() {
 
-  // ── Traemos TODO de una vez y filtramos/paginamos en frontend ──
-  const [todos, setTodos]             = useState([]);
-  const [loading, setLoading]         = useState(true);
+  const [todos, setTodos] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [filtroEstado, setFiltroEstado] = useState("activa");
-  const [pagina, setPagina]           = useState(1);
+  const [pagina, setPagina] = useState(1);
 
   const fetchSuscripciones = async () => {
     try {
       setLoading(true);
-      // limit=9999 para evitar que el backend corte los resultados
       const res = await api.get("/admin/suscripciones", { params: { limit: 9999 } });
       setTodos(res.data.suscripciones || []);
     } catch (err) {
@@ -126,19 +123,15 @@ function TabSuscripciones() {
 
   useEffect(() => { fetchSuscripciones(); }, []);
 
-  // Volver a página 1 cada vez que cambia el filtro
   useEffect(() => { setPagina(1); }, [filtroEstado]);
 
-  // Filtrado en frontend
   const suscripciones = filtroEstado
     ? todos.filter(s => s.estado === filtroEstado)
     : todos;
 
-  const totalPaginas     = Math.max(1, Math.ceil(suscripciones.length / POR_PAGINA));
-  const paginaSegura     = Math.min(pagina, totalPaginas);
+  const totalPaginas = Math.max(1, Math.ceil(suscripciones.length / POR_PAGINA));
+  const paginaSegura = Math.min(pagina, totalPaginas);
   const suscripcionesPag = suscripciones.slice((paginaSegura - 1) * POR_PAGINA, paginaSegura * POR_PAGINA);
-
-  // Conteos para el select (informativos)
   const countEstado = (e) => todos.filter(s => s.estado === e).length;
 
   return (

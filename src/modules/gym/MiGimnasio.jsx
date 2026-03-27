@@ -24,7 +24,6 @@ function MiGimnasio() {
   const [openMembresias, setOpenMembresias] = useState(false);
   const [openFotos, setOpenFotos]         = useState(false);
 
-  // ── Destacado ──
   const [destacando, setDestacando] = useState(false);
   const [toast, setToast]           = useState(null);
 
@@ -111,7 +110,6 @@ function MiGimnasio() {
           </div>
         </div>
 
-        {/* ── Botón destacar ── */}
         <button
           className={gym.destacado ? "btn btn-ghost gym-destacado-btn active" : "btn btn-ghost gym-destacado-btn"}
           onClick={handleToggleDestacado}

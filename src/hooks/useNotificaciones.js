@@ -11,13 +11,11 @@ export const useNotificaciones = () => {
   const [noLeidas, setNoLeidas] = useState(0);
   const eventSourceRef = useRef(null);
 
-  // ── Cargar conteo inicial ──
   useEffect(() => {
     if (!token) return;
     contarNoLeidas().then(setNoLeidas);
   }, [token]);
 
-  // ── SSE ──
   const conectarSSE = useCallback(() => {
     if (!token) return;
     if (eventSourceRef.current) eventSourceRef.current.close();
@@ -28,17 +26,16 @@ export const useNotificaciones = () => {
     es.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        if (data.tipo === "heartbeat") return; // ignorar pings
+        if (data.tipo === "heartbeat") return;
         mostrarToast({ titulo: data.titulo, mensaje: data.mensaje });
         setNoLeidas(prev => prev + 1);
       } catch {
-        // ignorar mensajes malformados
       }
     };
 
     es.onerror = () => {
       es.close();
-      setTimeout(conectarSSE, 5000); // reconectar en 5s
+      setTimeout(conectarSSE, 5000);
     };
 
     eventSourceRef.current = es;
@@ -50,7 +47,6 @@ export const useNotificaciones = () => {
     return () => eventSourceRef.current?.close();
   }, [conectarSSE]);
 
-  // ── FCM foreground ──
   useEffect(() => {
     if (!token) return;
     const unsub = onMensajeForeground((payload) => {

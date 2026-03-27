@@ -6,20 +6,18 @@ import ModalPortal from "../../components/ui/ModalPortal";
 
 const POR_PAGINA = 10;
 
-// Etiquetas legibles por tipo_pago
 const TIPO_LABEL = {
   membresia: "Membresía",
-  plan_web:  "Plan Web",
+  plan_web: "Plan Web",
 };
 
 function TabMovimientos() {
 
-  const [todos, setTodos]     = useState([]);
+  const [todos, setTodos] = useState([]);
   const [resumen, setResumen] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [pagina, setPagina]   = useState(1);
+  const [pagina, setPagina] = useState(1);
 
-  // Sub-tab: "todos" | "membresia" | "plan_web"
   const [subTab, setSubTab] = useState("todos");
 
   const [filtros, setFiltros] = useState({ estado: "", fecha_inicio: "", fecha_fin: "" });
@@ -39,13 +37,11 @@ function TabMovimientos() {
 
   useEffect(() => { fetchMovimientos(); }, []);
 
-  // Resetear página al cambiar sub-tab o filtros
   useEffect(() => { setPagina(1); }, [subTab, filtros]);
 
   const handleFiltro = (e) =>
     setFiltros(prev => ({ ...prev, [e.target.name]: e.target.value }));
 
-  // Filtrado: primero por sub-tab, luego por filtros secundarios
   const movimientos = todos.filter(m => {
     if (subTab !== "todos" && m.tipo_pago !== subTab)                          return false;
     if (filtros.estado       && m.estado     !== filtros.estado)               return false;
@@ -79,7 +75,6 @@ function TabMovimientos() {
         </div>
       )}
 
-      {/* ── Sub-tabs por tipo de pago ── */}
       <div className="admin-subtabs">
         {[
           { key: "todos",     label: "Todos",     count: todos.length        },

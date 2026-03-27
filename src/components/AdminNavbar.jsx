@@ -1,6 +1,6 @@
 import { useLocation } from "react-router-dom";
-import { useAuth } from "../core/context/AuthContext";
 import NotificationBell from "../components/ui/NotificationBell";
+import { MdMenu } from "react-icons/md";
 
 const PAGE_TITLES = {
   "/admin/dashboard": "Dashboard",
@@ -8,14 +8,13 @@ const PAGE_TITLES = {
   "/admin/finanzas": "Movimientos y balance",
   "/admin/referencias": "Referencias bancarias (CLABE)",
   "/admin/actividad": "Reembolsos y suscripciones",
-  "/admin/usuarios": "Usuarios"
-  //"/admin/perfil":  "Perfil"
+  "/admin/usuarios": "Usuarios",
+  "/admin/perfil": "Mi perfil",
 };
 
-function AdminNavbar() {
+function AdminNavbar({ onMenuToggle }) {
 
   const { pathname } = useLocation();
-  const { user } = useAuth();
   const pageTitle = PAGE_TITLES[pathname] || "Admin";
 
   return (
@@ -23,6 +22,13 @@ function AdminNavbar() {
       <div className="navbar-container">
 
         <div className="navbar-left">
+          <button
+            className="navbar-menu-btn"
+            onClick={onMenuToggle}
+            aria-label="Abrir menú"
+          >
+            <MdMenu size={22} />
+          </button>
           <span className="navbar-page-title">{pageTitle}</span>
         </div>
 

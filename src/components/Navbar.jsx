@@ -4,12 +4,12 @@ import NotificationBell from "./ui/NotificationBell";
 import { MdMenu } from "react-icons/md";
 
 const PAGE_TITLES = {
-  "/dashboard":     "Dashboard",
-  "/clientes":      "Clientes",
-  "/rutinas":       "Rutinas",
+  "/dashboard": "Dashboard",
+  "/clientes": "Clientes",
+  "/rutinas": "Rutinas",
   "/mis-gimnasios": "Mis Gimnasios",
-  "/resenas":       "Reseñas",
-  "/perfil":        "Perfil",
+  "/resenas": "Reseñas",
+  "/perfil": "Perfil",
   "/notificaciones":"Notificaciones",
 };
 

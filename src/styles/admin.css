@@ -574,3 +574,107 @@
 .admin-subtab-active .admin-subtab-count {
   background: rgba(255,255,255,0.25);
 }
+
+.admin-support-btn {
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  text-align: left;
+}
+
+.admin-support-btn:hover {
+  color: var(--primary);
+  background: var(--admin-hover, #f1f5f9);
+}
+
+.admin-footer-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 0.4rem 0;
+}
+
+/* ═══════════════════════════════════════════
+   ADMIN RESPONSIVE MÓVIL
+═══════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+
+  /* Sidebar oculto por defecto, slide desde la izquierda */
+  .admin-sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+
+  .admin-sidebar-open {
+    transform: translateX(0);
+  }
+
+  /* El body ocupa todo el ancho */
+  .admin-body {
+    margin-left: 0;
+  }
+
+  /* Overlay igual que en proveedor */
+  .sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 199;
+  }
+
+  .admin-main {
+    padding: 1rem;
+  }
+
+  /* Stats en una columna */
+  .admin-stats {
+    grid-template-columns: 1fr;
+  }
+
+  /* Tabla con scroll horizontal */
+  .admin-table-panel {
+    overflow-x: auto;
+  }
+
+  /* Header de tabla en columna */
+  .admin-table-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  /* Filtros en columna */
+  .admin-filters {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .admin-filters select,
+  .admin-filters input {
+    width: 100%;
+  }
+
+  /* Sub-tabs con scroll horizontal */
+  .admin-subtabs {
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+  }
+
+  /* Tabs con scroll */
+  .admin-tabs {
+    overflow-x: auto;
+    width: 100%;
+  }
+
+  /* Planes en columna */
+  .plan-admin-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .plan-admin-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}

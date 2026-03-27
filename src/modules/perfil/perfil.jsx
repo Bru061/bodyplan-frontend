@@ -13,34 +13,31 @@ function Perfil() {
 
   const navigate = useNavigate();
 
-  const [user, setUser]       = useState(null);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [toast, setToast]     = useState(null);
+  const [toast, setToast] = useState(null);
 
-  // ── Plan ──
-  const [planActivo, setPlanActivo]         = useState(null);
+  const [planActivo, setPlanActivo] = useState(null);
   const [historialPlanes, setHistorialPlanes] = useState([]);
 
-  // ── CLABE ──
-  const [clabe, setClabe]               = useState(null);
+  const [clabe, setClabe] = useState(null);
   const [editandoClabe, setEditandoClabe] = useState(false);
-  const [clabeForm, setClabeForm]         = useState({ clabe: "", banco: "", titular: "" });
-  const [clabeErrors, setClabeErrors]     = useState({});
-  const [clabeLoading, setClabeLoading]   = useState(false);
+  const [clabeForm, setClabeForm] = useState({ clabe: "", banco: "", titular: "" });
+  const [clabeErrors, setClabeErrors] = useState({});
+  const [clabeLoading, setClabeLoading] = useState(false);
 
-  // ── Balance del proveedor ──
-  const [balance, setBalance]             = useState([]);
+  const [balance, setBalance] = useState([]);
   const [editandoPerfil, setEditandoPerfil] = useState(false);
-  const [perfilForm, setPerfilForm]         = useState({});
-  const [perfilErrors, setPerfilErrors]     = useState({});
-  const [perfilLoading, setPerfilLoading]   = useState(false);
+  const [perfilForm, setPerfilForm] = useState({});
+  const [perfilErrors, setPerfilErrors] = useState({});
+  const [perfilLoading, setPerfilLoading] = useState(false);
 
   const abrirEditarPerfil = () => {
     setPerfilForm({
-      nombre:           user.nombre           || "",
-      apellido_paterno: user.apellido_paterno  || "",
-      apellido_materno: user.apellido_materno  || "",
-      telefono:         user.telefono          || ""
+      nombre: user.nombre || "",
+      apellido_paterno: user.apellido_paterno || "",
+      apellido_materno: user.apellido_materno || "",
+      telefono: user.telefono || ""
     });
     setPerfilErrors({});
     setEditandoPerfil(true);
@@ -88,7 +85,6 @@ function Perfil() {
     }
   };
 
-  // ── Modal confirmar cambio de plan ──
   const [confirmCambio, setConfirmCambio] = useState(false);
 
   const showToast = (message, type = "success") => setToast({ message, type });
@@ -114,7 +110,6 @@ function Perfil() {
 
       if (resClabe.status === "fulfilled") {
         const data = resClabe.value.data;
-        // El endpoint devuelve { referencias: [...] } — tomamos la activa del usuario
         const lista = data.referencias || (data.referencia ? [data.referencia] : []);
         const ref   = lista.find(r => r.activo) || null;
         if (ref) {
@@ -142,7 +137,6 @@ function Perfil() {
 
   useEffect(() => { fetchAll(); }, []);
 
-  // ── Días restantes del plan ──
   const diasRestantes = () => {
     if (!planActivo?.fecha_fin) return 0;
     const hoy = new Date();
@@ -157,7 +151,6 @@ function Perfil() {
     return "";
   };
 
-  // ── Renovar plan (mismo plan) ──
   const handleRenovar = async () => {
     if (!planActivo?.plan) return;
     try {
@@ -181,7 +174,6 @@ function Perfil() {
     }
   };
 
-  // ── Guardar / actualizar CLABE ──
   const handleGuardarClabe = async () => {
     const errors = {};
     if (!clabeForm.clabe.trim() || clabeForm.clabe.length !== 18)
@@ -217,7 +209,6 @@ function Perfil() {
     }
   };
 
-  // ── Helpers de balance ──
   const formatMXN = (val) =>
     `$${parseFloat(val || 0).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
@@ -238,7 +229,6 @@ function Perfil() {
 
   const dias = diasRestantes();
 
-  // Número de CLABE a mostrar en la card (normaliza numero_cuenta / clabe)
   const clabeDisplay = clabe?.numero_cuenta || clabe?.clabe || "";
 
   return (
@@ -255,7 +245,6 @@ function Perfil() {
 
       <section className="content-grid">
 
-        {/* ── Información personal ── */}
         <article className="panel">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
             <h2 className="panel-icon-title" style={{ margin: 0 }}>
@@ -272,7 +261,6 @@ function Perfil() {
           </div>
         </article>
 
-        {/* ── CLABE bancaria ── */}
         <article className="panel">
           <h2 className="panel-icon-title">
             <MdAccountBalance size={18} /> Datos bancarios (CLABE)
@@ -369,7 +357,6 @@ function Perfil() {
           )}
         </article>
 
-        {/* ── Mi Plan ── */}
         <article className="panel" style={{ gridColumn: "1 / -1" }}>
           <h2 className="panel-icon-title">
             <FiCreditCard size={18} /> Mi plan
@@ -408,7 +395,6 @@ function Perfil() {
             </div>
           )}
 
-          {/* ── Historial ── */}
           <p className="panel-description">Historial de pagos hacia la plataforma BodyPlan.</p>
           <div className="table-wrap">
             <table className="history-table">
@@ -450,7 +436,6 @@ function Perfil() {
 
       </section>
 
-      {/* ── Balance por gimnasio ── */}
       {balance.length > 0 && (
         <section style={{ marginTop: "1.5rem" }}>
           <article className="panel">
@@ -499,7 +484,6 @@ function Perfil() {
         </section>
       )}
 
-      {/* ── Modal editar perfil ── */}
       {editandoPerfil && (
         <ModalPortal>
           <div className="modal-overlay">
@@ -585,7 +569,6 @@ function Perfil() {
         </ModalPortal>
       )}
 
-      {/* ── Modal confirmar cambio de plan ── */}
       {confirmCambio && (
         <ModalPortal>
           <div className="modal-overlay">

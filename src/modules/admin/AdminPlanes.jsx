@@ -10,14 +10,14 @@ const FORM_INICIAL = {
 
 function AdminPlanes() {
 
-  const [planes, setPlanes]     = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [toast, setToast]       = useState(null);
-  const [modal, setModal]       = useState(null);
+  const [planes, setPlanes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState(null);
+  const [modal, setModal] = useState(null);
   const [planEdit, setPlanEdit] = useState(null);
-  const [form, setForm]         = useState(FORM_INICIAL);
-  const [errors, setErrors]     = useState({});
-  const [saving, setSaving]     = useState(false);
+  const [form, setForm] = useState(FORM_INICIAL);
+  const [errors, setErrors] = useState({});
+  const [saving, setSaving] = useState(false);
   const [confirmToggle, setConfirmToggle] = useState(null);
 
   const showToast = (message, type = "success") => setToast({ message, type });
@@ -44,9 +44,9 @@ function AdminPlanes() {
 
   const validate = () => {
     const e = {};
-    if (!form.nombre.trim())      e.nombre      = "El nombre es obligatorio";
-    if (!form.precio)             e.precio      = "El precio es obligatorio";
-    if (!form.duracion_dias)      e.duracion_dias = "La duración es obligatoria";
+    if (!form.nombre.trim()) e.nombre = "El nombre es obligatorio";
+    if (!form.precio) e.precio = "El precio es obligatorio";
+    if (!form.duracion_dias) e.duracion_dias = "La duración es obligatoria";
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -56,11 +56,11 @@ function AdminPlanes() {
     try {
       setSaving(true);
       const payload = {
-        nombre:       form.nombre.trim(),
-        precio:       parseFloat(form.precio),
+        nombre: form.nombre.trim(),
+        precio: parseFloat(form.precio),
         duracion_dias: parseInt(form.duracion_dias),
-        descripcion:  form.descripcion.trim(),
-        tipo_origen:  form.tipo_origen
+        descripcion: form.descripcion.trim(),
+        tipo_origen: form.tipo_origen
       };
 
       if (modal === "editar" && planEdit) {
@@ -98,11 +98,11 @@ function AdminPlanes() {
   const abrirEditar = (plan) => {
     setPlanEdit(plan);
     setForm({
-      nombre:       plan.nombre,
-      precio:       plan.precio,
+      nombre: plan.nombre,
+      precio: plan.precio,
       duracion_dias: plan.duracion_dias,
-      descripcion:  plan.descripcion || "",
-      tipo_origen:  plan.tipo_origen || "web"
+      descripcion: plan.descripcion || "",
+      tipo_origen: plan.tipo_origen || "web"
     });
     setErrors({});
     setModal("editar");

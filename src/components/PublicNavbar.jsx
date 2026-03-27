@@ -11,13 +11,11 @@ function PublicNavbar() {
     <header className="navbar" aria-label="Navegación principal">
       <div className="navbar-container">
 
-        {/* ── Brand ── */}
         <Link to="/" className="brand" aria-label="Inicio BodyPlan">
           <img src={logo} alt="Logo de BodyPlan" className="brand-logo" />
           <span className="brand-name">BodyPlan</span>
         </Link>
 
-        {/* ── Nav desktop ── */}
         <nav className="public-nav-desktop">
           <ul className="menu">
             <li><a href="/#planes">Planes</a></li>
@@ -30,7 +28,6 @@ function PublicNavbar() {
           </ul>
         </nav>
 
-        {/* ── Hamburguesa ── */}
         <button
           className="public-nav-hamburger"
           onClick={() => setMenuOpen(prev => !prev)}
@@ -41,7 +38,6 @@ function PublicNavbar() {
 
       </div>
 
-      {/* ── Menú móvil ── */}
       {menuOpen && (
         <div className="public-nav-mobile" onClick={() => setMenuOpen(false)}>
           <a href="/#planes" className="public-nav-mobile-item">Planes</a>

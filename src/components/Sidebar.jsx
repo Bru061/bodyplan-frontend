@@ -1,6 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { MdDashboard, MdPeople, MdFitnessCenter, MdStar, MdLogout, MdSupervisorAccount } from "react-icons/md";
+import { MdDashboard, MdPeople, MdFitnessCenter, MdStar, MdLogout, MdSupervisorAccount, MdHeadsetMic } from "react-icons/md";
 import { FaDumbbell } from "react-icons/fa";
 import { useAuth } from "../core/context/AuthContext";
 import api from "../services/axios";
@@ -12,8 +12,10 @@ const NAV_ITEMS = [
   { to: "/rutinas", icon: <FaDumbbell size={18} />, label: "Rutinas" },
   { to: "/personal", icon: <MdSupervisorAccount size={20} />, label: "Personal" },
   { to: "/mis-gimnasios", icon: <MdFitnessCenter size={20} />, label: "Mis Gimnasios" },
-  { to: "/resenas", icon: <MdStar size={20} />, label: "Reseñas" },
+  { to: "/resenas",  icon: <MdStar size={20} />, label: "Reseñas" },
 ];
+
+const SOPORTE_EMAIL = "devnest.contacto@gmail.com";
 
 function Sidebar({ open, onClose }) {
 
@@ -28,8 +30,7 @@ function Sidebar({ open, onClose }) {
         if (plan?.estado === "activa") {
           setPlanNombre(plan.plan?.nombre || null);
         }
-      } catch {
-      }
+      } catch {}
     };
     fetchPlan();
   }, []);
@@ -41,6 +42,17 @@ function Sidebar({ open, onClose }) {
   const iniciales = user
     ? `${user.nombre?.[0] ?? ""}${user.apellido_paterno?.[0] ?? ""}`.toUpperCase()
     : "U";
+
+  const handleSoporte = () => {
+    const asunto  = encodeURIComponent("Solicitud de soporte - BodyPlan");
+    const cuerpo  = encodeURIComponent(
+      `Hola, necesito ayuda con lo siguiente:\n\n` +
+      `Usuario: ${nombreCompleto}\n` +
+      `Correo: ${user?.correo || ""}\n\n` +
+      `Descripción del problema:\n`
+    );
+    window.location.href = `mailto:${SOPORTE_EMAIL}?subject=${asunto}&body=${cuerpo}`;
+  };
 
   return (
     <>
@@ -76,6 +88,13 @@ function Sidebar({ open, onClose }) {
         </nav>
 
         <div className="sidebar-footer">
+
+          <button className="sidebar-link sidebar-support" onClick={handleSoporte} title="Contactar soporte">
+            <span className="sidebar-icon"><MdHeadsetMic size={20} /></span>
+            <span className="sidebar-label">Contactar a soporte</span>
+          </button>
+
+          <div className="sidebar-footer-divider" />
 
           <NavLink
             to="/perfil"

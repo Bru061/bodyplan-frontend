@@ -1089,3 +1089,23 @@ textarea.field-error {
   font-size: 0.72rem;
   color: #94a3b8;
 }
+
+.sidebar-support {
+  color: var(--text-secondary);
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.sidebar-support:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-footer-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 0.4rem 0;
+}
