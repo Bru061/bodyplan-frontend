@@ -6,6 +6,7 @@ import "../../styles/gimnasio.css";
 import { FiPlus } from "react-icons/fi";
 import LoadingScreen from "../../components/ui/LoadingScreen";
 import ModalPortal from "../../components/ui/ModalPortal";
+import usePermissions from "../../hooks/usePermissions"
 
 function MisGimnasios() {
 
@@ -17,9 +18,18 @@ function MisGimnasios() {
   const [modal, setModal] = useState(null);
   const [errorMsg, setErrorMsg] = useState("");
 
+  const {
+    canCreateMoreGyms,
+    maxGyms,
+    getUpgradeMessage,
+    FEATURES,
+  } = usePermissions();
+
   const activos = gimnasios.filter(g => g.activo);
   const archivados = gimnasios.filter(g => !g.activo);
   const listaMostrar = tab === "activos" ? activos : archivados;
+  const totalGimnasios = gimnasios.length
+  const noPuedeCrearMas = !canCreateMoreGyms(totalGimnasios);
 
   const fetchGyms = async () => {
     try {
@@ -131,8 +141,18 @@ function MisGimnasios() {
           <h1>Mis gimnasios</h1>
           <p className="subtitle">Administra tus gimnasios.</p>
         </div>
-        <button className="btn btn-primary" onClick={() => navigate("/crear-gimnasio")}>
-          <FiPlus /> Agregar gimnasio
+        <button
+          className="btn btn-primary"
+          onClick={() => {
+            if (noPuedeCrearMas) {
+              setErrorMsg(getUpgradeMessage(FEATURES.MULTI_GYM));
+              return;
+            }
+            navigate("/crear-gimnasio");
+          }}
+          disabled={noPuedeCrearMas}
+          title={noPuedeCrearMas ? getUpgradeMessage(FEATURES.MULTI_GYM) : ""}>
+          <FiPlus /> {noPuedeCrearMas ? "Disponible en Pro" : "Agregar gimnasio"}
         </button>
       </section>
 
@@ -140,6 +160,12 @@ function MisGimnasios() {
         <div className="modal-error gym-error">
           {errorMsg}
           <button className="gym-error-close" onClick={() => setErrorMsg("")}>✕</button>
+        </div>
+      )}
+
+      {noPuedeCrearMas && (
+        <div className="modal-error gym-error" style={{ marginBottom: "1rem" }}>
+          Has alcanzado el límite de {maxGyms} gimnasio{maxGyms > 1 ? "s" : ""} (incluyendo inactivos) para tu plan actual.
         </div>
       )}
 

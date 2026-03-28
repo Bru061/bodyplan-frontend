@@ -10,6 +10,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import LoadingScreen from "../../components/ui/LoadingScreen";
 import { Pencil, Star } from "lucide-react";
 import Toast from "../../components/ui/Toast";
+import usePermissions from "../../hooks/usePermissions";
 
 function MiGimnasio() {
 
@@ -26,6 +27,9 @@ function MiGimnasio() {
 
   const [destacando, setDestacando] = useState(false);
   const [toast, setToast]           = useState(null);
+
+  const { can, FEATURES, getUpgradeMessage } = usePermissions();
+  const canHighlightGym = can(FEATURES.GYM_HIGHLIGHT);
 
   const showToast = (message, type = "success") => setToast({ message, type });
 
@@ -57,6 +61,11 @@ function MiGimnasio() {
   }, [gym, imgIndex]);
 
   const handleToggleDestacado = async () => {
+    if (!canHighlightGym) {
+      showToast(getUpgradeMessage(FEATURES.GYM_HIGHLIGHT), "error");
+      return;
+    }
+
     try {
       setDestacando(true);
       const res = await api.patch(`/gym/${id}/destacar`);
@@ -113,11 +122,16 @@ function MiGimnasio() {
         <button
           className={gym.destacado ? "btn btn-ghost gym-destacado-btn active" : "btn btn-ghost gym-destacado-btn"}
           onClick={handleToggleDestacado}
-          disabled={destacando}
-          title={gym.destacado ? "Quitar de destacados" : "Destacar gimnasio (requiere Plan Web activo)"}
+          disabled={destacando || !canHighlightGym}
+          title={!canHighlightGym
+            ? getUpgradeMessage(FEATURES.GYM_HIGHLIGHT)
+            : gym.destacado ? "Quitar de destacados" : "Destacar gimnasio (requiere plan Pro)"
+          }
         >
           <Star size={15} fill={gym.destacado ? "currentColor" : "none"} />
-          {destacando ? "Procesando..." : gym.destacado ? "Quitar destacado" : "Destacar"}
+          {!canHighlightGym
+            ? "Disponible en Pro"
+            : destacando ? "Procesando..." : gym.destacado ? "Quitar destacado" : "Destacar"}
         </button>
       </section>
 

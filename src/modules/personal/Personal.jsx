@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../../layout/DashboardLayout";
 import api from "../../services/axios";
 import "../../styles/personal.css";
@@ -6,9 +7,11 @@ import { FiPlus, FiEdit2, FiTrash2, FiUserPlus } from "react-icons/fi";
 import { MdPerson } from "react-icons/md";
 import Toast from "../../components/ui/Toast";
 import ModalPortal from "../../components/ui/ModalPortal";
+import LoadingScreen from "../../components/ui/LoadingScreen";
 import CreatePersonalModal from "./CreatePersonalModal";
 import EditPersonalModal from "./EditPersonalModal";
 import AsignarGimnasioModal from "./AsignarGimnasioModal";
+import usePermissions from "../../hooks/usePermissions";
 
 const getInitials = (p) =>
   `${p.nombre?.[0] ?? ""}${p.apellido_paterno?.[0] ?? ""}`.toUpperCase();
@@ -19,6 +22,10 @@ const getNombre = (p) =>
 function Personal() {
 
   const [personal, setPersonal] = useState([]);
+  const navigate = useNavigate();
+
+  const { can, FEATURES, getUpgradeMessage, loading: permissionsLoading } = usePermissions();
+  const canAccessPersonalModule = can(FEATURES.PERSONAL_MODULE);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("activos");
   const [tabDetalle, setTabDetalle] = useState("horarios");
@@ -140,6 +147,29 @@ function Personal() {
     }
   };
 
+  if (permissionsLoading) {
+    return <LoadingScreen message="Cargando personal..." />;
+  }
+
+  if (!canAccessPersonalModule) {
+    return (
+      <DashboardLayout>
+        <section className="page-header">
+          <div>
+            <p className="eyebrow">Gestión de personal</p>
+            <h1>Módulo no disponible</h1>
+            <p className="subtitle">{getUpgradeMessage(FEATURES.PERSONAL_MODULE)}</p>
+          </div>
+          <button className="btn btn-primary" onClick={() => navigate("/planes")}>Mejorar plan</button>
+        </section>
+      </DashboardLayout>
+    );
+  }
+
+  if (loading) {
+    return <LoadingScreen message="Cargando personal..." />;
+  }
+
   return (
     <DashboardLayout>
 
@@ -178,9 +208,7 @@ function Personal() {
           </div>
 
           <div className="personal-items">
-            {loading ? (
-              <p className="personal-empty">Cargando...</p>
-            ) : listaActual.length === 0 ? (
+            {listaActual.length === 0 ? (
               <p className="personal-empty">
                 No hay instructores {tab === "activos" ? "activos" : "inactivos"}.
               </p>

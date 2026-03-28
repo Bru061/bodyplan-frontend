@@ -5,7 +5,8 @@ import { useEffect, useRef, useState } from "react";
 import { getMyGym } from "../../services/gymService";
 import { useAuth } from "../../core/context/AuthContext";
 import Chart from "chart.js/auto";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import usePermissions from "../../hooks/usePermissions"
 
 
 function Dashboard() {
@@ -15,6 +16,14 @@ function Dashboard() {
   const { user } = useAuth();
   const chartRef = useRef(null);
   const chartInstanceRef = useRef(null);
+  const clientesChartRef = useRef(null);
+  const clientesChartInstanceRef = useRef(null);
+  const gimnasiosChartRef = useRef(null);
+  const gimnasiosChartInstanceRef = useRef(null);
+  const navigate = useNavigate();
+
+  const { can, FEATURES, getUpgradeMessage } = usePermissions();
+  const advancedStatsEnabled = can(FEATURES.ADVANCED_STATS);
 
   useEffect(() => {
     const checkGym = async () => {
@@ -29,7 +38,7 @@ function Dashboard() {
   }, [user]);
 
   useEffect(() => {
-    if (loading || !chartRef.current) return;
+    if (loading || !chartRef.current || !advancedStatsEnabled ) return;
 
     if (chartInstanceRef.current) {
       chartInstanceRef.current.destroy();
@@ -98,7 +107,113 @@ function Dashboard() {
       }
     };
 
-  }, [loading, dashboard.chartData]);
+  }, [loading, dashboard.chartData, advancedStatsEnabled]);
+
+  useEffect(() => {
+    if (loading || !advancedStatsEnabled || !clientesChartRef.current) return;
+
+    if (clientesChartInstanceRef.current) {
+      clientesChartInstanceRef.current.destroy();
+    }
+
+    const ctx = clientesChartRef.current.getContext("2d");
+
+    clientesChartInstanceRef.current = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: dashboard.chartData.labels,
+        datasets: [
+          {
+            label: "Clientes activos",
+            data: dashboard.chartData.clientesActivos,
+            borderColor: "rgba(14, 165, 233, 1)",
+            backgroundColor: "rgba(14, 165, 233, 0.1)",
+            borderWidth: 2,
+            tension: 0.35,
+            fill: true,
+          },
+          {
+            label: "Clientes inactivos",
+            data: dashboard.chartData.clientesInactivos,
+            borderColor: "rgba(244, 63, 94, 1)",
+            backgroundColor: "rgba(244, 63, 94, 0.08)",
+            borderWidth: 2,
+            tension: 0.35,
+            fill: true,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        interaction: { mode: "index", intersect: false },
+        plugins: {
+          legend: {
+            display: true,
+            position: "top",
+            labels: { usePointStyle: true, boxWidth: 8, font: { size: 12 } },
+          },
+        },
+        scales: {
+          y: { beginAtZero: true, ticks: { stepSize: 1 } },
+          x: { grid: { display: false } },
+        },
+      },
+    });
+
+    return () => {
+      if (clientesChartInstanceRef.current) {
+        clientesChartInstanceRef.current.destroy();
+      }
+    };
+  }, [loading, advancedStatsEnabled, dashboard.chartData]);
+
+  useEffect(() => {
+    if (loading || !advancedStatsEnabled || !gimnasiosChartRef.current) return;
+
+    if (gimnasiosChartInstanceRef.current) {
+      gimnasiosChartInstanceRef.current.destroy();
+    }
+
+    const ctx = gimnasiosChartRef.current.getContext("2d");
+
+    gimnasiosChartInstanceRef.current = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: dashboard.chartData.gimnasiosRankingLabels,
+        datasets: [
+          {
+            label: "Clientes por gimnasio",
+            data: dashboard.chartData.gimnasiosRankingValores,
+            backgroundColor: [
+              "rgba(37, 99, 235, 0.8)",
+              "rgba(14, 165, 233, 0.8)",
+              "rgba(16, 185, 129, 0.8)",
+              "rgba(245, 158, 11, 0.8)",
+              "rgba(236, 72, 153, 0.8)",
+            ],
+            borderRadius: 8,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        indexAxis: "y",
+        plugins: {
+          legend: { display: false },
+        },
+        scales: {
+          x: { beginAtZero: true, ticks: { stepSize: 1 } },
+          y: { grid: { display: false } },
+        },
+      },
+    });
+
+    return () => {
+      if (gimnasiosChartInstanceRef.current) {
+        gimnasiosChartInstanceRef.current.destroy();
+      }
+    };
+  }, [loading, advancedStatsEnabled, dashboard.chartData]);
 
   return (
     <DashboardLayout>
@@ -183,7 +298,15 @@ function Dashboard() {
             </div>
           </div>
 
-          {loading ? (
+          {!advancedStatsEnabled ? (
+            <div style={{ padding: "1.5rem 0" }}>
+              <p style={{ marginBottom: "0.75rem", color: "var(--text-secondary)" }}>
+                {getUpgradeMessage(FEATURES.ADVANCED_STATS)}
+              </p>
+
+              <button className="btn btn-primary" onClick={() => navigate("/planes")}>Mejorar plan</button>
+            </div>
+          ) : loading ? (
             <p style={{ padding: "2rem", color: "var(--text-secondary)" }}>
               Cargando datos...
             </p>
@@ -191,6 +314,46 @@ function Dashboard() {
             <canvas ref={chartRef} height="100" />
           )}
         </article>
+
+        {advancedStatsEnabled && (
+          <>
+            <article className="panel chart-panel">
+              <div className="panel-header">
+                <div>
+                  <h2>Clientes activos vs inactivos</h2>
+                  <p>Comparativo mensual por estado.</p>
+                </div>
+              </div>
+              {loading ? (
+                <p style={{ padding: "2rem", color: "var(--text-secondary)" }}>
+                  Cargando datos...
+                </p>
+              ) : (
+                <canvas ref={clientesChartRef} height="120" />
+              )}
+            </article>
+
+            <article className="panel chart-panel">
+              <div className="panel-header">
+                <div>
+                  <h2>Gimnasios más activos</h2>
+                  <p>Top gimnasios con mayor cantidad de clientes registrados.</p>
+                </div>
+              </div>
+              {loading ? (
+                <p style={{ padding: "2rem", color: "var(--text-secondary)" }}>
+                  Cargando datos...
+                </p>
+              ) : dashboard.chartData.gimnasiosRankingLabels.length === 0 ? (
+                <p style={{ padding: "2rem", color: "var(--text-secondary)" }}>
+                  Aún no hay datos suficientes para mostrar ranking de gimnasios.
+                </p>
+              ) : (
+                <canvas ref={gimnasiosChartRef} height="120" />
+              )}
+            </article>
+          </>
+        )}
       </section>
 
     </DashboardLayout>

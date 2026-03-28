@@ -8,6 +8,7 @@ import api from "../../services/axios";
 import "../../styles/clientes.css";
 import AddClienteModal from "./AddClienteModal";
 import * as XLSX from "xlsx";
+import usePermissions from "../../hooks/usePermissions"
 
 const LIMIT = 5;
 
@@ -50,6 +51,9 @@ function Clientes() {
     inactivos: 0,
     conMembresia: 0,
   });
+
+  const { can, FEATURES, getUpgradeMessage } = usePermissions();
+  const fullClientManagementEnabled = can(FEATURES.FULL_CLIENT_MANAGEMENT);
 
   const cargarStats = async () => {
     try {
@@ -123,6 +127,11 @@ function Clientes() {
   };
 
   const exportClientes = async () => {
+    if (!fullClientManagementEnabled) {
+      setGymError(getUpgradeMessage(FEATURES.FULL_CLIENT_MANAGEMENT));
+      return;
+    }
+
     try {
       const res = await api.get("/clientes", { params: { limit: 9999 } });
       const raw = res.data.clientes || [];
@@ -164,6 +173,11 @@ function Clientes() {
   );
 
   const handleAbrirModal = async () => {
+    if (!fullClientManagementEnabled) {
+      setGymError(getUpgradeMessage(FEATURES.FULL_CLIENT_MANAGEMENT));
+      return;
+    }
+
     try {
       setGymError("");
       const res = await api.get("/gym");
@@ -190,7 +204,11 @@ function Clientes() {
           </p>
         </div>
         <div className="header-actions">
-          <button type="button" className="btn btn-primary" onClick={exportClientes}>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={exportClientes}
+            >
             <FiDownload />
             Exportar reporte
           </button>

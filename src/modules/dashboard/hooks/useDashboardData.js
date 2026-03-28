@@ -20,7 +20,11 @@ export const useDashboardData = (meses = 6) => {
     chartData: {
       labels: [],
       membresiasIniciadas: [],
-      membresiasActivas: []
+      membresiasActivas: [],
+      clientesActivos: [],
+      clientesInactivos: [],
+      gimnasiosRankingLabels: [],
+      gimnasiosRankingValores: []
     }
   });
 
@@ -98,6 +102,24 @@ export const useDashboardData = (meses = 6) => {
           }).length;
         });
 
+        const clientesActivosSerie = periodos.map(({ anio, mes }) =>
+          clientes.filter(c => {
+            const f = new Date(c.fecha_inicio);
+            return f.getFullYear() === anio && f.getMonth() === mes && c.estado === "activa";
+          }).length
+        );
+
+        const clientesInactivosSerie = periodos.map(({ anio, mes }) =>
+          clientes.filter(c => {
+            const f = new Date(c.fecha_inicio);
+            return f.getFullYear() === anio && f.getMonth() === mes && c.estado !== "activa";
+          }).length
+        );
+
+        const rankingGimnasios = Object.values(conteoPorGym)
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 5);
+
         setDashboard({
           metrics: {
             clientesActivos: stats.clientes_activos   || 0,
@@ -112,7 +134,11 @@ export const useDashboardData = (meses = 6) => {
           chartData: {
             labels: periodos.map(p => p.label),
             membresiasIniciadas,
-            membresiasActivas: membresiasActivasSerie
+            membresiasActivas: membresiasActivasSerie,
+            clientesActivos: clientesActivosSerie,
+            clientesInactivos: clientesInactivosSerie,
+            gimnasiosRankingLabels: rankingGimnasios.map(g => g.nombre),
+            gimnasiosRankingValores: rankingGimnasios.map(g => g.count)
           }
         });
 

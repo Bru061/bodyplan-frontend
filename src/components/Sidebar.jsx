@@ -5,6 +5,7 @@ import { FaDumbbell } from "react-icons/fa";
 import { useAuth } from "../core/context/AuthContext";
 import api from "../services/axios";
 import logo from "../assets/logo.png";
+import usePermissions from "../hooks/usePermissions";
 
 const NAV_ITEMS = [
   { to: "/dashboard", icon: <MdDashboard size={20} />, label: "Dashboard" },
@@ -21,6 +22,10 @@ function Sidebar({ open, onClose }) {
 
   const { user, signOut } = useAuth();
   const [planNombre, setPlanNombre] = useState(null);
+
+  const { can, FEATURES, loading: permissionsLoading } = usePermissions();
+  const canAccessPersonalModule = can(FEATURES.PERSONAL_MODULE);
+  const canRenderPersonalNav = permissionsLoading || canAccessPersonalModule;
 
   useEffect(() => {
     const fetchPlan = async () => {
@@ -70,7 +75,9 @@ function Sidebar({ open, onClose }) {
         <nav className="sidebar-nav">
           <p className="sidebar-section-label">Principal</p>
           <ul>
-            {NAV_ITEMS.map(({ to, icon, label }) => (
+            {NAV_ITEMS
+            .filter((item) => item.to !== "/personal" || canRenderPersonalNav)
+            .map(({ to, icon, label }) => (
               <li key={to}>
                 <NavLink
                   to={to}

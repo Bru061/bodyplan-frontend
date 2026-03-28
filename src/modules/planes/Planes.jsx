@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/axios";
 import "../../styles/planes.css";
+import usePermissions from "../../hooks/usePermissions";
 
 const ACCESOS_HARDCODED = {
   1: [ // Prueba Gratis
@@ -42,6 +43,8 @@ function Planes() {
   const [procesando, setProcesando] = useState(null);
   const [error, setError] = useState("");
 
+  const { trialUsed, refreshPermissions } = usePermissions();
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -52,6 +55,7 @@ function Planes() {
           const resPlan = await api.get("/proveedor/mi-plan");
           if (resPlan.data.plan_activo?.estado === "activa") {
             setPlanActivo(resPlan.data.plan_activo);
+            refreshPermissions();
           }
         } catch {
         }
@@ -64,15 +68,23 @@ function Planes() {
       }
     };
     fetchData();
-  }, []);
+  }, [refreshPermissions]);
 
   const handleSeleccionar = async (plan) => {
     setError("");
+
+    const esTrial = parseFloat(plan.precio) === 0 || /trial|prueba/i.test(plan.nombre || "");
+    if (esTrial && trialUsed && !esPlanActual(plan)) {
+      setError("El plan de prueba solo puede activarse una vez por usuario.");
+      return;
+    }
+
     setProcesando(plan.id_plan);
 
     try {
       const res = await api.post("/pagos/premium/web/intent", {
-        id_plan: plan.id_plan
+        id_plan: plan.id_plan,
+        renovacion_automatica: false
       });
 
       if (res.data.message) {
@@ -193,7 +205,8 @@ function Planes() {
               <button
                 className={`plan-btn ${gratuito ? "plan-btn-ghost" : ""}`}
                 onClick={() => handleSeleccionar(plan)}
-                disabled={activo || cargando || !!procesando}
+                disabled={activo || cargando || !!procesando || (gratuito && trialUsed && !activo)}
+                title={gratuito && trialUsed && !activo ? "Este plan ya fue usado anteriormente" : ""}
               >
                 {activo    ? "Plan actual"
                 : cargando ? "Procesando..."

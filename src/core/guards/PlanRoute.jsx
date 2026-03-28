@@ -30,7 +30,7 @@ export default function PlanRoute() {
         const planActivo = res.data.plan_activo;
         setTienePlan(planActivo?.estado === "activa");
       } catch {
-        setTienePlan(true);
+        setTienePlan(false);
       } finally {
         setVerificando(false);
       }
