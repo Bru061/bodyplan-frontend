@@ -3,7 +3,7 @@ import axios from "axios";
 const api = axios.create({
   baseURL: import.meta.env.PROD
     ? "/api"
-    : "http://bodyplan-api.giize.com/api"
+    : "https://bodyplan-api.giize.com/api"
 });
 
 // INTERCEPTOR → agrega token automáticamente
