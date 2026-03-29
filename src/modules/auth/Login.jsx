@@ -41,14 +41,21 @@ function Login() {
         password: form.password,
       });
 
-      const resGyms = await api.get("/gym");
-      const gimnasios = resGyms.data.gimnasios || [];
+      const [resPlan, resGyms] = await Promise.allSettled([
+        api.get("/proveedor/mi-plan"),
+        api.get("/gym"),
+      ]);
 
-      if (gimnasios.length === 0) {
-        navigate("/mis-gimnasios");
-      } else {
-        navigate("/dashboard");
+      const planActivo = resPlan.status === "fulfilled" ? resPlan.value.data?.plan_activo : null;
+      const tienePlanActivo = planActivo?.estado === "activa";
+
+      if (!tienePlanActivo) {
+        navigate("/planes");
+        return;
       }
+
+      const gimnasios = resGyms.status === "fulfilled" ? (resGyms.value.data.gimnasios || []) : [];
+      navigate(gimnasios.length === 0 ? "/mis-gimnasios" : "/dashboard");
 
     } catch (err) {
       const msg =
@@ -66,8 +73,10 @@ function Login() {
       setError("");
       const result = await signInWithPopup(auth, provider);
       const idToken = await result.user.getIdToken();
-      const response = await signInWithGoogle(idToken);
-      navigate(response.redirectTo);
+      await signInWithGoogle(idToken);
+      const resPlan = await api.get("/proveedor/mi-plan");
+      const tienePlanActivo = resPlan.data?.plan_activo?.estado === "activa";
+      navigate(tienePlanActivo ? "/dashboard" : "/planes");
     } catch (error) {
       console.error(error);
       setError("Error al iniciar sesión con Google");

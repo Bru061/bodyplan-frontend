@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import api from "../../services/axios";
 import "../../styles/planes.css";
 import usePermissions from "../../hooks/usePermissions";
@@ -37,6 +37,7 @@ const ACCESOS_HARDCODED = {
 function Planes() {
 
   const navigate = useNavigate();
+  const location = useLocation();
   const [planes, setPlanes] = useState([]);
   const [planActivo, setPlanActivo] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -140,7 +141,13 @@ function Planes() {
 
       <button
         className="planes-back"
-        onClick={() => navigate(-1)}
+        onClick={() => {
+          if (window.history.length > 1) {
+            navigate(-1);
+          } else {
+            navigate(location.state?.from || "/dashboard");
+          }
+        }}
       >
         ← Atrás
       </button>

@@ -10,12 +10,12 @@ export default defineConfig({
     server: {
     proxy: {
       "/api": {
-        target: "http://bodyplan-api.giize.com:3000",
+        target: "https://bodyplan-api.giize.com",
         changeOrigin: true,
         secure: false
       },
       "/uploads": {
-        target: "http://bodyplan-api.giize.com:3000",
+        target: "https://bodyplan-api.giize.com",
         changeOrigin: true,
         secure: false
       }

@@ -161,6 +161,28 @@ function CreateGym() {
       setLoading(true);
       setError("");
 
+      const [resActivos, resInactivos] = await Promise.all([api.get("/gym"), api.get("/gym/desactivados")]);
+      const todos = [
+        ...(resActivos.data.gimnasios || []),
+        ...(resInactivos.data.gimnasios || []),
+      ];
+
+      const normalizar = (v) => (v || "").toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+      const keyNueva = [form.direccion, form.municipio, form.estado, form.codigo_postal].map(normalizar).join("|");
+
+      const duplicadoDir = todos.some((g) => {
+        const u = g.Ubicacion || g.ubicacion || {};
+        const keyExistente = [u.direccion, u.municipio, u.estado, u.codigo_postal].map(normalizar).join("|");
+        return keyExistente && keyExistente === keyNueva;
+      });
+
+      if (duplicadoDir) {
+        setStep(1);
+        setErrors({ direccion: "Ya existe un gimnasio registrado en esta misma dirección." });
+        setLoading(false);
+        return;
+      }
+
       const formData = new FormData();
       formData.append("nombre",      form.nombre);
       formData.append("descripcion", form.descripcion);

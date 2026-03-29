@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { MdNotificationsNone, MdNotifications } from "react-icons/md";
 import { useNotificaciones } from "../../hooks/useNotificaciones";
 import { marcarLeida } from "../../services/notificationService";
@@ -11,8 +12,8 @@ function NotificationBell() {
   const [notifs, setNotifs]         = useState([]);
   const [loading, setLoading]       = useState(false);
   const ref = useRef(null);
+  const navigate = useNavigate();
 
-  // Cerrar al hacer click fuera
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (ref.current && !ref.current.contains(e.target)) setOpen(false);
@@ -39,6 +40,16 @@ function NotificationBell() {
       fetchNotificaciones();
       resetNoLeidas();
     }
+  };
+
+  const resolveRoute = (n) => {
+    const text = `${n?.titulo || ""} ${n?.mensaje || ""}`.toLowerCase();
+    if (text.includes("rutina")) return "/rutinas";
+    if (text.includes("plan")) return "/planes";
+    if (text.includes("cliente")) return "/clientes";
+    if (text.includes("gimnasio")) return "/mis-gimnasios";
+    if (text.includes("pago")) return "/perfil";
+    return null;
   };
 
   const handleMarcarLeida = async (id) => {
@@ -85,7 +96,14 @@ function NotificationBell() {
                 <div
                   key={n.id_notificacion}
                   className={`notif-item ${!n.leida ? "notif-item-unread" : ""}`}
-                  onClick={() => !n.leida && handleMarcarLeida(n.id_notificacion)}
+                  onClick={async () => {
+                    if (!n.leida) await handleMarcarLeida(n.id_notificacion);
+                    const ruta = resolveRoute(n);
+                    if (ruta) {
+                      setOpen(false);
+                      navigate(ruta);
+                    }
+                  }}
                 >
                   <p className="notif-item-title">{n.titulo}</p>
                   {n.mensaje && <p className="notif-item-msg">{n.mensaje}</p>}

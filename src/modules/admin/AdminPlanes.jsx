@@ -21,6 +21,13 @@ function AdminPlanes() {
   const [confirmToggle, setConfirmToggle] = useState(null);
 
   const showToast = (message, type = "success") => setToast({ message, type });
+  const getUsuariosConPlan = (plan) => (
+    plan?.usuarios_activos ??
+    plan?.usuarios_con_plan ??
+    plan?.suscripciones_activas ??
+    plan?.usuariosComprados ??
+    0
+  );
 
   const fetchPlanes = async () => {
     try {
@@ -169,7 +176,14 @@ function AdminPlanes() {
                     </button>
                     <button
                       className={`btn ${plan.activo ? "btn-danger" : "btn-success"}`}
-                      onClick={() => setConfirmToggle(plan)}
+                      onClick={() => {
+                        if (plan.activo && getUsuariosConPlan(plan) > 0) {
+                          showToast("No puedes desactivar este plan porque tiene usuarios activos.", "error");
+                          return;
+                        }
+                        setConfirmToggle(plan);
+                      }}
+                      title={plan.activo && getUsuariosConPlan(plan) > 0 ? "Plan en uso" : ""}
                     >
                       {plan.activo ? "Desactivar" : "Activar"}
                     </button>

@@ -11,6 +11,7 @@ import LoadingScreen from "../../components/ui/LoadingScreen";
 import CreatePersonalModal from "./CreatePersonalModal";
 import EditPersonalModal from "./EditPersonalModal";
 import AsignarGimnasioModal from "./AsignarGimnasioModal";
+import EditHorarioModal from "./EditHorarioModal";
 import usePermissions from "../../hooks/usePermissions";
 
 const getInitials = (p) =>
@@ -104,6 +105,7 @@ function Personal() {
   const activos    = personal.filter(p => p.activo !== false);
   const inactivos  = personal.filter(p => p.activo === false);
   const listaActual = tab === "activos" ? activos : inactivos;
+  const instructorInactivo = seleccionado?.activo === false;
 
   const handleToggle = async () => {
     if (!confirmModal) return;
@@ -262,16 +264,18 @@ function Personal() {
                   <button
                     className="btn btn-ghost"
                     title="Editar datos"
-                    onClick={() => setShowEdit(true)}
+                    onClick={() => !instructorInactivo && setShowEdit(true)}
+                    disabled={instructorInactivo}
                   >
-                    <FiEdit2 size={15} /> Editar
+                    <FiEdit2 size={15} /> {instructorInactivo ? "No editable" : "Editar"}
                   </button>
                   <button
                     className="btn btn-ghost"
                     title="Asignar a gimnasio"
-                    onClick={() => setShowAsignar(true)}
+                    onClick={() => !instructorInactivo && setShowAsignar(true)}
+                    disabled={instructorInactivo}
                   >
-                    <FiUserPlus size={15} /> Asignar gimnasio
+                    <FiUserPlus size={15} /> {instructorInactivo ? "No asignable" : "Asignar gimnasio"}
                   </button>
                   <button
                     className={`btn ${seleccionado.activo !== false ? "btn-danger" : "btn-success"}`}
@@ -284,6 +288,12 @@ function Personal() {
                   </button>
                 </div>
               </div>
+
+              {instructorInactivo && (
+                <div className="modal-error gym-error" style={{ marginBottom: "1rem" }}>
+                  Este instructor está inactivo. No se puede editar ni asignar horarios o gimnasios hasta activarlo.
+                </div>
+              )}
 
               <div className="personal-detail-body">
 
@@ -324,7 +334,7 @@ function Personal() {
                         <div key={gymId} className="personal-gym-section">
                           <div className="personal-gym-title">
                             <span>{nombre}</span>
-                            <button onClick={() => setShowAsignar(true)}>+ Agregar día</button>
+                            <button onClick={() => !instructorInactivo && setShowAsignar(true)} disabled={instructorInactivo}>+ Agregar día</button>
                           </div>
                           {dias.map((h, i) => (
                             <div key={i} className="personal-horario-row">
@@ -336,20 +346,22 @@ function Personal() {
                                 <button
                                   className="icon-btn"
                                   title="Editar horario"
-                                  onClick={() => setEditHorario({
+                                  onClick={() => !instructorInactivo && setEditHorario({
                                     personalId: seleccionado.id_personal,
                                     gimnasioId: gymId,
                                     dia: h.dia_semana,
                                     hora_entrada: h.hora_entrada,
                                     hora_salida: h.hora_salida
                                   })}
+                                disabled={instructorInactivo}
                                 >
                                   <FiEdit2 size={13} />
                                 </button>
                                 <button
                                   className="icon-btn"
                                   title="Eliminar este día"
-                                  onClick={() => handleEliminarDia(seleccionado.id_personal, gymId, h.dia_semana)}
+                                  onClick={() => !instructorInactivo && handleEliminarDia(seleccionado.id_personal, gymId, h.dia_semana)}
+                                  disabled={instructorInactivo}
                                 >
                                   <FiTrash2 size={13} />
                                 </button>
@@ -463,6 +475,18 @@ function Personal() {
           onAsignado={async () => {
             await fetchPersonal();
             showToast("Horario asignado correctamente.");
+          }}
+        />
+      )}
+
+      {editHorario && (
+        <EditHorarioModal
+          data={editHorario}
+          onClose={() => setEditHorario(null)}
+          onUpdated={async () => {
+            setEditHorario(null);
+            await fetchPersonal();
+            showToast("Horario actualizado correctamente.");
           }}
         />
       )}

@@ -3,7 +3,7 @@ import { mostrarToast, contarNoLeidas } from "../services/notificationService";
 import { onMensajeForeground } from "../config/firebase";
 import { useAuth } from "../core/context/AuthContext";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://bodyplan-api.giize.com:3000/api";
+const API_BASE = "/api";
 
 export const useNotificaciones = () => {
 

@@ -16,6 +16,7 @@ function RutinaCard({ rutina, onEdit, clientesCount, refresh, refreshStats }) {
   const [toast, setToast] = useState("");
   const [loading, setLoading] = useState(false);
   const [instructores, setInstructores] = useState([]);
+  const [clientesAsignados, setClientesAsignados] = useState([]);
   const esActiva = rutina.activo;
   const tieneAsignacionesActivas = esActiva && clientesCount > 0;
 
@@ -25,6 +26,7 @@ function RutinaCard({ rutina, onEdit, clientesCount, refresh, refreshStats }) {
         const res = await api.get(`/rutinas/${rutina.id_rutina}/clientes`);
         const asignaciones = res.data?.clientes || [];
         const mapa = {};
+        const clientesMap = {};
         for (const a of asignaciones) {
           if (a.encargado && !mapa[a.encargado.id_personal]) {
             mapa[a.encargado.id_personal] = [
@@ -32,8 +34,12 @@ function RutinaCard({ rutina, onEdit, clientesCount, refresh, refreshStats }) {
               a.encargado.apellido_paterno
             ].filter(Boolean).join(" ");
           }
+          const cliente = a.cliente || a.usuario || a.Cliente || a.Usuario || null;
+          const nombreCliente = [cliente?.nombre, cliente?.apellido_paterno].filter(Boolean).join(" ").trim();
+          if (nombreCliente) clientesMap[nombreCliente.toLowerCase()] = nombreCliente;
         }
         setInstructores(Object.values(mapa));
+        setClientesAsignados(Object.values(clientesMap));
       } catch (err) {
       }
     };
@@ -121,6 +127,12 @@ function RutinaCard({ rutina, onEdit, clientesCount, refresh, refreshStats }) {
           <p className="routine-meta">
             Clientes con asignación activa: <strong>{clientesCount}</strong>
           </p>
+
+          {clientesAsignados.length > 0 && (
+            <p className="routine-instructor">
+              👥 Clientes: <strong>{clientesAsignados.slice(0, 4).join(", ")}{clientesAsignados.length > 4 ? ` +${clientesAsignados.length - 4}` : ""}</strong>
+            </p>
+          )}          
 
           {instructores.length > 0 && (
             <p className="routine-instructor">

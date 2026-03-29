@@ -37,6 +37,29 @@ function EditPersonalModal({ personal, onClose, onUpdated }) {
     try {
       setLoading(true);
       setError("");
+
+      const existenteRes = await api.get("/personal");
+      const existentes = (existenteRes.data.personal || []).filter((p) => p.id_personal !== personal.id_personal);
+      const nombreCompletoNuevo = [form.nombre, form.apellido_paterno, form.apellido_materno]
+        .filter(Boolean)
+        .join(" ")
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, " ");
+
+      const duplicado = existentes.some((p) => [p.nombre, p.apellido_paterno, p.apellido_materno]
+        .filter(Boolean)
+        .join(" ")
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, " ") === nombreCompletoNuevo);
+
+      if (duplicado) {
+        setError("Ya existe un instructor con ese nombre completo.");
+        setLoading(false);
+        return;
+      }
+      
       await api.put(`/personal/${personal.id_personal}`, {
         nombre: form.nombre.trim(),
         apellido_paterno: form.apellido_paterno.trim(),

@@ -13,7 +13,6 @@ import MiGimnasio from "../../modules/gym/MiGimnasio";
 import MisGimnasios from "../../modules/gym/MisGimnasios";
 import Rutinas from "../../modules/rutinas/rutinas";
 import Personal from "../../modules/personal/Personal";
-import Notificaciones from "../../modules/notificaciones/Notificaciones";
 import Perfil from "../../modules/perfil/perfil";
 import CreateGym from "../../modules/gym/CreateGym";
 import Planes from "../../modules/planes/Planes";
@@ -69,7 +68,6 @@ function AppRouter() {
             <Route path="/gimnasio/:id" element={<MiGimnasio />} />
             <Route path="/rutinas" element={<Rutinas />} />
             <Route path="/personal" element={<Personal />} />
-            <Route path="/notificaciones" element={<Notificaciones />} />
           </Route>
 
         </Route>

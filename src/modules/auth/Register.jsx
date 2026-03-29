@@ -6,6 +6,7 @@ import "../../styles/login.css";
 import { useAuth } from "../../core/context/AuthContext";
 import { auth, provider, signInWithPopup } from "../../config/firebase";
 import { useState } from "react";
+import api from "../../services/axios";
 import { FcGoogle } from "react-icons/fc";
 
 function Register() {
@@ -95,7 +96,9 @@ function Register() {
       const result = await signInWithPopup(auth, provider);
       const idToken = await result.user.getIdToken();
       await signInWithGoogle(idToken);
-      navigate("/mis-gimnasios");
+      const resPlan = await api.get("/proveedor/mi-plan");
+      const tienePlanActivo = resPlan.data?.plan_activo?.estado === "activa";
+      navigate(tienePlanActivo ? "/mis-gimnasios" : "/planes");
     } catch (error) {
       console.error(error);
       setError("Error al iniciar sesión con Google");

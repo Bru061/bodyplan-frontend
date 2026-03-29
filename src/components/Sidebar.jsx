@@ -56,7 +56,13 @@ function Sidebar({ open, onClose }) {
       `Correo: ${user?.correo || ""}\n\n` +
       `Descripción del problema:\n`
     );
-    window.location.href = `mailto:${SOPORTE_EMAIL}?subject=${asunto}&body=${cuerpo}`;
+    const mailto = `mailto:${SOPORTE_EMAIL}?subject=${asunto}&body=${cuerpo}`;
+    const link = document.createElement("a");
+    link.href = mailto;
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (

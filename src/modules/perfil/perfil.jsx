@@ -180,7 +180,10 @@ function Perfil() {
       errors.clabe = "La CLABE debe tener 18 dígitos";
     if (!clabeForm.banco.trim())   errors.banco   = "El banco es obligatorio";
     if (!clabeForm.titular.trim()) errors.titular = "El titular es obligatorio";
-
+    if (clabeForm.banco && !/^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s.-]+$/.test(clabeForm.banco.trim()))
+      errors.banco = "Banco solo permite letras, números, espacios, punto y guion";
+    if (clabeForm.titular && !/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(clabeForm.titular.trim()))
+      errors.titular = "Titular solo permite letras y espacios";
     if (Object.keys(errors).length > 0) { setClabeErrors(errors); return; }
 
     try {
@@ -314,7 +317,7 @@ function Perfil() {
                     type="text"
                     value={clabeForm.banco}
                     onChange={e => {
-                      setClabeForm(prev => ({ ...prev, banco: e.target.value }));
+                      setClabeForm(prev => ({ ...prev, banco: e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s.-]/g, "").slice(0, 60) }));
                       setClabeErrors(prev => ({ ...prev, banco: "" }));
                     }}
                     placeholder="Ej. BBVA, STP, Banorte"
