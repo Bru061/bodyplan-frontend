@@ -13,6 +13,10 @@ function EditFotosModal({ gym, onClose, onUpdated }) {
 
   const showToast = (message, type = "error") => setToast({ message, type });
 
+  const validTypes = ["image/jpeg", "image/png"];
+  const maxSize = 5 * 1024 * 1024;
+  const maxFotos = 5;
+
   const deleteFoto = async () => {
     try {
       setLoading(true);
@@ -79,7 +83,32 @@ function EditFotosModal({ gym, onClose, onUpdated }) {
               multiple
               accept="image/*"
               style={{ display: "none" }}
-              onChange={e => setNewFotos(Array.from(e.target.files))}
+              onChange={e => {
+                const files = Array.from(e.target.files || []);
+                if (!files.length) return;
+
+                if ((gym.fotos?.length || 0) + newFotos.length + files.length > maxFotos) {
+                  showToast(`Máximo ${maxFotos} imágenes permitidas entre actuales y nuevas.`);
+                  e.target.value = "";
+                  return;
+                }
+
+                for (const file of files) {
+                  if (!validTypes.includes(file.type)) {
+                    showToast("Solo se permiten imágenes JPG o PNG");
+                    e.target.value = "";
+                    return;
+                  }
+                  if (file.size > maxSize) {
+                    showToast("Cada imagen debe pesar menos de 5MB");
+                    e.target.value = "";
+                    return;
+                  }
+                }
+
+                setNewFotos(prev => [...prev, ...files].slice(0, maxFotos));
+                e.target.value = "";
+              }}
             />
             <button type="button" className="btn-select" onClick={() => fileRef.current.click()}>
               Seleccionar imágenes
@@ -93,7 +122,19 @@ function EditFotosModal({ gym, onClose, onUpdated }) {
             <div className="selected-files">
               <p className="selected-title">Imágenes seleccionadas:</p>
               <ul>
-                {newFotos.map((f, i) => <li key={i}>{f.name}</li>)}
+                {newFotos.map((f, i) => (
+                  <li key={i} style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>
+                    <span>{f.name}</span>
+                    <button
+                      type="button"
+                      className="btn btn-ghost"
+                      style={{ padding: "0.1rem 0.4rem", fontSize: "0.72rem" }}
+                      onClick={() => setNewFotos(prev => prev.filter((_, idx) => idx !== i))}
+                    >
+                      Quitar
+                    </button>
+                  </li>
+                ))}
               </ul>
             </div>
           )}
@@ -101,7 +142,10 @@ function EditFotosModal({ gym, onClose, onUpdated }) {
           <div className="fotos-grid">
             {gym.fotos?.map(f => (
               <div key={f.id_foto} className="foto-card">
-                <img src={`/uploads/gimnasios/${f.url_foto}`} alt="foto" />
+                <img src={`/uploads/gimnasios/${f.url_foto}`} alt={f.url_foto} />
+                <p style={{ margin: "0.5rem 0", fontSize: "0.78rem", color: "var(--text-secondary)", wordBreak: "break-all" }}>
+                  {f.url_foto}
+                </p>
                 <div className="foto-actions">
                   <button
                     className="btn btn-danger"

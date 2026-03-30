@@ -7,7 +7,7 @@ import { useAuth } from "../../core/context/AuthContext";
 import Chart from "chart.js/auto";
 import { Link, useNavigate } from "react-router-dom";
 import usePermissions from "../../hooks/usePermissions"
-
+import LoadingScreen from "../../components/ui/LoadingScreen";
 
 function Dashboard() {
 
@@ -22,7 +22,7 @@ function Dashboard() {
   const gimnasiosChartInstanceRef = useRef(null);
   const navigate = useNavigate();
 
-  const { can, FEATURES, getUpgradeMessage } = usePermissions();
+  const { can, FEATURES, getUpgradeMessage, loading: permissionsLoading } = usePermissions();
   const advancedStatsEnabled = can(FEATURES.ADVANCED_STATS);
 
   useEffect(() => {
@@ -214,6 +214,10 @@ function Dashboard() {
       }
     };
   }, [loading, advancedStatsEnabled, dashboard.chartData]);
+
+  if (permissionsLoading) {
+    return <LoadingScreen message="Cargando dashboard..." />;
+  }
 
   return (
     <DashboardLayout>

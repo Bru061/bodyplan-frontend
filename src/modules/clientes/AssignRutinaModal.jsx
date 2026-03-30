@@ -52,12 +52,30 @@ function AssignRutinaModal({ cliente, onClose, onAssigned }) {
     };
 
     const fetchPersonal = async () => {
-      if (!cliente?.id_gimnasio) return;
+      const gymIds = [
+        cliente?.id_gimnasio,
+        ...(cliente?.gimnasiosActivosIds || []),
+      ].filter(Boolean);
+
+      const unicos = [...new Set(gymIds.map(Number))];
+      if (unicos.length === 0) return;
+
       try {
-        const res = await api.get(`/personal/gimnasio/${cliente.id_gimnasio}`);
-        const lista = res.data.personal || [];
-        setPersonalExistente(lista);
-        setPersonalPersonalizada(lista);
+        const responses = await Promise.all(unicos.map((idGym) => api.get(`/personal/gimnasio/${idGym}`)));
+        const merged = [];
+        const seen = new Set();
+
+        responses.forEach((r) => {
+          (r.data.personal || []).forEach((p) => {
+            if (!seen.has(p.id_personal)) {
+              seen.add(p.id_personal);
+              merged.push(p);
+            }
+          });
+        });
+
+        setPersonalExistente(merged);
+        setPersonalPersonalizada(merged);
       } catch (err) {
         console.error("Error cargando personal:", err);
       }
@@ -65,7 +83,7 @@ function AssignRutinaModal({ cliente, onClose, onAssigned }) {
 
     fetchRutinas();
     fetchPersonal();
-  }, [cliente?.id_gimnasio]);
+  }, [cliente?.id_gimnasio, cliente?.gimnasiosActivosIds]);
 
   const handleTabChange = (t) => {
     setTab(t);

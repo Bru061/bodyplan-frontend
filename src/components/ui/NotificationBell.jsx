@@ -4,6 +4,7 @@ import { MdNotificationsNone, MdNotifications } from "react-icons/md";
 import { useNotificaciones } from "../../hooks/useNotificaciones";
 import { marcarLeida } from "../../services/notificationService";
 import api from "../../services/axios";
+import { useAuth } from "../../core/context/AuthContext";
 
 function NotificationBell() {
 
@@ -13,6 +14,7 @@ function NotificationBell() {
   const [loading, setLoading]       = useState(false);
   const ref = useRef(null);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -44,13 +46,25 @@ function NotificationBell() {
 
   const resolveRoute = (n) => {
     const text = `${n?.titulo || ""} ${n?.mensaje || ""}`.toLowerCase();
-    if (text.includes("rutina")) return "/rutinas";
+    const esAdmin = user?.role === "admin";
+
+    if (esAdmin) {
+      if (text.includes("reembolso") || text.includes("suscrip")) return "/admin/actividad";
+      if (text.includes("plan")) return "/admin/planes";
+      if (text.includes("usuario")) return "/admin/usuarios";
+      if (text.includes("referencia") || text.includes("clabe") || text.includes("banc")) return "/admin/referencias";
+      if (text.includes("pago") || text.includes("finanza")) return "/admin/finanzas";
+      return null;
+    }
+
+    if (text.includes("reembolso") || text.includes("suscrip")) return "/notificaciones";
     if (text.includes("plan")) return "/planes";
     if (text.includes("cliente")) return "/clientes";
     if (text.includes("gimnasio")) return "/mis-gimnasios";
     if (text.includes("pago")) return "/perfil";
     return null;
   };
+
 
   const handleMarcarLeida = async (id) => {
     await marcarLeida(id);
@@ -98,11 +112,8 @@ function NotificationBell() {
                   className={`notif-item ${!n.leida ? "notif-item-unread" : ""}`}
                   onClick={async () => {
                     if (!n.leida) await handleMarcarLeida(n.id_notificacion);
-                    const ruta = resolveRoute(n);
-                    if (ruta) {
-                      setOpen(false);
-                      navigate(ruta);
-                    }
+                    setOpen(false);
+                    navigate(resolveRoute(n));
                   }}
                 >
                   <p className="notif-item-title">{n.titulo}</p>

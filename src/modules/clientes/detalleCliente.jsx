@@ -71,6 +71,10 @@ function DetalleCliente() {
         const data = res.data.cliente;
         const usuario = data.usuario;
         const suscripcion = data.suscripciones?.find(s => s.estado === "activa");
+        const gimnasiosActivosIds = (data.suscripciones || [])
+          .filter(s => s.estado === "activa")
+          .map(s => s.gimnasio?.id_gimnasio)
+          .filter(Boolean);
 
         setHistorial(data.suscripciones || []);
         setCliente({
@@ -84,7 +88,8 @@ function DetalleCliente() {
             ? new Date(suscripcion.fecha_inicio).toLocaleDateString()
             : "Sin registro",
           membresia: suscripcion?.membresia?.nombre || "Sin membresía",
-          estado: suscripcion?.estado === "activa" ? "Activo" : "Inactivo"
+          estado: suscripcion?.estado === "activa" ? "Activo" : "Inactivo",
+          gimnasiosActivosIds
         });
       } catch (error) {
         console.error("Error cargando cliente", error);

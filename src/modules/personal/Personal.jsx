@@ -47,7 +47,9 @@ function Personal() {
     try {
       setLoading(true);
       const res = await api.get("/personal");
-      setPersonal(res.data.personal || []);
+      const lista = res.data.personal || [];
+      setPersonal(lista);
+      setSeleccionado(prev => prev ? (lista.find(p => p.id_personal === prev.id_personal) || null) : prev);
     } catch (err) {
       console.error("Error cargando personal", err);
       showToast("Error cargando el personal.", "error");
@@ -86,8 +88,10 @@ function Personal() {
       }
 
       setRutinasInstructor(resultado);
+      return resultado;
     } catch (err) {
       console.error("Error cargando rutinas del instructor", err);
+      return [];
     } finally {
       setLoadingRutinas(false);
     }
@@ -106,6 +110,29 @@ function Personal() {
   const inactivos  = personal.filter(p => p.activo === false);
   const listaActual = tab === "activos" ? activos : inactivos;
   const instructorInactivo = seleccionado?.activo === false;
+
+  const solicitarCambioEstado = async (item) => {
+    const accion = item.activo !== false ? "desactivar" : "activar";
+
+    if (accion === "desactivar") {
+      if (loadingRutinas) {
+        showToast("Aún estamos validando rutinas del instructor. Espera un momento.", "error");
+        return;
+      }
+
+      const rutinasActuales = await fetchRutinasInstructor(item.id_personal);
+      const activas = (rutinasActuales || []).filter(r => ["pendiente", "iniciada"].includes(r.estado_asignacion));
+      if (activas.length > 0) {
+        showToast(
+          `No puedes desactivar a ${getNombre(item)} porque supervisa ${activas.length} rutina${activas.length > 1 ? "s" : ""} activa${activas.length > 1 ? "s" : ""}.`,
+          "error"
+        );
+        return;
+      }
+    }
+
+    setConfirmModal({ item, accion });
+  };
 
   const handleToggle = async () => {
     if (!confirmModal) return;
@@ -279,12 +306,10 @@ function Personal() {
                   </button>
                   <button
                     className={`btn ${seleccionado.activo !== false ? "btn-danger" : "btn-success"}`}
-                    onClick={() => setConfirmModal({
-                      item: seleccionado,
-                      accion: seleccionado.activo !== false ? "desactivar" : "activar"
-                    })}
+                    onClick={() => solicitarCambioEstado(seleccionado)}
+                    disabled={loadingRutinas && seleccionado.activo !== false}
                   >
-                    {seleccionado.activo !== false ? "Desactivar" : "Activar"}
+                    {loadingRutinas && seleccionado.activo !== false ? "Validando..." : seleccionado.activo !== false ? "Desactivar" : "Activar"}
                   </button>
                 </div>
               </div>
