@@ -39,7 +39,7 @@ function TabReembolsos({ showToast }) {
   return (
     <div className="admin-table-panel">
       <div className="admin-table-header">
-        <h2>Solicitudes de reembolso ({reembolsos.length})</h2>
+        <h2>Reembolsos ({reembolsos.length})</h2>
       </div>
 
       <div style={{ overflowX: "auto" }}>
@@ -140,7 +140,7 @@ function TabSuscripciones({ showToast }) {
   return (
     <div className="admin-table-panel">
       <div className="admin-table-header">
-        <h2>Log de suscripciones ({logsFiltrados.length})</h2>
+        <h2>Movimientos ({logsFiltrados.length})</h2>
         <div className="admin-filters">
           <select value={filtroAccion} onChange={(e) => setFiltroAccion(e.target.value)}>
             <option value="">Todas las acciones</option>

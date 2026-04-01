@@ -18,7 +18,7 @@ function Rutinas() {
   const [stats, setStats] = useState({
     generales: 0,
     personalizadas: 0,
-    asignadas: 0
+    desactivadas: 0
   });
 
   const [vista, setVista] = useState("generales");
@@ -47,15 +47,27 @@ function Rutinas() {
 
   const fetchStats = async () => {
     try {
-      const res = await api.get("/rutinas");
-      const todas = res.data.rutinas || [];
-      const generales = todas.filter(r => !r.es_personalizada);
-      const personalizadas = todas.filter(r => r.es_personalizada);
+      const [resActivas, resDesactivadas] = await Promise.all([
+        api.get("/rutinas"),
+        api.get("/rutinas/desactivadas"),
+      ]);
+      const activas = resActivas.data.rutinas || [];
+      const desactivadas = resDesactivadas.data.rutinas || [];
+      const generales = activas.filter((r) => !r.es_personalizada && !(r.tipo_rutina || "").toLowerCase().includes("personal"));
+      const personalizadas = activas.filter((r) => r.es_personalizada || (r.tipo_rutina || "").toLowerCase().includes("personal"));
+
+      let personalizadasValidas = 0;
+      for (const r of personalizadas) {
+        const resClientes = await api.get(`/rutinas/${r.id_rutina}/clientes`);
+        const asignaciones = resClientes.data?.clientes || [];
+        const activasAsignadas = contarAsignacionesActivas(asignaciones);
+        if (activasAsignadas > 0) personalizadasValidas += 1;
+      }
 
       setStats({
         generales: generales.length,
-        personalizadas: personalizadas.length,
-        asignadas: 0
+        personalizadas: personalizadasValidas,
+        desactivadas: desactivadas.length
       });
     } catch (err) {
       console.error("Error obteniendo stats", err);
@@ -161,7 +173,7 @@ function Rutinas() {
 
       <section className="stats-grid">
         <article className="stat-card">
-          <p className="stat-label">Rutinas generales</p>
+          <p className="stat-label">Generales</p>
           <p className="stat-value">{stats.generales}</p>
         </article>
         <article className="stat-card">
@@ -169,8 +181,8 @@ function Rutinas() {
           <p className="stat-value">{stats.personalizadas}</p>
         </article>
         <article className="stat-card">
-          <p className="stat-label">Asignadas activamente</p>
-          <p className="stat-value">{stats.asignadas}</p>
+          <p className="stat-label">Desactivadas</p>
+          <p className="stat-value">{stats.desactivadas}</p>
         </article>
       </section>
 

@@ -22,6 +22,7 @@ function Sidebar({ open, onClose }) {
 
   const { user, signOut } = useAuth();
   const [planNombre, setPlanNombre] = useState(null);
+  const [planLoaded, setPlanLoaded] = useState(false);
 
   const { can, FEATURES, loading: permissionsLoading } = usePermissions();
   const canAccessPersonalModule = can(FEATURES.PERSONAL_MODULE);
@@ -29,16 +30,27 @@ function Sidebar({ open, onClose }) {
 
   useEffect(() => {
     const fetchPlan = async () => {
+      if (!user || user.role !== "proveedor") {
+        setPlanNombre(null);
+        setPlanLoaded(true);
+        return;
+      }
       try {
         const res = await api.get("/proveedor/mi-plan");
         const plan = res.data.plan_activo;
         if (plan?.estado === "activa") {
           setPlanNombre(plan.plan?.nombre || null);
+        } else {
+          setPlanNombre(null);
         }
-      } catch {}
+      } catch {
+        setPlanNombre(null);
+      } finally {
+        setPlanLoaded(true);
+      }
     };
     fetchPlan();
-  }, []);
+  }, [user?.id_usuario, user?.role]);
 
   const nombreCompleto = user
     ? `${user.nombre} ${user.apellido_paterno || ""}`.trim()
@@ -120,7 +132,7 @@ function Sidebar({ open, onClose }) {
             <div className="sidebar-user-info">
               <span className="sidebar-user-name">{nombreCompleto}</span>
               <span className="sidebar-user-role">
-                {planNombre ? `Plan ${planNombre}` : "Sin plan activo"}
+                {!planLoaded ? "Cargando plan..." : planNombre ? `Plan ${planNombre}` : "Sin plan activo"}
               </span>
             </div>
           </NavLink>

@@ -25,8 +25,26 @@ function AdminUsuarios() {
     const fetchTodos = async () => {
       try {
         setLoading(true);
-        const res = await api.get("/admin/usuarios");
-        const data = res.data.usuarios || [];
+        const acumulados = [];
+        let page = 1;
+        let totalPages = 1;
+
+        do {
+          const res = await api.get("/admin/usuarios", { params: { page, limit: 200 } });
+          const payload = res.data || {};
+          const dataPage = payload.usuarios || payload.data?.usuarios || [];
+          acumulados.push(...dataPage);
+
+          const fromPayload = Number(payload.total_paginas || payload.pages || payload.data?.total_paginas || payload.data?.pages);
+          totalPages = Number.isFinite(fromPayload) && fromPayload > 0
+            ? fromPayload
+            : (dataPage.length > 0 ? page + 1 : page);
+
+          page += 1;
+        } while (page <= totalPages);
+
+        const dedup = Array.from(new Map(acumulados.map((u) => [u.id_usuario, u])).values());
+        const data = dedup;
         setTodos(data);
         setUsuarios(data);
       } catch {
