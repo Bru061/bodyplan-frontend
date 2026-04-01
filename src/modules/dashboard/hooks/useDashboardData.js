@@ -33,8 +33,59 @@ export const useDashboardData = (meses = 6) => {
   useEffect(() => {
 
     const fetchData = async () => {
-      try {
 
+      try {
+        const proveedorStatsRes = await api.get("/proveedor/estadisticas", { params: { meses } });
+        const payload = proveedorStatsRes.data || {};
+        const resumen = payload.resumen || {};
+        const gimnasiosDetalle = payload.gimnasios || [];
+        const mesesDetalle = payload.meses || [];
+
+        if (!Array.isArray(mesesDetalle) || mesesDetalle.length === 0) {
+          throw new Error("Respuesta sin serie mensual en /proveedor/estadisticas");
+        }
+
+        const labels = mesesDetalle.map((item) => {
+          const anio = item.anio ?? item.year;
+          const mes = (item.mes ?? item.month ?? 1) - 1;
+          const fecha = new Date(anio, mes, 1);
+          return labelMes(fecha);
+        });
+        setDashboard({
+          metrics: {
+            clientesActivos: resumen.clientes_activos ?? 0,
+            clientesInactivos: resumen.clientes_inactivos ?? 0,
+            membresiasActivas: resumen.membresias_activas ?? resumen.clientes_activos ?? 0,
+            rutinas: resumen.total_rutinas ?? 0,
+            gimnasios: resumen.total_gimnasios ?? gimnasiosDetalle.length ?? 0,
+            clientesNuevosMes: resumen.clientes_nuevos_mes ?? 0,
+            membresiasPorVencer: resumen.membresias_por_vencer ?? 0,
+            gimnasioTop: resumen.gimnasio_top || "Sin datos",
+          },
+          chartData: {
+            labels,
+            membresiasIniciadas: mesesDetalle.map((item) => item.membresias_iniciadas ?? item.clientes_nuevos ?? 0),
+            membresiasActivas: mesesDetalle.map((item) => item.membresias_activas ?? item.clientes_activos ?? 0),
+            clientesActivos: mesesDetalle.map((item) => item.clientes_activos ?? 0),
+            clientesInactivos: mesesDetalle.map((item) => item.clientes_inactivos ?? 0),
+            gimnasiosRankingLabels: gimnasiosDetalle
+              .slice()
+              .sort((a, b) => (b.clientes_activos ?? 0) - (a.clientes_activos ?? 0))
+              .slice(0, 5)
+              .map((g) => g.nombre_gimnasio || g.nombre || "Gimnasio"),
+            gimnasiosRankingValores: gimnasiosDetalle
+              .slice()
+              .sort((a, b) => (b.clientes_activos ?? 0) - (a.clientes_activos ?? 0))
+              .slice(0, 5)
+              .map((g) => g.clientes_activos ?? 0),
+          },
+        });
+        return;
+      } catch (endpointErr) {
+        console.warn("No se pudo usar /proveedor/estadisticas, aplicando fallback", endpointErr);
+      }
+
+      try {
         const [clientesRes, gymRes, rutinasRes] = await Promise.all([
           api.get("/clientes", { params: { limit: 1000 } }),
           api.get("/gym"),
@@ -143,7 +194,7 @@ export const useDashboardData = (meses = 6) => {
         });
 
       } catch (err) {
-        console.error("Error cargando dashboard", err);
+        console.error("Error cargando dashboard (fallback)", err);
       } finally {
         setLoading(false);
       }

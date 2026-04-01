@@ -102,48 +102,51 @@ function TabReembolsos({ showToast }) {
   );
 }
 
-function TabSuscripciones() {
+function TabSuscripciones({ showToast }) {
 
   const [todos, setTodos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filtroEstado, setFiltroEstado] = useState("activa");
+  const [filtroAccion, setFiltroAccion] = useState("");
   const [pagina, setPagina] = useState(1);
 
-  const fetchSuscripciones = async () => {
+  const fetchLogSuscripciones = async () => {
     try {
       setLoading(true);
-      const res = await api.get("/admin/suscripciones", { params: { limit: 9999 } });
-      setTodos(res.data.suscripciones || []);
+      const res = await api.get("/admin/log-suscripciones");
+      const payload = res.data?.data || res.data || {};
+      const rows = payload.logs || payload.registros || payload.rows || [];
+      setTodos(rows);
     } catch (err) {
-      console.error("Error cargando suscripciones", err);
+      console.error("Error cargando log de suscripciones", err);
+      showToast?.(err?.response?.data?.message || "No se pudo cargar el log de suscripciones.", "error");
+      setTodos([]);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchSuscripciones(); }, []);
-
-  useEffect(() => { setPagina(1); }, [filtroEstado]);
-
-  const suscripciones = filtroEstado
-    ? todos.filter(s => s.estado === filtroEstado)
+  useEffect(() => { fetchLogSuscripciones(); }, []);
+  const accionesDisponibles = [...new Set(todos.map((item) => item.accion).filter(Boolean))];
+  const logsFiltrados = filtroAccion
+    ? todos.filter((item) => item.accion === filtroAccion)
     : todos;
 
-  const totalPaginas = Math.max(1, Math.ceil(suscripciones.length / POR_PAGINA));
+  useEffect(() => { setPagina(1); }, [filtroAccion, todos.length]);
+
+  const totalPaginas = Math.max(1, Math.ceil(logsFiltrados.length / POR_PAGINA));
   const paginaSegura = Math.min(pagina, totalPaginas);
-  const suscripcionesPag = suscripciones.slice((paginaSegura - 1) * POR_PAGINA, paginaSegura * POR_PAGINA);
-  const countEstado = (e) => todos.filter(s => s.estado === e).length;
+  const logsPaginados = logsFiltrados.slice((paginaSegura - 1) * POR_PAGINA, paginaSegura * POR_PAGINA);
 
   return (
     <div className="admin-table-panel">
       <div className="admin-table-header">
-        <h2>Suscripciones ({suscripciones.length})</h2>
+        <h2>Log de suscripciones ({logsFiltrados.length})</h2>
         <div className="admin-filters">
-          <select value={filtroEstado} onChange={e => setFiltroEstado(e.target.value)}>
-            <option value="">Todas ({todos.length})</option>
-            <option value="activa">Activas ({countEstado("activa")})</option>
-            <option value="vencida">Vencidas ({countEstado("vencida")})</option>
-            <option value="cancelada">Canceladas ({countEstado("cancelada")})</option>
+          <select value={filtroAccion} onChange={(e) => setFiltroAccion(e.target.value)}>
+            <option value="">Todas las acciones</option>
+            {accionesDisponibles.map((accion) => (
+              <option key={accion} value={accion}>{accion}</option>
+            ))}
           </select>
         </div>
       </div>
@@ -152,41 +155,35 @@ function TabSuscripciones() {
         <table className="admin-table">
           <thead>
             <tr>
-              <th>ID</th>
+              <th>Acción</th>
               <th>Cliente</th>
               <th>Gimnasio</th>
-              <th>Membresía</th>
-              <th>Fecha fin</th>
-              <th>Estado</th>
+              <th>Transición</th>
+              <th>Fecha</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan="6" className="admin-empty">Cargando...</td></tr>
-            ) : suscripcionesPag.length === 0 ? (
-              <tr><td colSpan="6" className="admin-empty">No hay suscripciones con ese estado.</td></tr>
+              <tr><td colSpan="5" className="admin-empty">Cargando...</td></tr>
+            ) : todos.length === 0 ? (
+              <tr><td colSpan="5" className="admin-empty">No hay movimientos registrados.</td></tr>
             ) : (
-              suscripcionesPag.map(s => (
-                <tr key={s.id_suscripcion}>
-                  <td>#{s.id_suscripcion}</td>
-                  <td>
-                    <p style={{ margin: 0, fontWeight: 600 }}>{s.Usuario?.nombre}</p>
-                    <span style={{ fontSize: "0.78rem", color: "var(--text-secondary)" }}>{s.Usuario?.correo}</span>
-                  </td>
-                  <td>{s.Gimnasio?.nombre || "—"}</td>
-                  <td>{s.membresia?.nombre || "—"}</td>
-                  <td>
-                    {s.fecha_fin
-                      ? new Date(s.fecha_fin).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" })
-                      : "—"}
-                  </td>
+              logsPaginados.map((s, i) => (
+                <tr key={s.id_log || s.id_log_suscripcion || `${s.accion}-${s.fecha_log}-${i}`}>
                   <td>
                     <span className={`badge ${
-                      s.estado === "activa"    ? "badge-success"
-                      : s.estado === "vencida" ? "badge-danger"
-                      : "badge-secondary"
-                    }`}>{s.estado}</span>
+                      s.accion === "INSERT" ? "badge-success" : s.accion === "DELETE" ? "badge-danger" : "badge-secondary"
+                    }`}>{s.accion || "—"}</span>
                   </td>
+                  <td>
+                    <p style={{ margin: 0, fontWeight: 600 }}>{s.nombre_cliente || s.cliente_nombre || "—"}</p>
+                    <span style={{ fontSize: "0.78rem", color: "var(--text-secondary)" }}>{s.correo_cliente || s.cliente_correo || "—"}</span>
+                  </td>
+                  <td>{s.gimnasio_nombre || "—"}</td>
+                  <td>
+                    {`${s.estado_anterior || "—"} → ${s.estado_nuevo || "—"}`}
+                  </td>
+                  <td>{s.fecha_log ? new Date(s.fecha_log).toLocaleString("es-MX") : "—"}</td>
                 </tr>
               ))
             )}
@@ -201,7 +198,105 @@ function TabSuscripciones() {
             <button key={n} className={`admin-pag-btn ${paginaSegura === n ? "admin-pag-active" : ""}`} onClick={() => setPagina(n)}>{n}</button>
           ))}
           <button className="admin-pag-btn" onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))} disabled={paginaSegura === totalPaginas}>→</button>
-          <span className="admin-pag-info">{suscripciones.length} registros</span>
+          <span className="admin-pag-info">{logsFiltrados.length} registros</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TabSuscripcionesEstado({ showToast }) {
+
+  const [todos, setTodos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filtroEstado, setFiltroEstado] = useState("");
+  const [pagina, setPagina] = useState(1);
+
+  const fetchSuscripciones = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get("/admin/suscripciones", { params: { limit: 9999 } });
+      setTodos(res.data?.suscripciones || []);
+    } catch (err) {
+      console.error("Error cargando suscripciones", err);
+      showToast?.(err?.response?.data?.message || "No se pudo cargar suscripciones.", "error");
+      setTodos([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchSuscripciones(); }, []);
+  useEffect(() => { setPagina(1); }, [filtroEstado, todos.length]);
+
+  const filtradas = filtroEstado ? todos.filter((s) => s.estado === filtroEstado) : todos;
+  const totalPaginas = Math.max(1, Math.ceil(filtradas.length / POR_PAGINA));
+  const paginaSegura = Math.min(pagina, totalPaginas);
+  const pageItems = filtradas.slice((paginaSegura - 1) * POR_PAGINA, paginaSegura * POR_PAGINA);
+  const countEstado = (estado) => todos.filter((s) => s.estado === estado).length;
+
+  return (
+    <div className="admin-table-panel">
+      <div className="admin-table-header">
+        <h2>Suscripciones ({filtradas.length})</h2>
+        <div className="admin-filters">
+          <select value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)}>
+            <option value="">Todas ({todos.length})</option>
+            <option value="activa">Activa ({countEstado("activa")})</option>
+            <option value="vencida">Vencida ({countEstado("vencida")})</option>
+            <option value="cancelada">Cancelada ({countEstado("cancelada")})</option>
+          </select>
+        </div>
+      </div>
+
+      <div style={{ overflowX: "auto" }}>
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>Cliente</th>
+              <th>Gimnasio</th>
+              <th>Membresía</th>
+              <th>Inicio</th>
+              <th>Fin</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr><td colSpan="6" className="admin-empty">Cargando...</td></tr>
+            ) : pageItems.length === 0 ? (
+              <tr><td colSpan="6" className="admin-empty">No hay suscripciones con ese estado.</td></tr>
+            ) : (
+              pageItems.map((s, i) => (
+                <tr key={s.id_suscripcion || i}>
+                  <td>
+                    <p style={{ margin: 0, fontWeight: 600 }}>{s.Usuario?.nombre || s.nombre_cliente || "—"}</p>
+                    <span style={{ fontSize: "0.78rem", color: "var(--text-secondary)" }}>{s.Usuario?.correo || s.correo_cliente || "—"}</span>
+                  </td>
+                  <td>{s.Gimnasio?.nombre || s.gimnasio_nombre || "—"}</td>
+                  <td>{s.membresia?.nombre || s.nombre_membresia || "—"}</td>
+                  <td>{s.fecha_inicio ? new Date(s.fecha_inicio).toLocaleDateString("es-MX") : "—"}</td>
+                  <td>{s.fecha_fin ? new Date(s.fecha_fin).toLocaleDateString("es-MX") : "—"}</td>
+                  <td>
+                    <span className={`badge ${
+                      s.estado === "activa" ? "badge-success" : s.estado === "vencida" ? "badge-danger" : "badge-secondary"
+                    }`}>{s.estado || "—"}</span>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {totalPaginas > 1 && (
+        <div className="admin-paginador">
+          <button className="admin-pag-btn" onClick={() => setPagina((p) => Math.max(1, p - 1))} disabled={paginaSegura === 1}>←</button>
+          {Array.from({ length: totalPaginas }, (_, i) => i + 1).map((n) => (
+            <button key={n} className={`admin-pag-btn ${paginaSegura === n ? "admin-pag-active" : ""}`} onClick={() => setPagina(n)}>{n}</button>
+          ))}
+          <button className="admin-pag-btn" onClick={() => setPagina((p) => Math.min(totalPaginas, p + 1))} disabled={paginaSegura === totalPaginas}>→</button>
+          <span className="admin-pag-info">{filtradas.length} registros</span>
         </div>
       )}
     </div>
@@ -241,12 +336,16 @@ function AdminActividad() {
         >
           Suscripciones
         </button>
+        <button
+          className={`admin-tab ${tab === "log" ? "admin-tab-active" : ""}`}
+          onClick={() => setTab("log")}
+        >
+          Movimientos
+        </button>
       </div>
-
-      {tab === "reembolsos"
-        ? <TabReembolsos showToast={showToast} />
-        : <TabSuscripciones />
-      }
+      {tab === "reembolsos" && <TabReembolsos showToast={showToast} />}
+      {tab === "suscripciones" && <TabSuscripcionesEstado showToast={showToast} />}
+      {tab === "log" && <TabSuscripciones showToast={showToast} />}
 
     </AdminLayout>
   );
