@@ -94,7 +94,8 @@ export function canAccess(feature, plan) {
 
 export function getMaxGyms(plan) {
   const safePlan = plan && PLAN_RULES[plan] ? plan : PLAN_KEYS.BASIC;
-  return PLAN_RULES[safePlan]?.maxGyms ?? 1;
+  const maxGyms = PLAN_RULES[safePlan]?.maxGyms;
+  return maxGyms === undefined ? 1 : maxGyms;
 }
 
 export function canCreateGym(plan, currentGyms = 0) {

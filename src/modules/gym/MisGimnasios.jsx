@@ -7,6 +7,7 @@ import { FiPlus } from "react-icons/fi";
 import LoadingScreen from "../../components/ui/LoadingScreen";
 import ModalPortal from "../../components/ui/ModalPortal";
 import usePermissions from "../../hooks/usePermissions"
+import Toast from "../../components/ui/Toast";
 
 function MisGimnasios() {
 
@@ -17,6 +18,9 @@ function MisGimnasios() {
   const [changingId, setChangingId] = useState(null);
   const [modal, setModal] = useState(null);
   const [errorMsg, setErrorMsg] = useState("");
+  const [toast, setToast] = useState(null);
+
+  const showToast = (message, type = "success") => setToast({ message, type });
 
   const {
     canCreateMoreGyms,
@@ -65,9 +69,9 @@ function MisGimnasios() {
         const activos = todos.filter(c => c.id_gimnasio === gym.id_gimnasio || c.gimnasio?.id_gimnasio === gym.id_gimnasio);
 
         if (activos.length > 0) {
-          setErrorMsg(
+          showToast(
             `No puedes archivar "${gym.nombre}" porque tiene ${activos.length} cliente${activos.length > 1 ? "s" : ""} con membresía activa.`
-          );
+          , "error");
           return;
         }
       } catch (err) {
@@ -106,6 +110,8 @@ function MisGimnasios() {
 
   return (
     <DashboardLayout>
+
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
       {modal && (
         <ModalPortal>

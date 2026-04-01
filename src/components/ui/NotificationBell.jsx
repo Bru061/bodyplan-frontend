@@ -57,9 +57,9 @@ function NotificationBell() {
       return null;
     }
 
-    if (text.includes("reembolso") || text.includes("suscrip")) return "/notificaciones";
     if (text.includes("plan")) return "/planes";
     if (text.includes("cliente")) return "/clientes";
+    if (text.includes("rutina")) return "/rutinas";
     if (text.includes("gimnasio")) return "/mis-gimnasios";
     if (text.includes("pago")) return "/perfil";
     return null;
