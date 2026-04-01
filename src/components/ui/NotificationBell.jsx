@@ -8,7 +8,7 @@ import { useAuth } from "../../core/context/AuthContext";
 
 function NotificationBell() {
 
-  const { noLeidas, resetNoLeidas } = useNotificaciones();
+  const { noLeidas, setNoLeidas } = useNotificaciones();
   const [open, setOpen]             = useState(false);
   const [notifs, setNotifs]         = useState([]);
   const [loading, setLoading]       = useState(false);
@@ -27,8 +27,10 @@ function NotificationBell() {
   const fetchNotificaciones = async () => {
     try {
       setLoading(true);
-      const res = await api.get("/notificaciones", { params: { canal: "web", limit: 20 } });
-      setNotifs(res.data.notificaciones || []);
+      const res = await api.get("/notificaciones", { params: { canal: "web", limit: 200 } });
+      const lista = res.data.notificaciones || [];
+      setNotifs(lista);
+      setNoLeidas(lista.filter((n) => !n.leida).length);
     } catch (err) {
       console.error("Error cargando notificaciones", err);
     } finally {
@@ -40,7 +42,6 @@ function NotificationBell() {
     setOpen(prev => !prev);
     if (!open) {
       fetchNotificaciones();
-      resetNoLeidas();
     }
   };
 
@@ -68,7 +69,11 @@ function NotificationBell() {
 
   const handleMarcarLeida = async (id) => {
     await marcarLeida(id);
-    setNotifs(prev => prev.map(n => n.id_notificacion === id ? { ...n, leida: true } : n));
+    setNotifs(prev => {
+      const actualizadas = prev.map(n => n.id_notificacion === id ? { ...n, leida: true } : n);
+      setNoLeidas(actualizadas.filter((n) => !n.leida).length);
+      return actualizadas;
+    });
   };
 
   return (
@@ -93,6 +98,7 @@ function NotificationBell() {
                     await marcarLeida(n.id_notificacion);
                   }
                   setNotifs(prev => prev.map(n => ({ ...n, leida: true })));
+                  setNoLeidas(0);
                 }}
               >
                 Marcar todas como leídas

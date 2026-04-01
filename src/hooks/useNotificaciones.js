@@ -16,6 +16,12 @@ export const useNotificaciones = () => {
     contarNoLeidas().then(setNoLeidas);
   }, [token]);
 
+  const refrescarNoLeidas = useCallback(async () => {
+    const total = await contarNoLeidas();
+    setNoLeidas(total);
+    return total;
+  }, []);
+
   const conectarSSE = useCallback(() => {
     if (!token) return;
     if (eventSourceRef.current) eventSourceRef.current.close();
@@ -61,5 +67,5 @@ export const useNotificaciones = () => {
 
   const resetNoLeidas = () => setNoLeidas(0);
 
-  return { noLeidas, setNoLeidas, resetNoLeidas };
+  return { noLeidas, setNoLeidas, resetNoLeidas, refrescarNoLeidas };
 };

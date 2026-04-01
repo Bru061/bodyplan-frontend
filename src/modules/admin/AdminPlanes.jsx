@@ -21,11 +21,19 @@ function AdminPlanes() {
   const [confirmToggle, setConfirmToggle] = useState(null);
 
   const showToast = (message, type = "success") => setToast({ message, type });
-  const getUsuariosConPlan = (plan) => (
+  const getUsuariosConPlan = (plan) => Number(
     plan?.usuarios_activos ??
+    plan?.proveedores_activos ??
+    plan?.usuarios_con_suscripcion_activa ??
+    plan?.clientes_activos_plan ??
+    plan?.clientes_activos ??
+    plan?.clientes_con_plan_activo ??
+    plan?.total_clientes_activos ??
     plan?.usuarios_con_plan ??
     plan?.suscripciones_activas ??
     plan?.usuariosComprados ??
+    plan?.estadisticas?.usuarios_activos ??
+    plan?.estadisticas?.clientes_activos ??
     0
   );
 
@@ -67,7 +75,7 @@ function AdminPlanes() {
         precio: parseFloat(form.precio),
         duracion_dias: parseInt(form.duracion_dias),
         descripcion: form.descripcion.trim(),
-        tipo_origen: form.tipo_origen
+        tipo_origen: "web"
       };
 
       if (modal === "editar" && planEdit) {
@@ -90,6 +98,22 @@ function AdminPlanes() {
   const handleToggle = async () => {
     if (!confirmToggle) return;
     try {
+      if (confirmToggle.activo) {
+        const resSuscripciones = await api.get("/admin/suscripciones", {
+          params: { estado: "activa", limit: 9999 }
+        });
+        const activas = resSuscripciones.data?.suscripciones || [];
+        const activasConPlan = activas.filter((s) => {
+          const idPlan = s?.plan?.id_plan ?? s?.Plan?.id_plan ?? s?.id_plan ?? s?.plan_id ?? s?.plan?.id;
+          return Number(idPlan) === Number(confirmToggle.id_plan);
+        });
+
+        if (activasConPlan.length > 0) {
+          showToast("No puedes desactivar este plan porque tiene clientes activos con este plan.", "error");
+          setConfirmToggle(null);
+          return;
+        }
+      }
       const endpoint = confirmToggle.activo
         ? `/admin/planes/${confirmToggle.id_plan}/desactivar`
         : `/admin/planes/${confirmToggle.id_plan}/activar`;
@@ -176,12 +200,21 @@ function AdminPlanes() {
                     </button>
                     <button
                       className={`btn ${plan.activo ? "btn-danger" : "btn-success"}`}
-                      onClick={() => {
-                        if (plan.activo && getUsuariosConPlan(plan) > 0) {
-                          showToast("No puedes desactivar este plan porque tiene usuarios activos.", "error");
-                          return;
+                      onClick={async () => {
+                        let planActual = plan;
+                        if (plan.activo) {
+                          try {
+                            const res = await api.get("/admin/planes");
+                            const actualizados = res.data?.planes || [];
+                            planActual = actualizados.find((p) => p.id_plan === plan.id_plan) || plan;
+                          } catch {}
+
+                          if (getUsuariosConPlan(planActual) > 0) {
+                            showToast("No puedes desactivar este plan porque tiene clientes activos con este plan.", "error");
+                            return;
+                          }
                         }
-                        setConfirmToggle(plan);
+                        setConfirmToggle(planActual);
                       }}
                       title={plan.activo && getUsuariosConPlan(plan) > 0 ? "Plan en uso" : ""}
                     >
@@ -225,14 +258,6 @@ function AdminPlanes() {
                 <div className="form-group">
                   <label>Descripción</label>
                   <input name="descripcion" value={form.descripcion} onChange={handleChange} placeholder="Descripción corta del plan" />
-                </div>
-
-                <div className="form-group">
-                  <label>Tipo origen</label>
-                  <select name="tipo_origen" value={form.tipo_origen} onChange={handleChange}>
-                    <option value="web">Web</option>
-                    <option value="app">App</option>
-                  </select>
                 </div>
               </div>
 
