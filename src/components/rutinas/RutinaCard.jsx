@@ -3,6 +3,10 @@ import api from "../../services/axios";
 import Toast from "../ui/Toast";
 import ModalPortal from "../ui/ModalPortal";
 
+/**
+ * Muestra información de la rutina, clientes e instructores asignados,
+ * y permite activar o desactivar la rutina según su estado actual.
+ */
 function RutinaCard({ rutina, onEdit, clientesCount, refresh, refreshStats }) {
 
   const tipo = (rutina.tipo_rutina || "").toString().toLowerCase();
@@ -21,6 +25,13 @@ function RutinaCard({ rutina, onEdit, clientesCount, refresh, refreshStats }) {
   const tieneAsignacionesActivas = esActiva && clientesCount > 0;
 
   useEffect(() => {
+
+    /**
+     * Obtiene instructores y clientes asignados a la rutina desde el API.
+     * Solo se ejecuta si la rutina está activa.
+     * Construye un mapa deduplicado de instructores y clientes a partir
+     * del arreglo de asignaciones recibido.
+     */
     const fetchInstructores = async () => {
       try {
         const res = await api.get(`/rutinas/${rutina.id_rutina}/clientes`);
@@ -47,6 +58,11 @@ function RutinaCard({ rutina, onEdit, clientesCount, refresh, refreshStats }) {
     if (esActiva) fetchInstructores();
   }, [rutina.id_rutina, esActiva]);
 
+  /**
+  * Valida si la rutina puede desactivarse antes de abrir el modal de confirmación.
+  * Si la rutina tiene clientes con asignación activa, muestra un Toast de advertencia
+  * y aborta el flujo. En caso contrario, abre el modal.
+  */
   const handleIntentarDesactivar = () => {
     if (tieneAsignacionesActivas) {
       setToast(
@@ -57,6 +73,12 @@ function RutinaCard({ rutina, onEdit, clientesCount, refresh, refreshStats }) {
     setModal(true);
   };
 
+  /**
+  * Ejecuta el cambio de estado de la rutina (activar / desactivar) contra el API.
+  * Cierra el modal, activa el indicador de carga y llama al endpoint correspondiente
+  * según el estado actual de `esActiva`. Al terminar refresca la lista y las stats.
+  * Si ocurre un error, muestra el mensaje devuelto por el servidor en un Toast.
+  */
   const handleToggle = async () => {
     setModal(false);
     setLoading(true);

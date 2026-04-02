@@ -5,6 +5,12 @@ import { useAuth } from "../core/context/AuthContext";
 
 const API_BASE = "/api";
 
+/**
+ * Hook que centraliza la gestión de notificaciones en tiempo real.
+ * Combina tres fuentes: conteo inicial desde la API, stream SSE para
+ * notificaciones en vivo y mensajes push de Firebase en primer plano (FCM).
+ * Expone el conteo de no leídas y utilidades para actualizarlo.
+ */
 export const useNotificaciones = () => {
 
   const { token } = useAuth();
@@ -16,12 +22,25 @@ export const useNotificaciones = () => {
     contarNoLeidas().then(setNoLeidas);
   }, [token]);
 
+  /**
+ * Consulta el servicio contarNoLeidas y actualiza el estado local.
+ * Memoizada con useCallback para uso seguro como dependencia de efectos.
+ */
   const refrescarNoLeidas = useCallback(async () => {
     const total = await contarNoLeidas();
     setNoLeidas(total);
     return total;
   }, []);
 
+
+  /**
+ * Abre una conexión EventSource al endpoint de stream de notificaciones
+ * autenticada mediante el token en la URL.
+ * Ignora eventos de tipo "heartbeat". Al recibir un mensaje válido
+ * muestra un toast y suma 1 al contador de no leídas.
+ * Si la conexión falla, la cierra y reintenta automáticamente tras 5 segundos.
+ * Memoizada con useCallback; se reconecta si cambia el token.
+ */
   const conectarSSE = useCallback(() => {
     if (!token) return;
     if (eventSourceRef.current) eventSourceRef.current.close();

@@ -2,7 +2,16 @@ import toast from "react-hot-toast";
 import { solicitarTokenFCM } from "../config/firebase";
 import api from "./axios";
 
-// ── Registrar dispositivo en el backend tras login ──
+/**
+ * Servicio de notificaciones. Gestiona el registro/desregistro de dispositivos
+ * FCM, la visualización de toasts y las operaciones de lectura contra el API.
+ */
+
+/**
+ * Solicita el token FCM del dispositivo y lo registra en el backend
+ * para habilitar notificaciones push por canal web.
+ * Si no se obtiene token (permiso denegado), aborta silenciosamente.
+ */
 export const registrarDispositivo = async () => {
   try {
     const fcmToken = await solicitarTokenFCM();
@@ -16,7 +25,11 @@ export const registrarDispositivo = async () => {
   }
 };
 
-// ── Desregistrar dispositivo antes del logout ──
+/**
+ * Obtiene el token FCM actual y lo elimina del backend,
+ * deshabilitando las notificaciones push antes del logout.
+ * Si no hay token disponible, aborta silenciosamente.
+ */
 export const desregistrarDispositivo = async () => {
   try {
     const fcmToken = await solicitarTokenFCM();
@@ -29,7 +42,11 @@ export const desregistrarDispositivo = async () => {
   }
 };
 
-// ── Mostrar toast de notificación ──
+/**
+ * Muestra una notificación emergente con react-hot-toast usando
+ * el estilo visual personalizado del sistema de diseño.
+ * Si hay mensaje, lo concatena al título en una segunda línea.
+ */
 export const mostrarToast = ({ titulo, mensaje }) => {
   const contenido = mensaje ? `${titulo}\n${mensaje}` : titulo;
   toast(contenido, {
@@ -47,7 +64,10 @@ export const mostrarToast = ({ titulo, mensaje }) => {
   });
 };
 
-// ── Obtener notificaciones no leídas ──
+/**
+ * Consulta el total de notificaciones no leídas del canal web.
+ * Retorna 0 si la petición falla, sin propagar el error.
+ */
 export const contarNoLeidas = async () => {
   try {
     const res = await api.get("/notificaciones/no-leidas", { params: { canal: "web" } });
@@ -57,7 +77,9 @@ export const contarNoLeidas = async () => {
   }
 };
 
-// ── Marcar notificación como leída ──
+/**
+ * Marca una notificación específica como leída en el backend.
+ */
 export const marcarLeida = async (id) => {
   try {
     await api.patch(`/notificaciones/${id}/leer`);

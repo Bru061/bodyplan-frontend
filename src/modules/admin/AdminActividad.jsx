@@ -5,12 +5,21 @@ import Toast from "../../components/ui/Toast";
 
 const POR_PAGINA = 10;
 
+/**
+ * Pestaña que muestra el listado paginado de solicitudes de reembolso.
+ * Carga los datos al montar y reinicia la paginación en cada recarga.
+ */
 function TabReembolsos({ showToast }) {
 
   const [reembolsos, setReembolsos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pagina, setPagina] = useState(1);
 
+  /**
+ * Obtiene todas las solicitudes de reembolso desde "/admin/reembolsos"
+ * y actualiza el estado. Reinicia la página a 1 tras cada carga.
+ * Muestra un Toast de error si la petición falla.
+ */
   const fetchReembolsos = async () => {
     try {
       setLoading(true);
@@ -29,6 +38,10 @@ function TabReembolsos({ showToast }) {
   const totalPaginas  = Math.max(1, Math.ceil(reembolsos.length / POR_PAGINA));
   const reembolsosPag = reembolsos.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
 
+  /**
+ * Mapea el estado de un reembolso a su clase CSS de badge correspondiente.
+ * Retorna "badge-secondary" como fallback para estados no reconocidos.
+ */
   const estadoBadge = (estado) => ({
     pendiente_revision: "badge-secondary",
     aprobado: "badge-success",
@@ -102,6 +115,11 @@ function TabReembolsos({ showToast }) {
   );
 }
 
+/**
+ * Pestaña que muestra el log de movimientos de suscripciones con
+ * filtro por tipo de acción (INSERT, DELETE, etc.) y paginación.
+ * Deduce las acciones disponibles dinámicamente desde los datos cargados.
+ */
 function TabSuscripciones({ showToast }) {
 
   const [todos, setTodos] = useState([]);
@@ -109,6 +127,12 @@ function TabSuscripciones({ showToast }) {
   const [filtroAccion, setFiltroAccion] = useState("");
   const [pagina, setPagina] = useState(1);
 
+  /**
+ * Obtiene el log de movimientos desde "/admin/log-suscripciones".
+ * Normaliza la respuesta revisando múltiples posibles claves
+ * (logs, registros, rows) para mayor compatibilidad con el backend.
+ * Muestra un Toast de error si la petición falla.
+ */
   const fetchLogSuscripciones = async () => {
     try {
       setLoading(true);
@@ -205,6 +229,11 @@ function TabSuscripciones({ showToast }) {
   );
 }
 
+/**
+ * Pestaña que lista todas las suscripciones con filtro por estado
+ * (activa, vencida, cancelada) y paginación. Muestra el conteo
+ * por estado directamente en el selector de filtro.
+ */
 function TabSuscripcionesEstado({ showToast }) {
 
   const [todos, setTodos] = useState([]);
@@ -212,6 +241,11 @@ function TabSuscripcionesEstado({ showToast }) {
   const [filtroEstado, setFiltroEstado] = useState("");
   const [pagina, setPagina] = useState(1);
 
+  /**
+ * Obtiene hasta 9999 suscripciones desde "/admin/suscripciones"
+ * para permitir filtrado y paginación local sin peticiones adicionales.
+ * Muestra un Toast de error si la petición falla.
+ */
   const fetchSuscripciones = async () => {
     try {
       setLoading(true);
@@ -303,6 +337,11 @@ function TabSuscripcionesEstado({ showToast }) {
   );
 }
 
+/**
+ * Página de administración que agrupa en pestañas el historial de
+ * reembolsos, suscripciones activas y movimientos del log.
+ * Gestiona un Toast compartido que se pasa como prop a cada pestaña.
+ */
 function AdminActividad() {
 
   const [tab, setTab]     = useState("reembolsos");

@@ -3,6 +3,13 @@ import AdminLayout from "../../layout/AdminLayout";
 import { Link } from "react-router-dom";
 import api from "../../services/axios";
 
+/**
+ * Página principal del panel de administración.
+ * Muestra métricas globales de la plataforma (ingresos, gimnasios,
+ * clientes, calificación y reembolsos pendientes), una tabla de
+ * ingresos mensuales filtrable por año, y accesos directos a las
+ * secciones de gestión más importantes.
+ */
 function AdminDashboard() {
 
   const [stats, setStats]   = useState(null);
@@ -11,6 +18,17 @@ function AdminDashboard() {
   const [anio, setAnio] = useState(new Date().getFullYear());
 
   useEffect(() => {
+    /**
+   * Ejecuta en paralelo tres peticiones al API con Promise.allSettled:
+   *   - /admin/ingresos-mensuales  → meses e ingresos del año seleccionado.
+   *   - /admin/resumen-gimnasios   → listado de gimnasios con sus métricas.
+   *   - /admin/reembolsos          → reembolsos con estado pendiente_revision.
+   *
+   * Combina los resultados en un único objeto stats y extrae los
+   * últimos 6 meses para la tabla de ingresos. Si alguna petición falla,
+   * usa valores por defecto sin interrumpir las demás.
+   * Se re-ejecuta cada vez que cambia el año seleccionado.
+   */
     const fetchStats = async () => {
       try {
         const [resIngresos, resResumenGimnasios, resReembolsos] = await Promise.allSettled([

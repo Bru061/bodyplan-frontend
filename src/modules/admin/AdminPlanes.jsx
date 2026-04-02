@@ -13,29 +13,13 @@ function AdminPlanes() {
   const [planes, setPlanes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
-  const [modal, setModal] = useState(null);
+  const [modal, setModal] = useState(false);
   const [planEdit, setPlanEdit] = useState(null);
   const [form, setForm] = useState(FORM_INICIAL);
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
-  const [confirmToggle, setConfirmToggle] = useState(null);
 
   const showToast = (message, type = "success") => setToast({ message, type });
-  const getUsuariosConPlan = (plan) => Number(
-    plan?.usuarios_activos ??
-    plan?.proveedores_activos ??
-    plan?.usuarios_con_suscripcion_activa ??
-    plan?.clientes_activos_plan ??
-    plan?.clientes_activos ??
-    plan?.clientes_con_plan_activo ??
-    plan?.total_clientes_activos ??
-    plan?.usuarios_con_plan ??
-    plan?.suscripciones_activas ??
-    plan?.usuariosComprados ??
-    plan?.estadisticas?.usuarios_activos ??
-    plan?.estadisticas?.clientes_activos ??
-    0
-  );
 
   const fetchPlanes = async () => {
     try {
@@ -78,13 +62,9 @@ function AdminPlanes() {
         tipo_origen: "web"
       };
 
-      if (modal === "editar" && planEdit) {
-        await api.put(`/admin/planes/${planEdit.id_plan}`, payload);
-        showToast("Plan actualizado correctamente.");
-      } else {
-        await api.post("/admin/planes", payload);
-        showToast("Plan creado correctamente.");
-      }
+      if (!planEdit) return;
+      await api.put(`/admin/planes/${planEdit.id_plan}`, payload);
+      showToast("Plan actualizado correctamente.");
 
       setModal(null);
       fetchPlanes();
@@ -92,37 +72,6 @@ function AdminPlanes() {
       showToast(err?.response?.data?.message || "Error guardando plan.", "error");
     } finally {
       setSaving(false);
-    }
-  };
-
-  const handleToggle = async () => {
-    if (!confirmToggle) return;
-    try {
-      if (confirmToggle.activo) {
-        const resSuscripciones = await api.get("/admin/suscripciones", {
-          params: { estado: "activa", limit: 9999 }
-        });
-        const activas = resSuscripciones.data?.suscripciones || [];
-        const activasConPlan = activas.filter((s) => {
-          const idPlan = s?.plan?.id_plan ?? s?.Plan?.id_plan ?? s?.id_plan ?? s?.plan_id ?? s?.plan?.id;
-          return Number(idPlan) === Number(confirmToggle.id_plan);
-        });
-
-        if (activasConPlan.length > 0) {
-          showToast("No puedes desactivar este plan porque tiene clientes activos con este plan.", "error");
-          setConfirmToggle(null);
-          return;
-        }
-      }
-      const endpoint = confirmToggle.activo
-        ? `/admin/planes/${confirmToggle.id_plan}/desactivar`
-        : `/admin/planes/${confirmToggle.id_plan}/activar`;
-      await api.patch(endpoint);
-      showToast(`Plan ${confirmToggle.activo ? "desactivado" : "activado"} correctamente.`);
-      setConfirmToggle(null);
-      fetchPlanes();
-    } catch (err) {
-      showToast("Error cambiando estado del plan.", "error");
     }
   };
 
@@ -136,14 +85,7 @@ function AdminPlanes() {
       tipo_origen: plan.tipo_origen || "web"
     });
     setErrors({});
-    setModal("editar");
-  };
-
-  const abrirCrear = () => {
-    setPlanEdit(null);
-    setForm(FORM_INICIAL);
-    setErrors({});
-    setModal("crear");
+    setModal("true");
   };
 
   return (
@@ -155,9 +97,8 @@ function AdminPlanes() {
         <div>
           <p className="eyebrow">Administración</p>
           <h1>Gestión de planes</h1>
-          <p className="subtitle">Crea, edita y activa/desactiva los planes de la plataforma.</p>
+          <p className="subtitle">Edita los planes de la plataforma.</p>
         </div>
-        <button className="btn btn-primary" onClick={abrirCrear}>+ Nuevo plan</button>
       </section>
 
       {loading ? (
@@ -198,28 +139,6 @@ function AdminPlanes() {
                     <button className="btn btn-ghost" onClick={() => abrirEditar(plan)}>
                       Editar
                     </button>
-                    <button
-                      className={`btn ${plan.activo ? "btn-danger" : "btn-success"}`}
-                      onClick={async () => {
-                        let planActual = plan;
-                        if (plan.activo) {
-                          try {
-                            const res = await api.get("/admin/planes");
-                            const actualizados = res.data?.planes || [];
-                            planActual = actualizados.find((p) => p.id_plan === plan.id_plan) || plan;
-                          } catch {}
-
-                          if (getUsuariosConPlan(planActual) > 0) {
-                            showToast("No puedes desactivar este plan porque tiene clientes activos con este plan.", "error");
-                            return;
-                          }
-                        }
-                        setConfirmToggle(planActual);
-                      }}
-                      title={plan.activo && getUsuariosConPlan(plan) > 0 ? "Plan en uso" : ""}
-                    >
-                      {plan.activo ? "Desactivar" : "Activar"}
-                    </button>
                   </td>
                 </tr>
               ))}
@@ -233,7 +152,7 @@ function AdminPlanes() {
         <ModalPortal>
           <div className="modal-overlay">
             <div className="modal-card">
-              <h2 className="modal-title">{modal === "crear" ? "Nuevo plan" : "Editar plan"}</h2>
+              <h2 className="modal-title">"Editar plan"</h2>
 
               <div className="modal-form">
                 <div className="form-group">
@@ -264,31 +183,7 @@ function AdminPlanes() {
               <div className="modal-actions">
                 <button className="btn btn-ghost" onClick={() => setModal(null)}>Cancelar</button>
                 <button className="btn btn-primary" onClick={handleGuardar} disabled={saving}>
-                  {saving ? "Guardando..." : modal === "crear" ? "Crear plan" : "Guardar cambios"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </ModalPortal>
-      )}
-
-      {confirmToggle && (
-        <ModalPortal>
-          <div className="modal-overlay">
-            <div className="modal-box">
-              <h3 className="modal-title">
-                {confirmToggle.activo ? "Desactivar plan" : "Activar plan"}
-              </h3>
-              <p className="modal-body">
-                ¿Deseas {confirmToggle.activo ? "desactivar" : "activar"} el plan <strong>{confirmToggle.nombre}</strong>?
-              </p>
-              <div className="modal-actions">
-                <button className="btn btn-ghost" onClick={() => setConfirmToggle(null)}>Cancelar</button>
-                <button
-                  className={`btn ${confirmToggle.activo ? "btn-danger" : "btn-success"}`}
-                  onClick={handleToggle}
-                >
-                  {confirmToggle.activo ? "Desactivar" : "Activar"}
+                  {saving ? "Guardando..." : "Guardar cambios"}
                 </button>
               </div>
             </div>

@@ -4,7 +4,13 @@ import { useAuth } from "../context/AuthContext";
 import api from "../../services/axios";
 
 const RUTAS_LIBRES = ["/planes", "/checkout", "/pago-exitoso", "/perfil"];
-
+/**
+ * Guard de ruta que verifica si un proveedor tiene un plan de suscripción activo.
+ * Permite el acceso libre a ciertas rutas (RUTAS_LIBRES) sin verificar el plan.
+ * Si el usuario no es proveedor, deja pasar sin restricción.
+ * Si no tiene plan activo y no está en una ruta libre, redirige a "/planes".
+ * Renderiza null mientras se resuelve la verificación para evitar flashes.
+ */
 export default function PlanRoute() {
 
   const { user, loading } = useAuth();
@@ -24,6 +30,11 @@ export default function PlanRoute() {
       return;
     }
 
+    /**
+     * Consulta el endpoint "/proveedor/mi-plan" para determinar si el proveedor
+     * tiene una suscripción con estado "activa". Actualiza tienePlan en consecuencia.
+     * En caso de error asume que no hay plan activo.
+     */
     const verificarPlan = async () => {
       try {
         const res = await api.get("/proveedor/mi-plan");

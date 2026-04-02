@@ -6,6 +6,12 @@ import { marcarLeida } from "../../services/notificationService";
 import api from "../../services/axios";
 import { useAuth } from "../../core/context/AuthContext";
 
+/**
+ * Ícono de campana en la barra de navegación que muestra el conteo
+ * de notificaciones no leídas y despliega un panel con el listado completo.
+ * Soporta marcar notificaciones individuales o todas como leídas,
+ * y navega a la ruta correspondiente al hacer clic en cada una.
+ */
 function NotificationBell() {
 
   const { noLeidas, setNoLeidas } = useNotificaciones();
@@ -24,6 +30,10 @@ function NotificationBell() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  /**
+ * Obtiene las notificaciones del usuario desde el API (canal web, límite 200).
+ * Actualiza la lista local y el contador global de no leídas en el contexto.
+ */
   const fetchNotificaciones = async () => {
     try {
       setLoading(true);
@@ -38,6 +48,10 @@ function NotificationBell() {
     }
   };
 
+  /**
+ * Alterna la visibilidad del panel de notificaciones.
+ * Al abrirse por primera vez dispara fetchNotificaciones para cargar datos frescos.
+ */
   const handleOpen = () => {
     setOpen(prev => !prev);
     if (!open) {
@@ -45,6 +59,11 @@ function NotificationBell() {
     }
   };
 
+  /**
+ * Determina la ruta de navegación asociada a una notificación
+ * basándose en palabras clave del título y mensaje.
+ * Diferencia rutas según el rol del usuario autenticado (admin vs. otros).
+ */
   const resolveRoute = (n) => {
     const text = `${n?.titulo || ""} ${n?.mensaje || ""}`.toLowerCase();
     const esAdmin = user?.role === "admin";
@@ -66,7 +85,10 @@ function NotificationBell() {
     return null;
   };
 
-
+/**
+ * Marca una notificación individual como leída llamando al servicio externo.
+ * Actualiza el estado local y recalcula el contador de no leídas.
+ */
   const handleMarcarLeida = async (id) => {
     await marcarLeida(id);
     setNotifs(prev => {

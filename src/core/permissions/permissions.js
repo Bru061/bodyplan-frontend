@@ -1,3 +1,8 @@
+/**
+ * Define las reglas de acceso por plan de suscripción y expone utilidades
+ * para verificar permisos, límites y mensajes de upgrade en toda la app.
+ */
+
 export const PLAN_KEYS = {
   TRIAL: "trial",
   BASIC: "basic",
@@ -43,11 +48,21 @@ const PLAN_RULES = {
   },
 };
 
+/**
+ * Convierte un valor a número de forma segura.
+ * Retorna NaN si el valor no es un número finito válido.
+ */
 function toNumber(value) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : NaN;
 }
 
+/**
+ * Infiere el tipo de plan (PLAN_KEYS) a partir del nombre y precio
+ * del objeto de plan recibido del backend.
+ * Criterios: nombre contiene "pro", "bás/bas", "trial/prueba", o precio === 0.
+ * Si no coincide ningún criterio retorna BASIC por defecto.
+ */
 function inferPlanFromSubscription(plan) {
   const nombre = (plan?.nombre || "").toLowerCase();
   const precio = toNumber(plan?.precio);
@@ -61,6 +76,11 @@ function inferPlanFromSubscription(plan) {
   return PLAN_KEYS.BASIC;
 }
 
+/**
+ * Transforma la respuesta completa del endpoint "/proveedor/mi-plan"
+ * en un snapshot normalizado con el plan actual y si ya se usó el trial.
+ * Revisa tanto el plan activo como todo el historial de suscripciones.
+ */
 export function derivePlanSnapshot(planResponse) {
   const planActivo = planResponse?.plan_activo || null;
   const historial = planResponse?.historial || [];
@@ -87,23 +107,39 @@ export function derivePlanSnapshot(planResponse) {
   };
 }
 
+/**
+ * Verifica si un plan tiene acceso a una feature específica según PLAN_RULES.
+ * Si el plan recibido es inválido, usa BASIC como fallback.
+ */
 export function canAccess(feature, plan) {
   const safePlan = plan && PLAN_RULES[plan] ? plan : PLAN_KEYS.BASIC;
   return Boolean(PLAN_RULES[safePlan]?.[feature]);
 }
 
+/**
+ * Retorna el número máximo de gimnasios permitidos para un plan.
+ * null significa ilimitado (plan PRO). Si el plan es inválido usa BASIC.
+ */
 export function getMaxGyms(plan) {
   const safePlan = plan && PLAN_RULES[plan] ? plan : PLAN_KEYS.BASIC;
   const maxGyms = PLAN_RULES[safePlan]?.maxGyms;
   return maxGyms === undefined ? 1 : maxGyms;
 }
 
+/**
+ * Determina si el proveedor puede crear un gimnasio adicional
+ * comparando sus gimnasios actuales contra el límite del plan.
+ */
 export function canCreateGym(plan, currentGyms = 0) {
   const maxGyms = getMaxGyms(plan);
   if (maxGyms == null) return true;
   return Number(currentGyms) < maxGyms;
 }
 
+/**
+ * Retorna el mensaje informativo que se muestra al usuario cuando intenta
+ * acceder a una feature bloqueada por su plan actual.
+ */
 export function getFeatureUpgradeMessage(feature) {
   const customMessages = {
     [FEATURES.ADVANCED_STATS]: "Las estadísticas avanzadas están disponibles solo en el plan Pro.",
