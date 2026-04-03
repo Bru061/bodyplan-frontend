@@ -20,6 +20,7 @@ import Checkout from "../../modules/planes/Checkout";
 import PagoExitoso from "../../modules/planes/PagoExitoso";
 import PrivacyPolicy from "../../modules/public/PrivacyPolicy";
 import TermsAndConditions from "../../modules/public/TermsAndConditions";
+import DeleteAccount from "../../modules/public/DeleteAccount";
 import AdminDashboard from "../../modules/admin/AdminDashboard";
 import AdminFinanzas from "../../modules/admin/AdminFinanzas";
 import AdminPlanes from "../../modules/admin/AdminPlanes";
@@ -37,6 +38,10 @@ function AppRouter() {
   return (
     <Routes>
 
+      <Route path="/politicas-privacidad" element={<PrivacyPolicy />} />
+      <Route path="/terminos-y-condiciones" element={<TermsAndConditions />} />
+      <Route path="/eliminar-cuenta" element={<DeleteAccount />} />
+
       {/* Públicas */}
       <Route element={<PublicRoute />}>
         <Route path="/" element={<Home />} />
@@ -45,8 +50,6 @@ function AppRouter() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
-        <Route path="/politicas-privacidad" element={<PrivacyPolicy />} />
-        <Route path="/terminos-y-condiciones" element={<TermsAndConditions />} />
       </Route>
 
       {/* Privadas */}

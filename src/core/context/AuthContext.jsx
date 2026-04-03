@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { loginAuth, registerAuth } from "../../services/authService";
 import { useNavigate } from "react-router-dom";
 import { googleAuth } from "../../services/authService";
+import api from "../../services/axios";
 
 /**
  * Contexto global de autenticación. Gestiona el ciclo de vida de la sesión del usuario:
@@ -39,17 +40,45 @@ export function AuthProvider({ children }) {
   const navigate = useNavigate();
   const isAuthenticated = Boolean(token);
 
-  useEffect(() => {
-    const savedToken = localStorage.getItem(STORAGE_KEYS.token);
-    const savedUser = localStorage.getItem(STORAGE_KEYS.user);
-    const savedGymId = localStorage.getItem(STORAGE_KEYS.gymId);
+  const clearSession = () => {
+    localStorage.removeItem(STORAGE_KEYS.token);
+    localStorage.removeItem(STORAGE_KEYS.user);
+    localStorage.removeItem(STORAGE_KEYS.gymId);
+    setToken(null);
+    setUser(null);
+    setGymId(null);
+  };
 
-    if (savedToken && savedUser) {
-      setToken(savedToken);
-      setUser(JSON.parse(savedUser));
-      setGymId(savedGymId ? Number(savedGymId) : null);
-    }
-    setLoading(false);
+  useEffect(() => {
+    const bootstrapSession = async () => {
+      const savedToken = localStorage.getItem(STORAGE_KEYS.token);
+      const savedUser = localStorage.getItem(STORAGE_KEYS.user);
+      const savedGymId = localStorage.getItem(STORAGE_KEYS.gymId);
+
+      if (!savedToken || !savedUser) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setToken(savedToken);
+        setUser(JSON.parse(savedUser));
+        setGymId(savedGymId ? Number(savedGymId) : null);
+
+        const res = await api.get("/user/me");
+        const remoteUser = res.data.usuario || res.data;
+        const role = remoteUser.role || mapRole(remoteUser.id_rol);
+
+        setUser({ ...remoteUser, role });
+        localStorage.setItem(STORAGE_KEYS.user, JSON.stringify({ ...remoteUser, role }));
+      } catch {
+        clearSession();
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    bootstrapSession();
   }, []);
 
   /**
@@ -116,14 +145,7 @@ export function AuthProvider({ children }) {
  * y redirige al usuario a la ruta raíz "/".
  */
   const signOut = () => {
-    localStorage.removeItem(STORAGE_KEYS.token);
-    localStorage.removeItem(STORAGE_KEYS.user);
-    localStorage.removeItem(STORAGE_KEYS.gymId);
-
-    setToken(null);
-    setUser(null);
-    setGymId(null);
-
+    clearSession();
     navigate("/");
   };
 

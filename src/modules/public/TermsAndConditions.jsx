@@ -156,8 +156,11 @@ function TermsAndConditions() {
 
         {/* Footer link */}
         <div className="legal-footer-link">
-          <Link to="/politicas-privacidad" className="legal-link-btn">
+          <Link to="/politicas-privacidad" target="_blank" rel="noreferrer" className="legal-link-btn">
             Ver Políticas de Privacidad →
+          </Link>
+          <Link to="/eliminar-cuenta" target="_blank" rel="noreferrer" className="legal-link-btn outlined">
+            Eliminar cuenta
           </Link>
         </div>
       </div>

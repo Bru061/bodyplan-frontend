@@ -145,11 +145,14 @@ function Sidebar({ open, onClose }) {
         </div>
 
         <div className="sidebar-legal">
-          <NavLink to="/politicas-privacidad" onClick={onClose}>
+          <NavLink to="/politicas-privacidad" target="_blank" rel="noreferrer" onClick={onClose}>
             Privacidad
           </NavLink>
-          <NavLink to="/terminos-y-condiciones" onClick={onClose}>
+          <NavLink to="/terminos-y-condiciones" target="_blank" rel="noreferrer" onClick={onClose}>
             Términos
+          </NavLink>
+          <NavLink to="/eliminar-cuenta" target="_blank" rel="noreferrer" onClick={onClose}>
+            Eliminar cuenta
           </NavLink>
         </div>
 

@@ -196,10 +196,12 @@
   text-decoration: underline;
 }
 
-/* ── FOOTER LINK ────────────────────────── */
+/* ── FOOTER LINKS ───────────────────────── */
 .legal-footer-link {
   padding-top: 2rem;
   display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
   justify-content: center;
 }
 
@@ -226,6 +228,18 @@
 
 .legal-link-btn:active {
   transform: scale(0.98);
+}
+
+/* Variante outlined para botones secundarios */
+.legal-link-btn.outlined {
+  background: transparent;
+  border: 1.5px solid #0f1e4a;
+  color: #0f1e4a;
+}
+
+.legal-link-btn.outlined:hover {
+  background: #f1f5f9;
+  text-decoration: none;
 }
 
 /* ── RESPONSIVE ─────────────────────────── */

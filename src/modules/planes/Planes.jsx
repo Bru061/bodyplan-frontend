@@ -43,6 +43,7 @@ function Planes() {
   const [loading, setLoading] = useState(true);
   const [procesando, setProcesando] = useState(null);
   const [error, setError] = useState("");
+  const [hasPlanHistory, setHasPlanHistory] = useState(false);
 
   const { trialUsed, refreshPermissions } = usePermissions();
 
@@ -54,11 +55,14 @@ function Planes() {
 
         try {
           const resPlan = await api.get("/proveedor/mi-plan");
+          const historial = resPlan.data.historial || [];
+          setHasPlanHistory(historial.length > 0);
           if (resPlan.data.plan_activo?.estado === "activa") {
             setPlanActivo(resPlan.data.plan_activo);
             refreshPermissions();
           }
         } catch {
+          setHasPlanHistory(false);
         }
 
       } catch (err) {
@@ -75,6 +79,11 @@ function Planes() {
     setError("");
 
     const esTrial = parseFloat(plan.precio) === 0 || /trial|prueba/i.test(plan.nombre || "");
+    if (esTrial && hasPlanHistory && !esPlanActual(plan)) {
+      setError("La promoción gratuita solo puede activarse una vez por cuenta.");
+      return;
+    }
+
     if (esTrial && trialUsed && !esPlanActual(plan)) {
       setError("El plan de prueba solo puede activarse una vez por usuario.");
       return;
@@ -174,6 +183,7 @@ function Planes() {
           const popular  = index === 1;
           const cargando = procesando === plan.id_plan;
           const accesos  = ACCESOS_HARDCODED[plan.id_plan] || [];
+          const trialBloqueada = gratuito && !activo && (trialUsed || hasPlanHistory);
 
           return (
             <div
@@ -212,11 +222,12 @@ function Planes() {
               <button
                 className={`plan-btn ${gratuito ? "plan-btn-ghost" : ""}`}
                 onClick={() => handleSeleccionar(plan)}
-                disabled={activo || cargando || !!procesando || (gratuito && trialUsed && !activo)}
-                title={gratuito && trialUsed && !activo ? "Este plan ya fue usado anteriormente" : ""}
+                disabled={activo || cargando || !!procesando || trialBloqueada}
+                title={trialBloqueada ? "Este plan promocional ya fue usado anteriormente" : ""}
               >
                 {activo    ? "Plan actual"
                 : cargando ? "Procesando..."
+                : trialBloqueada ? "Promoción ya usada"
                 : gratuito ? "Comenzar gratis"
                 : index === planes.length - 1 ? "Empezar"
                 : "Comenzar"}

@@ -1050,17 +1050,18 @@ textarea.field-error {
 .footer {
   background: #0f172a;
   color: rgba(255, 255, 255, 0.85);
-  margin-top: 2rem;
-  padding: 2rem 1rem 1.1rem;
+  margin-top: 0;
+  padding: 1rem 1rem;
 }
 
 .footer-content {
-  max-width: 1200px;
+  max-width: none;
+  padding: 0 20px;
   margin: 0 auto;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  border-bottom: none;
   display: flex;
   justify-content: space-between;
+  align-items: center;
   gap: 1rem;
   flex-wrap: wrap;
 }
@@ -1068,9 +1069,26 @@ textarea.field-error {
 .footer-copy {
   max-width: 1200px;
   margin: 0.8rem auto 0;
+  margin-right: auto;
   text-align: center;
   font-size: 0.85rem;
   color: rgba(255, 255, 255, 0.75);
+}
+
+.footer-bottom-links {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.footer-bottom-links a {
+  color: rgba(255, 255, 255, 0.3);
+  text-decoration: none;
+  font-size: 0.78rem;
+  transition: color 0.2s;
+}
+
+.footer-bottom-links a:hover {
+  color: rgba(255, 255, 255, 0.7);
 }
 
 /* ═══════════════════════════════════════════

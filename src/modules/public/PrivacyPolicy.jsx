@@ -191,8 +191,11 @@ function PrivacyPolicy() {
 
         {/* Footer link */}
         <div className="legal-footer-link">
-          <Link to="/terminos-y-condiciones" className="legal-link-btn">
+          <Link to="/terminos-y-condiciones" target="_blank" rel="noreferrer" className="legal-link-btn">
             Ver Términos y Condiciones →
+          </Link>
+          <Link to="/eliminar-cuenta" target="_blank" rel="noreferrer" className="legal-link-btn outlined">
+            Eliminar cuenta
           </Link>
         </div>
       </div>

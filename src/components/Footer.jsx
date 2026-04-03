@@ -1,14 +1,19 @@
+import { Link } from "react-router-dom";
+
 function Footer() {
   return (
-    <footer style={{
-      background: "#0f172a",
-      borderTop: "1px solid rgba(255,255,255,0.07)",
-      padding: "1.5rem 20px",
-      textAlign: "center"
-    }}>
-      <p style={{ margin: 0, fontSize: "0.8rem", color: "rgba(255,255,255,0.3)" }}>
-        © {new Date().getFullYear()} DevNest — Todos los derechos reservados.
-      </p>
+    <footer className="footer">
+      <div className="footer-content">
+        <p className="footer-copy">
+          © {new Date().getFullYear()} DevNest — Todos los derechos reservados.
+        </p>
+
+        <div className="footer-bottom-links">
+          <Link to="/politicas-privacidad" target="_blank" rel="noreferrer">Privacidad</Link>
+          <Link to="/terminos-y-condiciones" target="_blank" rel="noreferrer">Términos</Link>
+          <Link to="/eliminar-cuenta" target="_blank" rel="noreferrer">Eliminar cuenta</Link>
+        </div>
+      </div>
     </footer>
   );
 }
