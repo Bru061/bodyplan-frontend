@@ -340,25 +340,27 @@ label {
 }
 
 /* ═══════════════════════════════════════════
-   NAVBAR
+   NAVBAR — BodyPlan refined
 ═══════════════════════════════════════════ */
 
 .navbar {
   position: sticky;
   top: 0;
   z-index: 40;
-  background: linear-gradient(120deg, #0f172a 0%, #1e3a8a 100%);
-  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.2);
+  background: linear-gradient(175deg, #0d1b3e 0%, #112060 55%, #0f1e4a 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 4px 24px rgba(10, 21, 53, 0.25);
 }
 
 .navbar-container {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.25rem 1.5rem;
+  padding: 0.85rem 1.5rem;
   max-width: 100%;
 }
 
+/* ── IZQUIERDA ───────────────────────────── */
 .navbar-left {
   display: flex;
   align-items: center;
@@ -369,125 +371,161 @@ label {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   border-radius: 8px;
   border: none;
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.75);
   cursor: pointer;
-  transition: background 0.18s;
+  transition: background 0.15s, color 0.15s;
   flex-shrink: 0;
 }
 
-.navbar-menu-btn:hover { background: rgba(255, 255, 255, 0.18); }
+.navbar-menu-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
 
 .navbar-page-title {
   color: #fff;
-  font-family: 'Outfit', sans-serif;
-  font-size: 1rem;
-  font-weight: 600;
+  font-family: 'Sora', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: -0.1px;
 }
 
 .navbar-mobile-brand { display: none; }
-.navbar-mobile-brand .brand-logo { width: 32px; height: 32px; }
+.navbar-mobile-brand .brand-logo { width: 30px; height: 30px; }
 
+/* ── DERECHA ─────────────────────────────── */
 .navbar-right {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 4px;
 }
 
 .navbar-icon-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   border-radius: 8px;
-  color: rgba(255, 255, 255, 0.8);
-  transition: background 0.18s, color 0.18s;
+  color: rgba(255, 255, 255, 0.55);
+  transition: background 0.15s, color 0.15s;
   text-decoration: none;
+  border: none;
+  background: none;
+  cursor: pointer;
 }
 
 .navbar-icon-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .navbar-avatar {
-  background: rgba(255, 255, 255, 0.12);
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
+  background: linear-gradient(135deg, #2a4db5, #1a2f6e);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
   color: #fff;
+  font-family: 'Sora', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .navbar-exit-btn {
   background: none;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 8px;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 0.85rem;
-  font-weight: 600;
-  padding: 0.4rem 0.9rem;
+  color: rgba(255, 255, 255, 0.65);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 500;
+  padding: 0.38rem 0.85rem;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 
 .navbar-exit-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
   color: #fff;
-  border-color: rgba(255, 255, 255, 0.5);
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 .navbar-onboarding-text {
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 0.95rem;
-  font-weight: 500;
+  color: rgba(255, 255, 255, 0.75);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 400;
 }
 
+/* ── BRAND (navbar pública) ──────────────── */
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 0.7rem;
+  gap: 10px;
   text-decoration: none;
 }
 
 .brand-logo {
-  width: 44px;
-  height: 44px;
+  width: 34px;
+  height: 34px;
   object-fit: contain;
   background: #fff;
-  border-radius: 10px;
+  border-radius: 8px;
+  flex-shrink: 0;
 }
 
 .brand-name {
   color: #fff;
-  font-size: 1.15rem;
-  font-family: 'Outfit', sans-serif;
-  font-weight: 700;
+  font-family: 'Sora', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.2px;
 }
 
+/* ── MENÚ (navbar pública) ───────────────── */
 .menu {
   display: flex;
   align-items: center;
   list-style: none;
   margin: 0;
   padding: 0;
-  gap: 1.1rem;
+  gap: 0.25rem;
 }
 
 .menu a {
-  color: rgba(255, 255, 255, 0.82);
+  color: rgba(255, 255, 255, 0.55);
   text-decoration: none;
-  font-size: 0.95rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 400;
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.menu a:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.menu a.active {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
   font-weight: 500;
 }
 
-.menu a:hover,
-.menu a.active { color: #fff; }
-
 /* ═══════════════════════════════════════════
-   SIDEBAR
+   SIDEBAR — BodyPlan refined
 ═══════════════════════════════════════════ */
 
 .sidebar {
@@ -496,7 +534,7 @@ label {
   left: 0;
   height: 100vh;
   width: 240px;
-  background: linear-gradient(180deg, #0f172a 0%, #1e3a8a 100%);
+  background: linear-gradient(175deg, #0d1b3e 0%, #112060 55%, #0f1e4a 100%);
   display: flex;
   flex-direction: column;
   z-index: 200;
@@ -504,17 +542,33 @@ label {
   overflow-y: auto;
 }
 
+/* Círculo decorativo sutil */
+.sidebar::before {
+  content: '';
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  border: 50px solid rgba(255, 255, 255, 0.03);
+  top: -70px;
+  right: -70px;
+  pointer-events: none;
+}
+
+/* ── BRAND ─────────────────────────────── */
 .sidebar-brand {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 1.25rem 1.25rem 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 10px;
+  padding: 1.25rem 1.1rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  position: relative;
+  z-index: 1;
 }
 
 .sidebar-logo {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   object-fit: contain;
   background: #fff;
   border-radius: 8px;
@@ -522,16 +576,19 @@ label {
 }
 
 .sidebar-brand-name {
+  font-family: 'Sora', sans-serif;
   color: #fff;
-  font-family: 'Outfit', sans-serif;
-  font-size: 1.1rem;
-  font-weight: 700;
-  letter-spacing: 0.01em;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.2px;
 }
 
+/* ── NAV ────────────────────────────────── */
 .sidebar-nav {
   flex: 1;
   padding: 1rem 0.75rem;
+  position: relative;
+  z-index: 1;
 }
 
 .sidebar-nav ul {
@@ -540,70 +597,132 @@ label {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 
 .sidebar-section-label {
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.35);
+  color: rgba(255, 255, 255, 0.28);
   padding: 0 0.5rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 6px;
 }
 
 .sidebar-link {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.65rem 0.75rem;
-  border-radius: 10px;
-  color: rgba(255, 255, 255, 0.65);
-  font-size: 0.9rem;
-  font-weight: 500;
+  gap: 10px;
+  padding: 0.6rem 0.75rem;
+  border-radius: 9px;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.875rem;
+  font-weight: 400;
   text-decoration: none;
-  transition: background 0.18s, color 0.18s;
+  transition: background 0.15s, color 0.15s;
+  position: relative;
 }
 
 .sidebar-link:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.sidebar-link:hover .sidebar-icon {
+  color: #93c5fd;
 }
 
 .sidebar-link-active {
-  background: rgba(255, 255, 255, 0.13);
+  background: rgba(255, 255, 255, 0.12);
   color: #fff;
-  font-weight: 600;
+  font-weight: 500;
 }
 
-.sidebar-link-active .sidebar-icon,
-.sidebar-link:hover .sidebar-icon { color: #93c5fd; }
+/* Acento izquierdo en item activo */
+.sidebar-link-active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 25%;
+  bottom: 25%;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: #93c5fd;
+}
+
+.sidebar-link-active .sidebar-icon {
+  color: #93c5fd;
+}
 
 .sidebar-icon {
   display: flex;
   align-items: center;
   flex-shrink: 0;
-  color: rgba(255, 255, 255, 0.5);
-  transition: color 0.18s;
+  color: rgba(255, 255, 255, 0.38);
+  transition: color 0.15s;
 }
 
+/* ── SOPORTE ────────────────────────────── */
+.sidebar-support {
+  margin: 0 0.75rem 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  position: relative;
+  z-index: 1;
+  text-decoration: none;
+  font-family: inherit;
+}
+
+.sidebar-support:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* ── FOOTER ─────────────────────────────── */
 .sidebar-footer {
-  padding: 0.75rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.85rem 0.75rem 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
+  position: relative;
+  z-index: 1;
+}
+
+.sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0.5rem;
+  border-radius: 9px;
+  transition: background 0.15s;
+  margin-bottom: 2px;
+}
+
+.sidebar-user:hover {
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .sidebar-avatar {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.15);
+  background: linear-gradient(135deg, #2a4db5, #1a2f6e);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
   color: #fff;
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-family: 'Sora', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -618,37 +737,60 @@ label {
 
 .sidebar-user-name {
   color: #fff;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 0.82rem;
+  font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.2;
 }
 
 .sidebar-user-role {
-  color: rgba(255, 255, 255, 0.45);
-  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.38);
+  font-size: 0.7rem;
+  margin-top: 1px;
 }
 
 .sidebar-logout {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.6rem 0.75rem;
-  border-radius: 10px;
+  gap: 10px;
+  padding: 0.55rem 0.75rem;
+  border-radius: 9px;
   border: none;
   background: none;
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 0.9rem;
-  font-weight: 500;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.875rem;
+  font-weight: 400;
   cursor: pointer;
   width: 100%;
-  transition: background 0.18s, color 0.18s;
+  font-family: inherit;
+  transition: background 0.15s, color 0.15s;
 }
 
 .sidebar-logout:hover {
-  background: rgba(239, 68, 68, 0.15);
+  background: rgba(239, 68, 68, 0.12);
   color: #fca5a5;
+}
+
+/* ── LEGAL (Privacidad / Términos) ───────── */
+.sidebar-legal {
+  display: flex;
+  gap: 12px;
+  padding: 0.5rem 0.5rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  margin-top: 4px;
+}
+
+.sidebar-legal a {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.28);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.sidebar-legal a:hover {
+  color: rgba(255, 255, 255, 0.6);
 }
 
 /* ═══════════════════════════════════════════

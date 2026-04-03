@@ -18,6 +18,7 @@ function Register() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [acceptedPolicies, setAcceptedPolicies] = useState(false);
 
   const [form, setForm] = useState(
     location.state?.form || {
@@ -61,6 +62,10 @@ function Register() {
     }
     if (/\s/.test(form.password)) {
       setError("La contraseña no debe contener espacios");
+      return;
+    }
+    if (!acceptedPolicies) {
+      setError("Debes aceptar las Políticas de Privacidad y los Términos y Condiciones.");
       return;
     }
 
@@ -241,6 +246,21 @@ function Register() {
               >
                 {loading ? "Registrando..." : "Registrarse"}
               </button>
+
+              <label style={{ display: "flex", gap: "0.5rem", alignItems: "flex-start", fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+                <input
+                  type="checkbox"
+                  checked={acceptedPolicies}
+                  onChange={(e) => setAcceptedPolicies(e.target.checked)}
+                  style={{ marginTop: "0.2rem" }}
+                />
+                <span>
+                  He leído y acepto las{" "}
+                  <Link to="/politicas-privacidad" target="_blank" rel="noreferrer">Políticas de Privacidad</Link>{" "}
+                  y los{" "}
+                  <Link to="/terminos-y-condiciones" target="_blank" rel="noreferrer">Términos y Condiciones</Link>.
+                </span>
+              </label>
 
             </form>
 

@@ -18,6 +18,8 @@ import CreateGym from "../../modules/gym/CreateGym";
 import Planes from "../../modules/planes/Planes";
 import Checkout from "../../modules/planes/Checkout";
 import PagoExitoso from "../../modules/planes/PagoExitoso";
+import PrivacyPolicy from "../../modules/public/PrivacyPolicy";
+import TermsAndConditions from "../../modules/public/TermsAndConditions";
 import AdminDashboard from "../../modules/admin/AdminDashboard";
 import AdminFinanzas from "../../modules/admin/AdminFinanzas";
 import AdminPlanes from "../../modules/admin/AdminPlanes";
@@ -43,6 +45,8 @@ function AppRouter() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/politicas-privacidad" element={<PrivacyPolicy />} />
+        <Route path="/terminos-y-condiciones" element={<TermsAndConditions />} />
       </Route>
 
       {/* Privadas */}

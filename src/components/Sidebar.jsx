@@ -144,6 +144,15 @@ function Sidebar({ open, onClose }) {
 
         </div>
 
+        <div className="sidebar-legal">
+          <NavLink to="/politicas-privacidad" onClick={onClose}>
+            Privacidad
+          </NavLink>
+          <NavLink to="/terminos-y-condiciones" onClick={onClose}>
+            Términos
+          </NavLink>
+        </div>
+
       </aside>
     </>
   );

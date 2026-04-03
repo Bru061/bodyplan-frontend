@@ -8,6 +8,7 @@ import {
   useElements
 } from "@stripe/react-stripe-js";
 import "../../styles/planes.css";
+import { Link } from "react-router-dom";
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
@@ -74,6 +75,13 @@ function CheckoutForm({ desglose, plan }) {
 
       <p className="checkout-seguro">
         🔒 Pago seguro procesado por Stripe
+      </p>
+
+     <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "0.25rem" }}>
+        Al continuar aceptas nuestras{" "}
+        <Link to="/politicas-privacidad" target="_blank" rel="noreferrer">Políticas de Privacidad</Link>{" "}
+        y{" "}
+        <Link to="/terminos-y-condiciones" target="_blank" rel="noreferrer">Términos y Condiciones</Link>.
       </p>
 
     </form>
