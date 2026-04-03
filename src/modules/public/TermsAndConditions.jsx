@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import "../../styles/LegalPage.css";
+import "../../styles/legalPage.css";
 
 function TermsAndConditions() {
   const sections = [
