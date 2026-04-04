@@ -22,6 +22,10 @@ function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  /**
+ * Actualiza el campo correspondiente en el formulario y limpia
+ * el mensaje de error al detectar cualquier cambio.
+ */
   const handleChange = (e) => {
     setError("");
     setForm((prev) => ({
@@ -30,6 +34,15 @@ function Login() {
     }));
   };
 
+  /**
+ * Autentica al usuario con correo y contraseña mediante signIn.
+ * Tras el éxito consulta en paralelo el plan activo y los gimnasios
+ * para determinar la ruta de redirección:
+ *   - Sin plan activo → "/planes"
+ *   - Con plan, sin gimnasios → "/mis-gimnasios"
+ *   - Con plan y gimnasios → "/dashboard"
+ * Muestra el error devuelto por el servidor si la autenticación falla.
+ */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -68,6 +81,11 @@ function Login() {
     }
   };
 
+  /**
+ * Abre el popup de Google con Firebase, obtiene el idToken y lo
+ * envía al backend mediante signInWithGoogle. Redirige a "/dashboard"
+ * si el proveedor tiene plan activo, o a "/planes" en caso contrario.
+ */
   const handleGoogleLogin = async () => {
     try {
       setError("");

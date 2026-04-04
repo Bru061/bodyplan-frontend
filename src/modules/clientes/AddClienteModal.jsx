@@ -2,6 +2,12 @@ import { useState } from "react";
 import api from "../../services/axios";
 import ModalPortal from "../../components/ui/ModalPortal";
 
+/**
+ * Modal para registrar un nuevo cliente e inscribirlo en un gimnasio
+ * con una membresía seleccionada. Aplica filtros de caracteres en los
+ * campos de nombre y apellidos, y valida el correo en tiempo real al
+ * perder el foco y al momento del submit.
+ */
 function AddClienteModal({ gimnasios, membresias, fetchMembresias, onClose, onCreated }) {
 
   const [form, setForm] = useState({
@@ -20,17 +26,30 @@ function AddClienteModal({ gimnasios, membresias, fetchMembresias, onClose, onCr
   const onlyLetters = (v) => v.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "");
   const onlyLettersNoSpace = (v) => v.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ]/g, "");
 
+  /**
+ * Actualiza el campo correspondiente del formulario.
+ * Convierte id_membresia a número al actualizar. Limpia el error
+ * del campo si existía alguno previo.
+ */
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: name === "id_membresia" ? Number(value) : value }));
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: "" }));
   };
 
+  /**
+ * Valida el formato del correo al perder el foco del campo.
+ * Muestra error de formato si el valor no cumple el patrón básico de email.
+ */
   const handleCorreoBlur = () => {
     if (form.correo && !/^\S+@\S+\.\S+$/.test(form.correo))
       setErrors(prev => ({ ...prev, correo: "Correo inválido" }));
   };
 
+  /**
+ * Actualiza el gimnasio seleccionado, limpia la membresía elegida
+ * y dispara fetchMembresias para cargar las membresías del nuevo gimnasio.
+ */
   const handleGymChange = async (e) => {
     const id = Number(e.target.value);
     setForm(prev => ({ ...prev, id_gimnasio: id, id_membresia: "" }));
@@ -38,6 +57,13 @@ function AddClienteModal({ gimnasios, membresias, fetchMembresias, onClose, onCr
     if (id) await fetchMembresias(id);
   };
 
+  /**
+ * Valida todos los campos requeridos antes de enviar.
+ * Si hay errores los muestra en el formulario sin hacer petición.
+ * Si es válido, envía POST a "/gym/clientes/inscribir" con los datos normalizados.
+ * Al éxito llama a onCreated y cierra el modal.
+ * Muestra el error del servidor si la petición falla.
+ */
   const handleSubmit = async () => {
     const newErrors = {};
 

@@ -5,6 +5,13 @@ import { useNavigate } from "react-router-dom";
 import '../../styles/login.css';
 import { MdAssignmentInd } from "react-icons/md";
 
+/**
+ * Página de recuperación de contraseña con flujo en 3 pasos:
+ *   1. Solicitar código → ingresa correo y recibe un código por email.
+ *   2. Verificar código → valida el código de 6 dígitos recibido.
+ *   3. Nueva contraseña → establece y confirma la nueva contraseña.
+ * Cada paso avanza el estado `step` solo si la petición al API es exitosa.
+ */
 function ForgotPassword() {
 
   const navigate = useNavigate();
@@ -21,6 +28,10 @@ function ForgotPassword() {
 
   const PLATFORM = "web";
 
+  /**
+ * Envía el correo a "/password/request" para solicitar un código de recuperación.
+ * Al éxito muestra un mensaje de confirmación y avanza al paso 2.
+ */
   const handleRequestCode = async (e) => {
     e.preventDefault();
     setError("");
@@ -38,6 +49,10 @@ function ForgotPassword() {
     }
   };
 
+  /**
+ * Valida el código ingresado contra "/password/verify" junto con el correo.
+ * Al éxito avanza al paso 3 donde el usuario puede definir su nueva contraseña.
+ */
   const handleVerifyCode = async (e) => {
     e.preventDefault();
     setError("");
@@ -55,6 +70,11 @@ function ForgotPassword() {
     }
   };
 
+  /**
+ * Valida localmente que la contraseña tenga al menos 6 caracteres y que
+ * ambos campos coincidan antes de enviar a "/password/change".
+ * Al éxito muestra confirmación y redirige a "/login" tras 1.5 segundos.
+ */
   const handleChangePassword = async (e) => {
     e.preventDefault();
     setError("");
@@ -128,13 +148,18 @@ function ForgotPassword() {
 
             {step === 1 && (
               <form onSubmit={handleRequestCode} className="login-fields">
+                <div className="float-field">
                 <input
+                  id="correo"
                   type="email"
-                  placeholder="Correo electrónico"
+                  name="correo"
+                  placeholder=" "
                   value={correo}
                   onChange={(e)=>setCorreo(e.target.value)}
                   required
                 />
+                <label htmlFor="correo">Correo electrónico</label>
+                </div>
                 <button className="btn btn-primary" disabled={loading}>
                   {loading ? "Enviando..." : "Enviar código"}
                 </button>

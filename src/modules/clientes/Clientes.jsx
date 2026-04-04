@@ -12,6 +12,10 @@ import usePermissions from "../../hooks/usePermissions"
 
 const LIMIT = 5;
 
+/**
+ * Elimina clientes duplicados por id_usuario del arreglo crudo del API.
+ * En caso de duplicado prioriza la entrada con estado "activa" sobre cualquier otra.
+ */
 function deduplicarClientes(clientesRaw) {
   const mapa = new Map();
   for (const c of clientesRaw) {
@@ -55,6 +59,10 @@ function Clientes() {
   const { can, FEATURES, getUpgradeMessage } = usePermissions();
   const fullClientManagementEnabled = can(FEATURES.FULL_CLIENT_MANAGEMENT);
 
+  /**
+ * Obtiene todos los clientes y calcula los contadores de activos,
+ * inactivos y clientes con membresía activa para las tarjetas de estadísticas.
+ */
   const cargarStats = async () => {
     try {
       const res = await api.get("/clientes", { params: { limit: 9999 } });
@@ -73,6 +81,11 @@ function Clientes() {
     }
   };
 
+  /**
+ * Obtiene todos los clientes, los deduplica y los normaliza al formato
+ * que consume la tabla: id, nombre, correo, teléfono, estado,
+ * fechaInicio, membresía, gimnasio e id_gimnasio.
+ */
   const cargarClientes = async () => {
     try {
       const res = await api.get("/clientes", { params: { limit: 9999 } });
@@ -107,6 +120,10 @@ function Clientes() {
     setPage(1);
   }, [search, filtroEstado, filtroGym]);
 
+  /**
+ * Obtiene los gimnasios del proveedor para poblar el selector de filtro
+ * y el modal de registro de clientes.
+ */
   const fetchGimnasios = async () => {
     try {
       const res = await api.get("/gym");
@@ -116,6 +133,10 @@ function Clientes() {
     }
   };
 
+  /**
+ * Obtiene las membresías disponibles de un gimnasio específico.
+ * Se invoca al seleccionar un gimnasio dentro del modal de registro.
+ */
   const fetchMembresias = async (id_gimnasio) => {
     try {
       const res = await api.get(`/gym/${id_gimnasio}`);
@@ -126,6 +147,12 @@ function Clientes() {
     }
   };
 
+  /**
+ * Verifica el permiso FULL_CLIENT_MANAGEMENT antes de exportar.
+ * Si el permiso es válido, obtiene todos los clientes, los deduplica
+ * y genera un archivo Excel descargable con los datos relevantes.
+ * Muestra un mensaje de upgrade si el plan no tiene el permiso.
+ */
   const exportClientes = async () => {
     if (!fullClientManagementEnabled) {
       setGymError(getUpgradeMessage(FEATURES.FULL_CLIENT_MANAGEMENT));
@@ -172,6 +199,11 @@ function Clientes() {
     paginaSegura * LIMIT
   );
 
+  /**
+ * Verifica el permiso FULL_CLIENT_MANAGEMENT y que el proveedor tenga
+ * al menos un gimnasio registrado antes de abrir el modal de registro.
+ * Muestra mensajes de error descriptivos si alguna condición no se cumple.
+ */
   const handleAbrirModal = async () => {
     if (!fullClientManagementEnabled) {
       setGymError(getUpgradeMessage(FEATURES.FULL_CLIENT_MANAGEMENT));

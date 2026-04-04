@@ -11,6 +11,12 @@ const TIPO_LABEL = {
   plan_web: "Plan Web",
 };
 
+/**
+ * Pestaña que muestra el historial completo de pagos con subtabs
+ * por tipo (todos, membresía, plan web) y filtros por estado y rango de fechas.
+ * Carga todos los registros una sola vez y aplica filtrado local.
+ * Muestra un resumen de totales cuando el API lo retorna.
+ */
 function TabMovimientos() {
 
   const [todos, setTodos] = useState([]);
@@ -22,6 +28,11 @@ function TabMovimientos() {
 
   const [filtros, setFiltros] = useState({ estado: "", fecha_inicio: "", fecha_fin: "" });
 
+  /**
+ * Obtiene hasta 9999 pagos desde "/admin/movimientos" para permitir
+ * filtrado y paginación local sin peticiones adicionales.
+ * Actualiza el listado completo y el resumen de totales.
+ */
   const fetchMovimientos = async () => {
     try {
       setLoading(true);
@@ -39,6 +50,10 @@ function TabMovimientos() {
 
   useEffect(() => { setPagina(1); }, [subTab, filtros]);
 
+  /**
+ * Actualiza un campo individual del objeto de filtros (estado,
+ * fecha_inicio o fecha_fin) manteniendo el resto sin cambios.
+ */
   const handleFiltro = (e) =>
     setFiltros(prev => ({ ...prev, [e.target.name]: e.target.value }));
 
@@ -54,6 +69,10 @@ function TabMovimientos() {
   const paginaSegura   = Math.min(pagina, totalPaginas);
   const movimientosPag = movimientos.slice((paginaSegura - 1) * POR_PAGINA, paginaSegura * POR_PAGINA);
 
+  /**
+ * Cuenta cuántos pagos del listado completo tienen un tipo_pago dado.
+ * Usado para mostrar el conteo en cada subtab.
+ */
   const countTipo = (tipo) => todos.filter(m => m.tipo_pago === tipo).length;
 
   return (
@@ -172,6 +191,12 @@ function TabMovimientos() {
   );
 }
 
+/**
+ * Pestaña que muestra el saldo pendiente de transferir por gimnasio,
+ * incluyendo su CLABE bancaria y estado de verificación.
+ * Permite seleccionar pagos y marcarlos como transferidos
+ * tras confirmación en un modal.
+ */
 function TabBalance({ showToast }) {
 
   const [balance, setBalance] = useState([]);
@@ -180,6 +205,10 @@ function TabBalance({ showToast }) {
   const [confirmModal, setConfirmModal] = useState(false);
   const [procesando, setProcesando] = useState(false);
 
+  /**
+ * Obtiene el balance de pagos pendientes por gimnasio desde "/admin/balance"
+ * y actualiza el listado. Muestra un Toast de error si la petición falla.
+ */
   const fetchBalance = async () => {
     try {
       setLoading(true);
@@ -194,6 +223,12 @@ function TabBalance({ showToast }) {
 
   useEffect(() => { fetchBalance(); }, []);
 
+  /**
+ * Envía los IDs de pagos seleccionados a "/admin/pagos/transferido" para
+ * marcarlos como transferidos. Tras el éxito limpia la selección, cierra
+ * el modal de confirmación y recarga el balance.
+ * Muestra Toast de éxito o error según el resultado.
+ */
   const handleTransferir = async () => {
     try {
       setProcesando(true);

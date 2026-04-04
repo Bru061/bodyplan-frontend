@@ -6,6 +6,14 @@ import '../../styles/login.css';
 import { MdAssignmentInd } from "react-icons/md";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 
+/**
+ * Página para establecer una nueva contraseña mediante un token de reset
+ * obtenido desde los parámetros de la URL (useParams).
+ * Incluye toggles de visibilidad para ambos campos de contraseña.
+ * Valida que la contraseña tenga al menos 8 caracteres y que ambos
+ * campos coincidan antes de enviar la petición.
+ * Al éxito redirige a "/login" tras 1.5 segundos.
+ */
 function ResetPassword(){
 
   const { token } = useParams();
@@ -20,6 +28,12 @@ function ResetPassword(){
 
   const PLATFORM = "web";
 
+  /**
+ * Valida la contraseña localmente (mínimo 8 caracteres, ambos campos iguales)
+ * y envía el token y la nueva contraseña a "/password/reset/:token".
+ * Muestra mensaje de éxito o error según el resultado.
+ * Al éxito redirige a "/login" tras 1.5 segundos.
+ */
   const handleSubmit = async(e)=>{
     e.preventDefault();
     setError("");

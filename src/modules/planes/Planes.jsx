@@ -46,6 +46,7 @@ function Planes() {
   const [hasPlanHistory, setHasPlanHistory] = useState(false);
 
   const { trialUsed, refreshPermissions } = usePermissions();
+  const fromPerfil = location.state?.from === "/perfil";
 
   useEffect(() => {
     const fetchData = async () => {
@@ -148,18 +149,14 @@ function Planes() {
   return (
     <div className="planes-page">
 
-      <button
-        className="planes-back"
-        onClick={() => {
-          if (window.history.length > 1) {
-            navigate(-1);
-          } else {
-            navigate(location.state?.from || "/dashboard");
-          }
-        }}
-      >
-        ← Atrás
-      </button>
+      {fromPerfil && (
+        <button
+          className="planes-back"
+          onClick={() => navigate("/perfil")}
+        >
+          ← Atrás
+        </button>
+      )}
 
       <div className="planes-header">
         <h1>Elige tu plan</h1>

@@ -24,6 +24,12 @@ function DetalleCliente() {
   const [tabSubs, setTabSubs] = useState("activa");
   const [tabRutinas, setTabRutinas] = useState("activas");
 
+  /**
+ * Obtiene todas las rutinas del proveedor y filtra las que pertenecen
+ * al cliente actual consultando los clientes asignados de cada rutina.
+ * Agrega el nombre del encargado y el id_asignacion a cada rutina
+ * para poder mostrarlos y operar sobre ellos en la UI.
+ */
   const fetchRutinasCliente = async () => {
     try {
       const res = await api.get("/rutinas");
@@ -65,6 +71,13 @@ function DetalleCliente() {
   };
 
   useEffect(() => {
+
+    /**
+ * Obtiene los datos completos del cliente desde "/clientes/:id".
+ * Normaliza la respuesta extrayendo la suscripción activa, el historial
+ * de suscripciones y los IDs de gimnasios activos para construir el
+ * objeto cliente que consume el resto del componente.
+ */
     const cargarCliente = async () => {
       try {
         const res = await api.get(`/clientes/${id}`);
@@ -102,6 +115,12 @@ function DetalleCliente() {
     if (cliente) fetchRutinasCliente();
   }, [cliente]);
 
+  /**
+ * Cancela la asignación de rutina indicada en confirmModal enviando
+ * DELETE a "/rutinas/asignacion/:id_asignacion". Cierra el modal al
+ * éxito y recarga las rutinas del cliente. Muestra el error del servidor
+ * si la operación falla sin cerrar el modal.
+ */
   const handleCancelar = async () => {
     if (!confirmModal) return;
     try {

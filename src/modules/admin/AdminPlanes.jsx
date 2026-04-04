@@ -21,6 +21,10 @@ function AdminPlanes() {
 
   const showToast = (message, type = "success") => setToast({ message, type });
 
+  /**
+ * Obtiene todos los planes registrados desde "/admin/planes"
+ * y actualiza el listado. Muestra un Toast de error si falla.
+ */
   const fetchPlanes = async () => {
     try {
       setLoading(true);
@@ -35,12 +39,20 @@ function AdminPlanes() {
 
   useEffect(() => { fetchPlanes(); }, []);
 
+  /**
+ * Actualiza el campo correspondiente en el formulario y limpia
+ * su error de validación si existía.
+ */
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: "" }));
   };
 
+  /**
+ * Valida que nombre, precio y duracion_dias estén presentes.
+ * Actualiza el estado de errores y retorna si el formulario es válido.
+ */
   const validate = () => {
     const e = {};
     if (!form.nombre.trim()) e.nombre = "El nombre es obligatorio";
@@ -50,6 +62,12 @@ function AdminPlanes() {
     return Object.keys(e).length === 0;
   };
 
+  /**
+ * Valida el formulario y, si es correcto, envía PUT a
+ * "/admin/planes/:id" con los datos normalizados (precio como float,
+ * duración como entero). Muestra Toast de éxito o error y recarga
+ * el listado al terminar. Solo opera en modo edición (planEdit requerido).
+ */
   const handleGuardar = async () => {
     if (!validate()) return;
     try {
@@ -75,6 +93,10 @@ function AdminPlanes() {
     }
   };
 
+  /**
+ * Carga los datos del plan seleccionado en el formulario,
+ * limpia errores previos y abre el modal de edición.
+ */
   const abrirEditar = (plan) => {
     setPlanEdit(plan);
     setForm({

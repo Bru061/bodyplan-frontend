@@ -18,6 +18,10 @@ function AdminPerfil() {
 
   const showToast = (message, type = "success") => setToast({ message, type });
 
+  /**
+ * Obtiene los datos del usuario autenticado desde "/user/me"
+ * y los guarda en el estado. Registra el error en consola si falla.
+ */
   const fetchUser = async () => {
     try {
       const res = await api.get("/user/me");
@@ -31,6 +35,10 @@ function AdminPerfil() {
 
   useEffect(() => { fetchUser(); }, []);
 
+  /**
+ * Inicializa el formulario de edición con los datos actuales del usuario,
+ * limpia errores previos y abre el modal.
+ */
   const abrirEditarPerfil = () => {
     setPerfilForm({
       nombre: user.nombre || "",
@@ -42,6 +50,15 @@ function AdminPerfil() {
     setEditandoPerfil(true);
   };
 
+  /**
+ * Valida los campos del formulario antes de enviar:
+ *   - nombre, apellido_paterno y apellido_materno: obligatorios, solo letras.
+ *   - telefono: opcional, exactamente 10 dígitos si se proporciona.
+ *
+ * Si hay errores los muestra en el formulario sin hacer la petición.
+ * Si es válido, envía PUT a "/user/me" con los datos normalizados,
+ * muestra un Toast de resultado y recarga el perfil al éxito.
+ */
   const handleGuardarPerfil = async () => {
     const errors = {};
     const onlyLetters = (v) => /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(v.trim());

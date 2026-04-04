@@ -7,6 +7,7 @@ const DIAS = ["Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado", "Do
 function AsignarGimnasioModal({ personal, onClose, onAsignado }) {
 
   const [gimnasios, setGimnasios] = useState([]);
+  const [diasDisponibles, setDiasDisponibles] = useState([]);
   const [form, setForm] = useState({
     id_gimnasio: "",
     dia_semana:  "",
@@ -41,15 +42,45 @@ function AsignarGimnasioModal({ personal, onClose, onAsignado }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+    setForm(prev => {
+      const next = { ...prev, [name]: value };
+      if (name === "id_gimnasio") {
+        next.dia_semana = "";
+      }
+      return next;
+    });
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: "" }));
   };
+
+  useEffect(() => {
+    const fetchDiasDisponibles = async () => {
+      if (!form.id_gimnasio) {
+        setDiasDisponibles([]);
+        return;
+      }
+
+      try {
+        const res = await api.get(`/gym/${form.id_gimnasio}`);
+        const gym = res.data.gimnasio;
+        const dias = [...new Set((gym?.horarios || []).map(h => h.dia_semana).filter(Boolean))];
+        setDiasDisponibles(dias);
+      } catch (err) {
+        console.error("Error cargando horarios del gimnasio", err);
+        setDiasDisponibles([]);
+      }
+    };
+
+    fetchDiasDisponibles();
+  }, [form.id_gimnasio]);
 
   const handleSubmit = async () => {
     const newErrors = {};
 
     if (!form.id_gimnasio) newErrors.id_gimnasio = "Selecciona un gimnasio";
     if (!form.dia_semana)  newErrors.dia_semana  = "Selecciona un día";
+    if (form.dia_semana && diasDisponibles.length > 0 && !diasDisponibles.includes(form.dia_semana)) {
+      newErrors.dia_semana = "El día seleccionado no está disponible en el horario del gimnasio";
+    }
     if (!form.hora_entrada) newErrors.hora_entrada = "Indica la hora de entrada";
     if (!form.hora_salida)  newErrors.hora_salida  = "Indica la hora de salida";
     if (form.hora_entrada && form.hora_salida) {
@@ -112,9 +143,16 @@ function AsignarGimnasioModal({ personal, onClose, onAsignado }) {
 
             <div className="form-group">
               <label>Día *</label>
-              <select name="dia_semana" value={form.dia_semana} onChange={handleChange}>
+              <select
+                name="dia_semana"
+                value={form.dia_semana}
+                onChange={handleChange}
+                disabled={!form.id_gimnasio}
+              >
                 <option value="">Seleccionar día</option>
-                {DIAS.map(d => <option key={d}>{d}</option>)}
+                {(diasDisponibles.length > 0 ? diasDisponibles : DIAS).map(d => (
+                  <option key={d}>{d}</option>
+                ))}
               </select>
               {errors.dia_semana && <span className="field-error-msg">{errors.dia_semana}</span>}
             </div>

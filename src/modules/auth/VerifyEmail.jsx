@@ -5,7 +5,16 @@ import AuthLayout from "../../layout/AuthLayout";
 import "../../styles/login.css";
 import { MdAssignmentInd } from "react-icons/md";
 import { FiArrowLeft } from "react-icons/fi";
+import { useAuth } from "../../core/context/AuthContext";
 
+/**
+ * Página de verificación de correo electrónico post-registro.
+ * Recibe el correo y los datos del formulario anterior mediante
+ * el estado de navegación (location.state).
+ * Si la verificación es exitosa y hay credenciales previas, inicia
+ * sesión automáticamente y redirige a "/planes". De lo contrario
+ * redirige a "/login" con el correo y estado de verificación.
+ */
 function VerifyEmail() {
 
   const navigate = useNavigate();
@@ -13,12 +22,19 @@ function VerifyEmail() {
 
   const correo = location.state?.correo;
   const formAnterior = location.state?.form;
+  const { signIn } = useAuth();
 
   const [codigo, setCodigo] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
+  /**
+ * Valida que el campo de código no esté vacío y lo envía junto
+ * con el correo a "/auth/verify-email". Si la verificación es exitosa
+ * intenta iniciar sesión automáticamente con las credenciales almacenadas
+ * en el estado de navegación. Muestra error si el código es incorrecto o expirado.
+ */
   const handleVerify = async (e) => {
 
     e.preventDefault();
@@ -43,8 +59,22 @@ function VerifyEmail() {
 
       setSuccess("¡Correo verificado correctamente! Redirigiendo...");
 
+      if (formAnterior?.correo && formAnterior?.password) {
+        await signIn({
+          correo: formAnterior.correo,
+          password: formAnterior.password
+        });
+        setTimeout(() => {
+          navigate("/planes", { replace: true });
+        }, 1500);
+        return;
+      }
+
       setTimeout(() => {
-        navigate("/mis-gimnasios");
+        navigate("/login", {
+          replace: true,
+          state: { correo, verified: true }
+        });
       }, 1500);
 
     } catch (err) {
@@ -61,6 +91,10 @@ function VerifyEmail() {
 
   };
 
+  /**
+ * Navega de regreso a "/register" preservando los datos del formulario
+ * anterior en el estado de navegación para no perder lo que el usuario ya escribió.
+ */
   const handleRegresar = () => {
     navigate("/register", {
       state: { form: formAnterior }
@@ -115,10 +149,12 @@ function VerifyEmail() {
             )}
 
             <form onSubmit={handleVerify} className="login-fields">
-
+              <div className="float-field">
               <input
+                id="codigo"
                 type="text"
-                placeholder="Código de verificación"
+                name="codigo"
+                placeholder=" "
                 maxLength={6}
                 value={codigo}
                 onChange={(e) => {
@@ -128,6 +164,8 @@ function VerifyEmail() {
                 }}
                 required
               />
+              <label htmlFor="correo">Código de Verificación</label>
+              </div>
 
               <button
                 type="submit"

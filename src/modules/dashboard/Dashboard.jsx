@@ -25,6 +25,10 @@ function Dashboard() {
   const { can, FEATURES, getUpgradeMessage, loading: permissionsLoading } = usePermissions();
   const advancedStatsEnabled = can(FEATURES.ADVANCED_STATS);
 
+  /**
+ * Verifica que el proveedor tenga al menos un gimnasio registrado al montar.
+ * No bloquea ni redirige; solo registra en consola si ocurre un error.
+ */
   useEffect(() => {
     const checkGym = async () => {
       if (user?.role !== "proveedor") return;

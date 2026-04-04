@@ -16,6 +16,14 @@ const FORM_INICIAL = {
   instrucciones: ""
 };
 
+/**
+ * Modal con dos pestañas para asignar una rutina a un cliente:
+ *   - Existente: selecciona una rutina general ya creada y la asigna.
+ *   - Personalizada: crea una rutina nueva y la asigna en un solo flujo.
+ * Ambas pestañas permiten asignar opcionalmente un instructor encargado
+ * (solo visible si la rutina es de tipo "gimnasio" y hay personal disponible).
+ * La fecha límite está restringida a un máximo de 3 meses desde hoy.
+ */
 function AssignRutinaModal({ cliente, onClose, onAssigned }) {
 
   const [tab, setTab] = useState("existente");
@@ -41,6 +49,12 @@ function AssignRutinaModal({ cliente, onClose, onAssigned }) {
     return d.toISOString().split("T")[0];
   })();
 
+  /**
+ * Al montar, carga en paralelo:
+ *   - fetchRutinas: obtiene las rutinas generales disponibles desde "/rutinas/generales".
+ *   - fetchPersonal: obtiene el personal de todos los gimnasios activos del cliente,
+ *     deduplica por id_personal y lo comparte entre ambas pestañas.
+ */
   useEffect(() => {
     const fetchRutinas = async () => {
       try {
@@ -85,12 +99,23 @@ function AssignRutinaModal({ cliente, onClose, onAssigned }) {
     fetchPersonal();
   }, [cliente?.id_gimnasio, cliente?.gimnasiosActivosIds]);
 
+  /**
+ * Cambia la pestaña activa y limpia errores generales y de formulario.
+ */
   const handleTabChange = (t) => {
     setTab(t);
     setError("");
     setFormErrors({});
   };
 
+  /**
+ * Actualiza el campo del formulario de rutina personalizada aplicando
+ * restricciones de caracteres y longitud según el campo:
+ *   - duracion_min / calorias_estimadas: solo dígitos con límite de caracteres.
+ *   - objetivo: solo letras, números y espacios.
+ *   - nombre, descripcion, instrucciones: límite de caracteres.
+ * Limpia el error del campo si existía alguno previo.
+ */
   const handleChange = (e) => {
     let { name, value } = e.target;
 
@@ -105,6 +130,12 @@ function AssignRutinaModal({ cliente, onClose, onAssigned }) {
     if (formErrors[name]) setFormErrors(prev => ({ ...prev, [name]: null }));
   };
 
+  /**
+ * Valida todos los campos del formulario de rutina personalizada.
+ * Verifica obligatoriedad, límites numéricos (duración máx. 180 min,
+ * calorías máx. 5000) y que la fecha no supere los 3 meses permitidos.
+ * Actualiza formErrors y retorna si el formulario es válido.
+ */
   const validatePersonalizada = () => {
     const e = {};
 
@@ -135,6 +166,11 @@ function AssignRutinaModal({ cliente, onClose, onAssigned }) {
     return Object.keys(e).length === 0;
   };
 
+  /**
+ * Valida que se haya seleccionado rutina, fecha límite y que el cliente
+ * tenga gimnasio asociado. Envía POST a "/rutinas/asignar" con los datos
+ * de la rutina existente seleccionada. Al éxito llama a onAssigned y cierra el modal.
+ */
   const handleSubmitExistente = async (e) => {
     e.preventDefault();
     setError("");
@@ -170,6 +206,13 @@ function AssignRutinaModal({ cliente, onClose, onAssigned }) {
     }
   };
 
+  /**
+ * Valida el formulario y, si es correcto, ejecuta dos pasos secuenciales:
+ *   1. POST a "/rutinas" para crear la rutina personalizada.
+ *   2. POST a "/rutinas/asignar" usando el id_rutina obtenido en el paso anterior.
+ * Si algún paso falla muestra el error correspondiente sin completar el flujo.
+ * Al éxito llama a onAssigned y cierra el modal.
+ */
   const handleSubmitPersonalizada = async (e) => {
     e.preventDefault();
     setError("");
@@ -233,6 +276,10 @@ function AssignRutinaModal({ cliente, onClose, onAssigned }) {
     }
   };
 
+  /**
+ * Construye el nombre completo de un miembro del personal
+ * concatenando nombre y apellido_paterno disponibles.
+ */
   const nombrePersonal = (p) =>
     [p.nombre, p.apellido_paterno].filter(Boolean).join(" ");
 

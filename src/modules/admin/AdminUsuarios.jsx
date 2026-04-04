@@ -22,6 +22,13 @@ function AdminUsuarios() {
   const showToast = (message, type = "success") => setToast({ message, type });
 
   useEffect(() => {
+    /**
+ * Obtiene todos los usuarios del API de forma iterativa paginando de
+ * 200 en 200 hasta cubrir todas las páginas disponibles.
+ * Normaliza la respuesta revisando múltiples claves posibles y deduplica
+ * el resultado final por id_usuario para evitar registros repetidos.
+ * Muestra un Toast de error si alguna petición falla.
+ */
     const fetchTodos = async () => {
       try {
         setLoading(true);
@@ -81,6 +88,10 @@ function AdminUsuarios() {
     return () => clearTimeout(delay);
   }, [searchInput]);
 
+  /**
+ * Cuenta cuántos usuarios del listado completo tienen un id_rol dado.
+ * Usado para mostrar el conteo en las tarjetas de estadísticas.
+ */
   const contarPorRol = (idRol) => todos.filter(u => u.id_rol === idRol).length;
 
   const STATS = [
@@ -89,6 +100,11 @@ function AdminUsuarios() {
     { label: "Admin", value: "1", count: contarPorRol(1) }
   ];
 
+  /**
+ * Genera el título dinámico de la tabla según el filtro de rol activo.
+ * Si no hay filtro muestra "Todos los usuarios (N)", si hay filtro
+ * muestra el nombre del rol con su conteo actual.
+ */
   const tituloTabla = () => {
     if (!filtroRol) return `Todos los usuarios (${usuarios.length})`;
     return `${ROL_LABEL[filtroRol]}s (${usuarios.length})`;

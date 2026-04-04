@@ -31,6 +31,14 @@ function Register() {
     }
   );
 
+  /**
+ * Actualiza el campo del formulario aplicando filtros de caracteres
+ * según el tipo de campo:
+ *   - nombre: solo letras y espacios.
+ *   - apellido_paterno / apellido_materno: solo letras sin espacios.
+ *   - password / confirmPassword: sin espacios.
+ * Limpia el error activo al detectar cualquier cambio.
+ */
   const handleChange = (e) => {
     let { name, value } = e.target;
     setError("");
@@ -48,6 +56,18 @@ function Register() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  /**
+ * Valida el formulario antes de registrar:
+ *   - Contraseña mínimo 8 caracteres.
+ *   - Ambas contraseñas deben coincidir.
+ *   - Sin espacios en la contraseña.
+ *   - Políticas de privacidad aceptadas.
+ *
+ * Si es válido llama a signUp y redirige a "/verify-email" pasando
+ * el correo y los datos del formulario en el estado de navegación
+ * para que VerifyEmail pueda completar el flujo automáticamente.
+ * Muestra el error del servidor si el registro falla.
+ */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -95,6 +115,11 @@ function Register() {
     }
   };
 
+  /**
+ * Abre el popup de Google con Firebase, obtiene el idToken y lo
+ * envía al backend mediante signInWithGoogle. Redirige a "/mis-gimnasios"
+ * si el proveedor tiene plan activo, o a "/planes" en caso contrario.
+ */
   const handleGoogleLogin = async () => {
     try {
       setError("");

@@ -392,7 +392,7 @@ function Perfil() {
           ) : (
             <div className="mi-plan-sin">
               <p>No tienes un plan activo actualmente.</p>
-              <Link to="/planes" className="btn btn-primary" style={{ display: "inline-flex" }}>
+              <Link to="/planes" state={{ from: "/perfil" }} className="btn btn-primary" style={{ display: "inline-flex" }}>
                 Ver planes
               </Link>
             </div>
@@ -585,7 +585,7 @@ function Perfil() {
                 <button className="btn btn-ghost" onClick={() => setConfirmCambio(false)}>
                   Cancelar
                 </button>
-                <button className="btn btn-primary" onClick={() => navigate("/planes")}>
+                <button className="btn btn-primary" onClick={() => navigate("/planes", { state: { from: "/perfil" } })}>
                   Ver planes
                 </button>
               </div>

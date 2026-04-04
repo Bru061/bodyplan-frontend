@@ -4,6 +4,14 @@ import api from "../../../services/axios";
 const labelMes = (date) =>
   date.toLocaleDateString("es-MX", { month: "short", year: "numeric" });
 
+/**
+ * Hook que obtiene y prepara todos los datos necesarios para el dashboard.
+ * Implementa una estrategia de doble fuente con fallback automático:
+ *   1. Intenta obtener datos del endpoint optimizado "/proveedor/estadisticas".
+ *   2. Si falla, reconstruye las métricas y series temporales consultando
+ *      "/clientes", "/gym" y "/rutinas" por separado y calculando los
+ *      valores localmente.
+ */
 export const useDashboardData = (meses = 6) => {
 
   const [dashboard, setDashboard] = useState({
@@ -32,6 +40,19 @@ export const useDashboardData = (meses = 6) => {
 
   useEffect(() => {
 
+    /**
+ * Orquesta la carga de datos intentando primero el endpoint principal.
+ * Si este falla, ejecuta el fallback con tres peticiones paralelas y
+ * calcula localmente:
+ *   - clientesNuevosMes: inscritos en el mes y año actuales.
+ *   - membresiasPorVencer: membresías activas que vencen en los próximos 15 días.
+ *   - gimnasioTop: gimnasio con mayor cantidad de clientes.
+ *   - Series temporales por periodo (membresiasIniciadas, membresiasActivas,
+ *     clientesActivos, clientesInactivos) para los últimos N meses.
+ *   - Ranking de los 5 gimnasios con más clientes activos.
+ * Actualiza el estado dashboard con métricas y datos de gráficas.
+ * Se re-ejecuta si cambia el parámetro meses.
+ */
     const fetchData = async () => {
 
       try {

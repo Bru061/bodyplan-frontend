@@ -17,6 +17,10 @@ function AdminReferencias() {
 
   const showToast = (message, type = "success") => setToast({ message, type });
 
+  /**
+ * Obtiene todas las referencias bancarias desde "/admin/referencias"
+ * y actualiza el listado. Muestra un Toast de error si falla.
+ */
   const fetchReferencias = async () => {
     try {
       setLoading(true);
@@ -31,6 +35,12 @@ function AdminReferencias() {
 
   useEffect(() => { fetchReferencias(); }, []);
 
+  /**
+ * Marca una CLABE como verificada mediante PATCH a
+ * "/admin/referencias/:id/verificar". Gestiona el estado de carga
+ * individual por referencia (verificando) y recarga el listado al terminar.
+ * Muestra Toast de éxito o error según el resultado.
+ */
   const handleVerificar = async (ref) => {
     try {
       setVerificando(ref.id_referencia);
@@ -44,6 +54,12 @@ function AdminReferencias() {
     }
   };
 
+  /**
+ * Activa o desactiva una referencia bancaria según su estado actual,
+ * llamando a "/admin/referencias/:id/activar" o "/desactivar".
+ * Gestiona el estado de carga individual (toggling), cierra el modal
+ * de confirmación y recarga el listado. Muestra Toast con el resultado.
+ */
   const handleToggleActivo = async (ref) => {
     try {
       setToggling(ref.id_referencia);
@@ -63,6 +79,11 @@ function AdminReferencias() {
     }
   };
 
+  /**
+ * Filtra el listado completo de referencias según el filtro activo:
+ * verificado, pendiente, activo o inactivo.
+ * Sin filtro retorna todas las referencias.
+ */
   const referenciasFiltradas = referencias.filter(r => {
     if (filtro === "verificado") return r.verificado === true;
     if (filtro === "pendiente") return r.verificado === false;
