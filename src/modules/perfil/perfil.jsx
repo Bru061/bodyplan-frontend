@@ -9,6 +9,12 @@ import LoadingScreen from "../../components/ui/LoadingScreen";
 import Toast from "../../components/ui/Toast";
 import ModalPortal from "../../components/ui/ModalPortal";
 
+/**
+ * Página de perfil del proveedor. Carga en paralelo el usuario, plan activo,
+ * historial de planes, CLABE bancaria y balance de gimnasios. Permite editar
+ * la información personal, gestionar la CLABE interbancaria, renovar o cambiar
+ * el plan activo, y consultar el balance pendiente de transferencia.
+ */
 function Perfil() {
 
   const navigate = useNavigate();
@@ -32,6 +38,10 @@ function Perfil() {
   const [perfilErrors, setPerfilErrors] = useState({});
   const [perfilLoading, setPerfilLoading] = useState(false);
 
+  /**
+ * Inicializa el formulario de edición con los datos actuales del usuario,
+ * limpia errores previos y abre el modal de edición de perfil.
+ */
   const abrirEditarPerfil = () => {
     setPerfilForm({
       nombre: user.nombre || "",
@@ -43,6 +53,11 @@ function Perfil() {
     setEditandoPerfil(true);
   };
 
+  /**
+ * Valida nombre, apellidos (solo letras) y teléfono (10 dígitos si se proporciona).
+ * Si hay errores los muestra en el formulario. Si son válidos, envía PUT a "/user/me"
+ * con los datos normalizados, muestra Toast de resultado y recarga los datos.
+ */
   const handleGuardarPerfil = async () => {
     const errors = {};
     const onlyLetters = (v) => /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(v.trim());
@@ -89,6 +104,15 @@ function Perfil() {
 
   const showToast = (message, type = "success") => setToast({ message, type });
 
+  /**
+ * Ejecuta cuatro peticiones en paralelo con Promise.allSettled:
+ *   - /user/me          → datos del usuario autenticado.
+ *   - /proveedor/mi-plan → plan activo e historial de planes.
+ *   - /referencias/mia  → CLABE bancaria activa del proveedor.
+ *   - /proveedor/balance → balance de ingresos por gimnasio.
+ * Actualiza el estado correspondiente de cada respuesta de forma independiente,
+ * tolerando fallos parciales sin interrumpir el resto de la carga.
+ */
   const fetchAll = async () => {
     try {
       const [resUser, resPlan, resClabe, resBalance] = await Promise.allSettled([
@@ -137,6 +161,10 @@ function Perfil() {
 
   useEffect(() => { fetchAll(); }, []);
 
+  /**
+ * Calcula los días que quedan hasta la fecha de vencimiento del plan activo.
+ * Retorna 0 si el plan ya venció o no tiene fecha de fin.
+ */
   const diasRestantes = () => {
     if (!planActivo?.fecha_fin) return 0;
     const hoy = new Date();
@@ -144,6 +172,12 @@ function Perfil() {
     return Math.max(0, Math.ceil((fin - hoy) / (1000 * 60 * 60 * 24)));
   };
 
+  /**
+ * Retorna la clase CSS para estilizar el indicador de días según urgencia:
+ *   - "vencido"   → 0 días restantes.
+ *   - "venciendo" → 7 días o menos.
+ *   - ""          → más de 7 días.
+ */
   const diasClass = () => {
     const d = diasRestantes();
     if (d <= 0)  return "vencido";
@@ -151,6 +185,12 @@ function Perfil() {
     return "";
   };
 
+  /**
+ * Solicita la renovación del plan activo mediante POST a "/pagos/premium/web/intent".
+ * Si el backend responde con un mensaje de éxito directo, muestra Toast y recarga.
+ * Si devuelve un client_secret de Stripe, redirige al checkout con los datos del pago.
+ * Muestra Toast de error si la petición falla.
+ */
   const handleRenovar = async () => {
     if (!planActivo?.plan) return;
     try {
@@ -174,6 +214,13 @@ function Perfil() {
     }
   };
 
+  /**
+ * Valida CLABE (exactamente 18 dígitos), banco y titular con sus respectivas reglas
+ * de caracteres. Si hay errores los muestra en el formulario.
+ * Si es válido, actualiza la CLABE existente (PUT) o registra una nueva (POST)
+ * según si ya existe un id_referencia. Muestra Toast indicando que queda
+ * pendiente de verificación por el administrador.
+ */
   const handleGuardarClabe = async () => {
     const errors = {};
     if (!clabeForm.clabe.trim() || clabeForm.clabe.length !== 18)
@@ -212,13 +259,11 @@ function Perfil() {
     }
   };
 
+  /**
+ * Formatea un número como moneda MXN con dos decimales y separadores de miles.
+ */
   const formatMXN = (val) =>
     `$${parseFloat(val || 0).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
-  const clabeVerificada = (gym) =>
-    gym.referencia_bancaria?.verificado ??
-    gym.clabe_verificada ??
-    false;
 
   if (loading) return <LoadingScreen message="Cargando perfil..." />;
 

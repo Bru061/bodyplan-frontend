@@ -1,14 +1,31 @@
+/**
+ * Paso de membresías del formulario de registro de gimnasio.
+ * Permite agregar hasta 10 membresías, cada una con nombre, precio,
+ * duración en días y descripción. Aplica filtros de caracteres en
+ * nombre (alfanumérico) y precio/duración (solo dígitos).
+ * Muestra el error global de membresías si existe.
+ */
 function StepMembresias({ membresias, setMembresias, errors, setErrors }) {
 
+  /**
+ * Agrega una nueva membresía vacía al arreglo si el total es menor a 10.
+ */
   const handleAdd = () => {
     if (membresias.length >= 10) return;
     setMembresias(prev => [...prev, { nombre: "", precio: "", duracion: "", descripcion: "" }]);
   };
 
+  /**
+ * Elimina la membresía en el índice indicado del arreglo.
+ */
   const handleRemove = (index) => {
     setMembresias(prev => prev.filter((_, i) => i !== index));
   };
 
+  /**
+ * Actualiza un campo específico de la membresía en el índice dado.
+ * Limpia el error global de membresías si existía alguno.
+ */
   const handleChange = (index, field, value) => {
     setMembresias(prev => prev.map((m, i) => i === index ? { ...m, [field]: value } : m));
     if (errors.membresias) setErrors(prev => ({ ...prev, membresias: "" }));

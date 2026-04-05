@@ -1,3 +1,10 @@
+/**
+ * Paso 1 del formulario de registro de gimnasio.
+ * Renderiza los campos de información básica: nombre, descripción y teléfono.
+ * Muestra errores de validación y un contador de caracteres en la descripción.
+ * Es un componente puramente controlado; toda la lógica de estado y validación
+ * reside en el componente padre.
+ */
 function StepBasico({ form, errors, onChange }) {
   return (
     <div className="step-form">

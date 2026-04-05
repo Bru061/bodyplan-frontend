@@ -3,6 +3,12 @@ import api from "../../services/axios";
 import Toast from "../../components/ui/Toast";
 import ModalPortal from "../../components/ui/ModalPortal";
 
+/**
+ * Modal para gestionar las fotos de un gimnasio.
+ * Permite subir nuevas imágenes (JPG/PNG, máx. 5MB c/u, máx. 5 en total
+ * entre actuales y nuevas) y eliminar fotos existentes con confirmación.
+ * Bloquea la eliminación si el gimnasio tiene solo una foto.
+ */
 function EditFotosModal({ gym, onClose, onUpdated }) {
 
   const [loading, setLoading] = useState(false);
@@ -17,6 +23,11 @@ function EditFotosModal({ gym, onClose, onUpdated }) {
   const maxSize = 5 * 1024 * 1024;
   const maxFotos = 5;
 
+  /**
+ * Elimina la foto cuyo id está almacenado en confirmarId mediante
+ * DELETE a "/gym/fotos/:id". Llama a onUpdated tras el éxito y
+ * muestra un Toast de error si la operación falla.
+ */
   const deleteFoto = async () => {
     try {
       setLoading(true);
@@ -31,6 +42,12 @@ function EditFotosModal({ gym, onClose, onUpdated }) {
     }
   };
 
+  /**
+ * Valida que haya archivos seleccionados y los sube al gimnasio
+ * mediante POST a "/gym/:id/fotos" como multipart/form-data.
+ * Limpia la selección local y llama a onUpdated al éxito.
+ * Muestra Toast de error si la petición falla.
+ */
   const handleUpload = async () => {
     if (!newFotos.length) { showToast("Selecciona al menos una foto."); return; }
     try {

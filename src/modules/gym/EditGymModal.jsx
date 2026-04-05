@@ -2,6 +2,14 @@ import { useState, useEffect } from "react";
 import api from "../../services/axios";
 import ModalPortal from "../../components/ui/ModalPortal";
 
+/**
+ * Modal para editar la información básica y ubicación de un gimnasio.
+ * Inicializa el formulario con los datos actuales del gimnasio y su ubicación.
+ * Aplica filtros de caracteres por campo y valida antes de guardar.
+ * Al guardar realiza dos peticiones secuenciales: una para los datos generales
+ * y otra para la ubicación. Tras el éxito llama a onUpdated y cierra el modal.
+ * Hace scroll automático al primer campo con error al fallar la validación.
+ */
 function EditGymModal({ gym, onClose, onUpdated }) {
 
   if (!gym) return null;
@@ -37,11 +45,20 @@ function EditGymModal({ gym, onClose, onUpdated }) {
   const onlyLetters = (v, max) => v.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "").slice(0, max);
   const lettersNumbers = (v, max) => v.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]/g, "").slice(0, max);
 
+  /**
+ * Actualiza un campo específico del formulario y limpia su error si existía.
+ */
   const setField = (field, value) => {
     setForm(prev => ({ ...prev, [field]: value }));
     if (errors[field]) setErrors(prev => ({ ...prev, [field]: "" }));
   };
 
+  /**
+ * Valida todos los campos requeridos (nombre, descripción, teléfono de 10 dígitos,
+ * dirección, municipio, estado y CP de 5 dígitos). Si hay errores los muestra
+ * en el formulario. Si son válidos envía PUT a "/gym/:id" y PUT a "/gym/:id/ubicacion"
+ * de forma secuencial. Muestra el error del servidor si alguna petición falla.
+ */
   const handleSave = async () => {
     const newErrors = {};
     setError("");

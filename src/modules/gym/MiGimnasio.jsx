@@ -12,6 +12,13 @@ import { Pencil, Star } from "lucide-react";
 import Toast from "../../components/ui/Toast";
 import usePermissions from "../../hooks/usePermissions";
 
+/**
+ * Página de detalle y administración de un gimnasio específico identificado
+ * por el parámetro :id. Muestra fotos en un slider automático con navegación
+ * manual, información general, horarios y membresías. Permite editar cada
+ * sección mediante modales independientes y destacar el gimnasio si el plan
+ * tiene el permiso GYM_HIGHLIGHT.
+ */
 function MiGimnasio() {
 
   const { id } = useParams();
@@ -33,6 +40,10 @@ function MiGimnasio() {
 
   const showToast = (message, type = "success") => setToast({ message, type });
 
+  /**
+ * Obtiene los datos del gimnasio desde "/gym/:id" y actualiza el estado.
+ * Registra el error en consola si la petición falla sin interrumpir el flujo.
+ */
   const fetchGym = async () => {
     try {
       if (!id) return;
@@ -47,6 +58,10 @@ function MiGimnasio() {
 
   useEffect(() => { fetchGym(); }, [id]);
 
+  /**
+ * Avanza el índice de imagen cada 3 segundos si el gimnasio tiene más de una foto.
+ * Limpia el intervalo al desmontar o al cambiar las fotos del gimnasio.
+ */
   useEffect(() => {
     if (!gym?.fotos || gym.fotos.length <= 1) return;
     const interval = setInterval(() => {
@@ -55,11 +70,21 @@ function MiGimnasio() {
     return () => clearInterval(interval);
   }, [gym?.fotos]);
 
+  /**
+ * Resetea imgIndex a 0 si el índice actual supera el total de fotos disponibles,
+ * por ejemplo tras eliminar o reordenar imágenes.
+ */
   useEffect(() => {
     if (!gym?.fotos) return;
     if (imgIndex >= gym.fotos.length) setImgIndex(0);
   }, [gym, imgIndex]);
 
+  /**
+ * Verifica el permiso GYM_HIGHLIGHT antes de operar.
+ * Si no tiene permiso muestra un Toast de upgrade. Si lo tiene,
+ * llama a PATCH "/gym/:id/destacar" para alternar el estado destacado
+ * y recarga los datos del gimnasio. Muestra Toast de éxito o error.
+ */
   const handleToggleDestacado = async () => {
     if (!canHighlightGym) {
       showToast(getUpgradeMessage(FEATURES.GYM_HIGHLIGHT), "error");

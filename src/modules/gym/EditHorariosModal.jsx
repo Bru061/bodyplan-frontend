@@ -3,6 +3,14 @@ import api from "../../services/axios";
 import Toast from "../../components/ui/Toast";
 import ModalPortal from "../../components/ui/ModalPortal";
 
+/**
+ * Modal para editar los horarios de un gimnasio.
+ * Inicializa el formulario con los horarios existentes o con una fila vacía
+ * si el gimnasio no tiene horarios registrados.
+ * Valida días únicos, campos completos y que la hora de cierre sea mayor
+ * a la apertura. Los errores se gestionan por clave "campo-índice".
+ * Al guardar crea (POST) o actualiza (PUT) cada horario individualmente.
+ */
 function EditHorariosModal({ gym, onClose, onUpdated }) {
 
   const [horarios, setHorarios] = useState([]);
@@ -26,12 +34,19 @@ function EditHorariosModal({ gym, onClose, onUpdated }) {
     }
   }, [gym]);
 
+  /**
+ * Actualiza el campo indicado del horario en el índice dado.
+ * Limpia el error asociado a ese campo e índice si existía.
+ */
   const handleChange = (index, field, value) => {
     setHorarios(prev => prev.map((h, i) => i === index ? { ...h, [field]: value } : h));
     const key = `${field}-${index}`;
     if (errors[key]) setErrors(prev => ({ ...prev, [key]: "" }));
   };
 
+  /**
+ * Agrega un horario nuevo con valores predeterminados (Lunes, 06:00–22:00).
+ */
   const addHorario = () => {
     setHorarios(prev => [
       ...prev,
@@ -39,6 +54,11 @@ function EditHorariosModal({ gym, onClose, onUpdated }) {
     ]);
   };
 
+  /**
+ * Elimina el horario en el índice indicado. Si tiene id_horario llama a
+ * DELETE "/gym/horarios/:id" antes de quitarlo del estado local.
+ * Bloquea la eliminación si solo queda un horario.
+ */
   const deleteHorario = async (index) => {
     if (horarios.length === 1) { showToast("Debe existir al menos un horario."); return; }
     const h = horarios[index];
@@ -54,12 +74,22 @@ function EditHorariosModal({ gym, onClose, onUpdated }) {
     setHorarios(prev => prev.filter((_, i) => i !== index));
   };
 
+  /**
+ * Verifica que la hora de cierre sea estrictamente mayor a la de apertura.
+ */
   const horaEsValida = (a, c) => {
     const [h1, m1] = a.split(":").map(Number);
     const [h2, m2] = c.split(":").map(Number);
     return (h2 * 60 + m2) > (h1 * 60 + m1);
   };
 
+  /**
+ * Valida todos los horarios verificando campos completos, días únicos y
+ * validez de horarios. Si hay errores los muestra por campo e índice.
+ * Si son válidos itera sobre los horarios enviando POST para nuevos
+ * y PUT para existentes, normalizando el formato de hora a "HH:MM:SS".
+ * Muestra Toast de error si alguna petición falla.
+ */
   const handleSave = async () => {
     const newErrors = {};
 

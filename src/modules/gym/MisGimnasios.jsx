@@ -9,6 +9,12 @@ import ModalPortal from "../../components/ui/ModalPortal";
 import usePermissions from "../../hooks/usePermissions"
 import Toast from "../../components/ui/Toast";
 
+/**
+ * Página que lista todos los gimnasios del proveedor (activos y archivados)
+ * separados en pestañas. Verifica el límite de gimnasios del plan antes de
+ * permitir crear uno nuevo. Permite archivar o activar cada gimnasio con
+ * confirmación en modal, bloqueando el archivado si hay clientes con membresía activa.
+ */
 function MisGimnasios() {
 
   const [gimnasios, setGimnasios] = useState([]);
@@ -35,6 +41,10 @@ function MisGimnasios() {
   const totalGimnasios = gimnasios.length
   const noPuedeCrearMas = !canCreateMoreGyms(totalGimnasios);
 
+  /**
+ * Obtiene en paralelo los gimnasios activos ("/gym") y archivados ("/gym/desactivados")
+ * y los combina en un único arreglo de estado.
+ */
   const fetchGyms = async () => {
     try {
       const [resActivos, resArchivados] = await Promise.all([
@@ -60,6 +70,11 @@ function MisGimnasios() {
     return <LoadingScreen message="Cargando gimnasios..." />;
   }
 
+  /**
+ * Determina si se puede archivar el gimnasio verificando que no tenga
+ * clientes con membresía activa. Si los tiene, muestra un Toast de error
+ * con el conteo. Si no hay impedimento abre el modal de confirmación.
+ */
   const confirmarToggle = async (gym) => {
     setErrorMsg("");
     if (gym.activo) {
@@ -82,6 +97,12 @@ function MisGimnasios() {
     setModal({ gym, accion: gym.activo ? "archivar" : "activar" });
   };
 
+  /**
+ * Ejecuta el cambio de estado del gimnasio tras la confirmación del modal.
+ * Llama a PUT "/gym/down/:id" para archivar o "/gym/up/:id" para activar.
+ * Gestiona el estado de carga individual por gimnasio (changingId) y recarga
+ * el listado al terminar. Muestra error descriptivo si la operación falla.
+ */
   const toggleActivo = async () => {
     if (!modal) return;
     const { gym } = modal;

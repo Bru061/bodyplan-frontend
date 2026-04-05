@@ -3,6 +3,14 @@ import api from "../../services/axios";
 import Toast from "../../components/ui/Toast";
 import ModalPortal from "../../components/ui/ModalPortal";
 
+/**
+ * Modal para editar las membresías de un gimnasio.
+ * Inicializa el formulario con las membresías existentes o con una fila vacía.
+ * Valida nombres únicos, precios y duraciones mayores a 0, y descripción obligatoria.
+ * Al guardar crea (POST) o actualiza (PUT) cada membresía individualmente.
+ * La eliminación desactiva la membresía en el backend (PATCH /desactivar)
+ * antes de quitarla del estado local. Bloquea si solo queda una membresía.
+ */
 function EditMembresiasModal({ gym, onClose, onUpdated }) {
 
   const [membresias, setMembresias] = useState([]);
@@ -31,12 +39,19 @@ function EditMembresiasModal({ gym, onClose, onUpdated }) {
     }
   }, [gym]);
 
+  /**
+ * Actualiza el campo indicado de la membresía en el índice dado.
+ * Limpia el error asociado a ese campo e índice si existía.
+ */
   const handleChange = (index, field, value) => {
     setMembresias(prev => prev.map((m, i) => i === index ? { ...m, [field]: value } : m));
     const key = `${field}-${index}`;
     if (errors[key]) setErrors(prev => ({ ...prev, [key]: "" }));
   };
 
+  /**
+ * Agrega una membresía nueva vacía al arreglo de estado.
+ */
   const addMembresia = () => {
     setMembresias(prev => [
       ...prev,
@@ -44,6 +59,10 @@ function EditMembresiasModal({ gym, onClose, onUpdated }) {
     ]);
   };
 
+  /**
+ * Desactiva la membresía en el backend si tiene id (PATCH /desactivar)
+ * y la elimina del estado local. Bloquea si solo queda una membresía.
+ */
   const deleteMembresia = async (index) => {
     if (membresias.length === 1) { showToast("Debe existir al menos una membresía."); return; }
     const m = membresias[index];
@@ -59,6 +78,12 @@ function EditMembresiasModal({ gym, onClose, onUpdated }) {
     setMembresias(prev => prev.filter((_, i) => i !== index));
   };
 
+  /**
+ * Valida nombre (único, máx. 15 chars), precio > 0, duración > 0
+ * y descripción obligatoria (máx. 200 chars). Si hay errores los muestra
+ * por campo e índice. Si son válidos itera enviando POST para nuevas
+ * membresías y PUT para las existentes. Muestra Toast de error si falla.
+ */
   const handleSave = async () => {
     const newErrors = {};
     const nombres = new Set();

@@ -1,3 +1,10 @@
+/**
+ * Paso de ubicación del formulario de registro de gimnasio.
+ * Renderiza los campos de dirección, municipio, estado, código postal,
+ * colonia/localidad, país (solo lectura) y URL de Google Maps.
+ * Muestra errores de validación por campo y un hint para url_map.
+ * Es un componente puramente controlado; toda la lógica reside en el padre.
+ */
 function StepUbicacion({ form, errors, onChange }) {
   return (
     <div className="step-form">

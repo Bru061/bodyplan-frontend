@@ -14,12 +14,27 @@ import AsignarGimnasioModal from "./AsignarGimnasioModal";
 import EditHorarioModal from "./EditHorarioModal";
 import usePermissions from "../../hooks/usePermissions";
 
+/**
+ * Extrae las iniciales del nombre y apellido paterno de un instructor en mayúsculas.
+ */
 const getInitials = (p) =>
   `${p.nombre?.[0] ?? ""}${p.apellido_paterno?.[0] ?? ""}`.toUpperCase();
 
+/**
+ * Construye el nombre completo del instructor concatenando nombre,
+ * apellido paterno y materno, omitiendo los valores vacíos.
+ */
 const getNombre = (p) =>
   [p.nombre, p.apellido_paterno, p.apellido_materno].filter(Boolean).join(" ");
 
+/**
+ * Página de gestión de instructores. Requiere el permiso PERSONAL_MODULE;
+ * si no está disponible muestra un estado de upgrade con enlace a planes.
+ * Lista instructores activos e inactivos con panel de detalle lateral que
+ * muestra horarios por gimnasio, rutinas activas e historial de rutinas completadas.
+ * Permite crear, editar, asignar gimnasios, editar horarios y activar/desactivar
+ * instructores con confirmación.
+ */
 function Personal() {
 
   const [personal, setPersonal] = useState([]);
@@ -43,6 +58,11 @@ function Personal() {
 
   const showToast = (message, type = "success") => setToast({ message, type });
 
+  /**
+ * Obtiene el listado completo de personal desde "/personal" y actualiza el estado.
+ * Si había un instructor seleccionado, actualiza su referencia con los datos frescos
+ * para reflejar cambios sin deseleccionar. Muestra Toast de error si falla.
+ */
   const fetchPersonal = async () => {
     try {
       setLoading(true);
@@ -65,6 +85,12 @@ function Personal() {
   const [rutinasInstructor, setRutinasInstructor] = useState([]);
   const [loadingRutinas, setLoadingRutinas] = useState(false);
 
+  /**
+ * Obtiene todas las rutinas del proveedor y filtra las asignadas al instructor
+ * con el id dado, buscando en los clientes de cada rutina.
+ * Añade el cliente y el estado de asignación a cada rutina encontrada.
+ * Actualiza rutinasInstructor y retorna el arreglo para uso inmediato en validaciones.
+ */
   const fetchRutinasInstructor = async (personalId) => {
     try {
       setLoadingRutinas(true);
@@ -111,6 +137,12 @@ function Personal() {
   const listaActual = tab === "activos" ? activos : inactivos;
   const instructorInactivo = seleccionado?.activo === false;
 
+  /**
+ * Determina si el instructor puede desactivarse verificando que no tenga
+ * rutinas activas (pendiente o iniciada) a su cargo. Si las tiene muestra
+ * un Toast de bloqueo. Si puede cambiarse abre el modal de confirmación.
+ * Para activaciones no aplica ninguna validación previa.
+ */
   const solicitarCambioEstado = async (item) => {
     const accion = item.activo !== false ? "desactivar" : "activar";
 
@@ -134,6 +166,12 @@ function Personal() {
     setConfirmModal({ item, accion });
   };
 
+  /**
+ * Ejecuta el cambio de estado del instructor tras la confirmación del modal.
+ * Llama a PATCH "/personal/:id/desactivar" o "/activar" según la acción.
+ * Limpia la selección si el instructor modificado era el actualmente seleccionado.
+ * Muestra Toast de resultado y recarga el listado.
+ */
   const handleToggle = async () => {
     if (!confirmModal) return;
     const { item, accion } = confirmModal;
@@ -165,6 +203,11 @@ function Personal() {
     }
   };
 
+  /**
+ * Elimina un día de horario específico de un instructor en un gimnasio dado
+ * mediante DELETE a "/personal/:id/gimnasios/:gymId/:dia".
+ * Muestra Toast de resultado y recarga el listado.
+ */
   const handleEliminarDia = async (personalId, gimnasioId, dia) => {
     try {
       await api.delete(`/personal/${personalId}/gimnasios/${gimnasioId}/${dia}`);

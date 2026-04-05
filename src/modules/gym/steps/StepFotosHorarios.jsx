@@ -3,10 +3,20 @@ import { FiUpload } from "react-icons/fi";
 
 const DIAS = ["Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado", "Domingo"];
 
+/**
+ * Paso de fotos y horarios del formulario de registro de gimnasio.
+ * Permite subir hasta 5 imágenes JPG/PNG de máximo 5MB cada una,
+ * y configurar hasta 7 horarios (uno por día) con día, apertura y cierre.
+ */
 function StepFotosHorarios({ fotos, setFotos, horarios, setHorarios, errors, setErrors, setError }) {
 
   const fileRef = useRef(null);
 
+  /**
+ * Valida y agrega los archivos seleccionados al estado de fotos.
+ * Rechaza la selección si el total supera 5 imágenes, si algún archivo
+ * no es JPG/PNG o si supera los 5MB. Limpia el input tras cada selección.
+ */
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
@@ -39,16 +49,26 @@ function StepFotosHorarios({ fotos, setFotos, horarios, setHorarios, errors, set
     e.target.value = "";
   };
 
+  /**
+ * Agrega un nuevo horario vacío al arreglo si el total es menor a 7.
+ */
   const handleAddHorario = () => {
     if (horarios.length >= 7) return;
     setHorarios(prev => [...prev, { dia: "", apertura: "", cierre: "" }]);
   };
 
+  /**
+ * Actualiza un campo específico del horario en el índice dado.
+ * Limpia el error de horarios si existía alguno previo.
+ */
   const handleHorarioChange = (index, field, value) => {
     setHorarios(prev => prev.map((h, i) => i === index ? { ...h, [field]: value } : h));
     if (errors.horarios) setErrors(prev => ({ ...prev, horarios: "" }));
   };
 
+  /**
+ * Elimina el horario en el índice indicado del arreglo.
+ */
   const handleRemoveHorario = (index) => {
     setHorarios(prev => prev.filter((_, i) => i !== index));
   };

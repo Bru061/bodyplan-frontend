@@ -15,6 +15,16 @@ const STEPS = [
   { label: "Membresías" },
 ];
 
+/**
+ * Formulario wizard de 4 pasos para registrar un nuevo gimnasio:
+ *   0. Básico    → nombre, descripción, teléfono.
+ *   1. Ubicación → dirección, municipio, estado, CP, url_map.
+ *   2. Fotos     → imágenes y horarios.
+ *   3. Membresías → planes de membresía.
+ * Valida cada paso antes de avanzar y verifica duplicados de dirección
+ * antes del envío final. Muestra un modal de confirmación si el usuario
+ * intenta cancelar con cambios sin guardar.
+ */
 function CreateGym() {
 
   const navigate = useNavigate();
@@ -42,6 +52,18 @@ function CreateGym() {
   const [horarios, setHorarios] = useState([]);
   const [membresias, setMembresias] = useState([]);
 
+  /**
+ * Actualiza el campo del formulario aplicando filtros y límites
+ * de caracteres según el campo:
+ *   - telefono: solo dígitos, máx. 10.
+ *   - direccion: alfanumérico + caracteres especiales de dirección.
+ *   - municipio / estado / localidad: solo letras, máx. 20.
+ *   - codigo_postal: solo dígitos, máx. 5.
+ *   - url_map: sin espacios.
+ *   - nombre: alfanumérico, máx. 50.
+ *   - descripcion: máx. 255 caracteres.
+ * Limpia el error del campo si existía alguno previo.
+ */
   const handleChange = (e) => {
     let { name, value } = e.target;
 
@@ -64,6 +86,16 @@ function CreateGym() {
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: "" }));
   };
 
+  /**
+ * Valida los campos del paso indicado y retorna un objeto de errores.
+ * Reglas por paso:
+ *   0 → nombre, descripción y teléfono (exactamente 10 dígitos).
+ *   1 → dirección, municipio, estado, CP (5 dígitos) y url_map (URL válida).
+ *   2 → al menos una foto, al menos un horario sin días repetidos,
+ *        todos los campos completos y hora cierre > apertura.
+ *   3 → al menos una membresía con nombre, precio > 0,
+ *        duración entre 1 y 3650 días y descripción máx. 200 chars.
+ */
   const validateStep = (index) => {
     const e = {};
 
@@ -131,6 +163,10 @@ function CreateGym() {
     return e;
   };
 
+  /**
+ * Valida el paso actual y avanza al siguiente si no hay errores.
+ * Detiene el flujo y muestra los errores si la validación falla.
+ */
   const handleNext = () => {
     const newErrors = validateStep(step);
     if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
@@ -139,12 +175,19 @@ function CreateGym() {
     setStep(prev => prev + 1);
   };
 
+  /**
+ * Retrocede al paso anterior limpiando errores previos.
+ */
   const handleBack = () => {
     setErrors({});
     setError("");
     setStep(prev => prev - 1);
   };
 
+  /**
+ * Si no hay cambios en el formulario navega directamente a "/mis-gimnasios".
+ * Si hay cambios, abre el modal de confirmación de cancelación.
+ */
   const handleCancel = () => {
     const hayCambios =
       form.nombre || form.descripcion || form.telefono ||
@@ -153,6 +196,13 @@ function CreateGym() {
     setShowCancelModal(true);
   };
 
+  /**
+ * Valida el paso final, verifica que no exista otro gimnasio con la misma
+ * dirección (consultando activos e inactivos) y envía el formulario como
+ * multipart/form-data incluyendo fotos, horarios y membresías serializados.
+ * Si el backend devuelve error de URL redirige al paso de ubicación.
+ * Al éxito navega a "/mis-gimnasios".
+ */
   const handleSubmit = async () => {
     const newErrors = validateStep(3);
     if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
