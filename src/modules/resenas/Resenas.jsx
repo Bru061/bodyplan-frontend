@@ -4,6 +4,10 @@ import { useNavigate } from "react-router-dom";
 import api from "../../services/axios";
 import "../../styles/clientes.css";
 
+/**
+ * Componente de presentación que renderiza un conjunto de 5 estrellas
+ * coloreando en amarillo las que corresponden a la calificación dada.
+ */
 function Estrellas({ calificacion, size = 16 }) {
   return (
     <span style={{ display: "inline-flex", gap: "2px" }}>
@@ -22,6 +26,13 @@ function Estrellas({ calificacion, size = 16 }) {
   );
 }
 
+/**
+ * Página que muestra las reseñas de los gimnasios del proveedor.
+ * Si el proveedor tiene un solo gimnasio lo selecciona automáticamente.
+ * Si tiene varios muestra un selector para elegir el gimnasio activo.
+ * Muestra el promedio de calificación, la distribución por estrellas
+ * y el listado completo de reseñas del gimnasio seleccionado.
+ */
 function Resenas() {
   
   const [gimnasios, setGimnasios] = useState([]);
@@ -58,6 +69,11 @@ function Resenas() {
       return;
     }
 
+    /**
+ * Obtiene las reseñas del gimnasio seleccionado desde "/gym/:id/resenas"
+ * y actualiza el listado. Limpia las reseñas si no hay gimnasio seleccionado.
+ * Se ejecuta cada vez que cambia gimnasioSeleccionado.
+ */
     const fetchResenas = async () => {
       try {
         setLoading(true);

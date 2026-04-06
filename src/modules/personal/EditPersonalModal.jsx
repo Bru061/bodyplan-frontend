@@ -2,6 +2,13 @@ import { useState } from "react";
 import api from "../../services/axios";
 import ModalPortal from "../../components/ui/ModalPortal";
 
+/**
+ * Modal para editar los datos de un instructor existente.
+ * Inicializa el formulario con los datos actuales del instructor.
+ * Aplica los mismos filtros de caracteres que CreatePersonalModal.
+ * Verifica duplicados de nombre completo excluyendo al propio instructor
+ * antes de enviar la actualización.
+ */
 function EditPersonalModal({ personal, onClose, onUpdated }) {
 
   const [form, setForm] = useState({
@@ -16,6 +23,10 @@ function EditPersonalModal({ personal, onClose, onUpdated }) {
   const onlyLetters = (v) => v.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "");
   const onlyLettersNoSpace = (v) => v.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ]/g, "");
 
+  /**
+ * Actualiza el campo del formulario aplicando filtros de caracteres
+ * y límites de longitud según el campo. Limpia el error si existía.
+ */
   const handleChange = (e) => {
     const { name, value } = e.target;
     let v = value;
@@ -27,6 +38,13 @@ function EditPersonalModal({ personal, onClose, onUpdated }) {
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: "" }));
   };
 
+  /**
+ * Valida nombre y apellido paterno. Obtiene el listado de instructores
+ * excluyendo al propio instructor editado y verifica que el nuevo nombre
+ * completo no esté duplicado. Si es válido, envía PUT a "/personal/:id".
+ * Al éxito llama a onUpdated y cierra el modal.
+ * Muestra el error del servidor si la petición falla.
+ */
   const handleSubmit = async () => {
     const newErrors = {};
     if (!form.nombre.trim()) newErrors.nombre = "El nombre es obligatorio";

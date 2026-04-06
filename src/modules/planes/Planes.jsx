@@ -34,6 +34,14 @@ const ACCESOS_HARDCODED = {
   ]
 };
 
+/**
+ * Página de selección de planes de suscripción. Carga los planes disponibles
+ * y el plan activo del proveedor en paralelo. Muestra las características de
+ * cada plan usando una tabla de accesos hardcodeada por id_plan. Bloquea la
+ * selección del plan trial si ya fue usado anteriormente. Si el pago es gratuito
+ * o ya estaba pagado, redirige al dashboard directamente; de lo contrario
+ * redirige al checkout con el client_secret de Stripe.
+ */
 function Planes() {
 
   const navigate = useNavigate();
@@ -76,6 +84,13 @@ function Planes() {
     fetchData();
   }, [refreshPermissions]);
 
+  /**
+ * Valida que el plan trial no sea seleccionado si ya fue usado por la cuenta.
+ * Envía POST a "/pagos/premium/web/intent" con el id del plan seleccionado.
+ * Si el backend responde con un mensaje directo navega al dashboard.
+ * Si devuelve un client_secret redirige al checkout con los datos del pago.
+ * Muestra el error del servidor si la petición falla.
+ */
   const handleSeleccionar = async (plan) => {
     setError("");
 
@@ -122,15 +137,27 @@ function Planes() {
     }
   };
 
+  /**
+ * Compara el nombre del plan dado con el del plan activo del proveedor
+ * de forma insensible a mayúsculas para determinar si ya está suscrito.
+ */
   const esPlanActual = (plan) =>
     planActivo?.plan?.nombre?.toLowerCase() === plan.nombre?.toLowerCase();
 
+    /**
+ * Formatea el precio del plan como cadena MXN. Retorna "$0" para planes gratuitos.
+ */
   const formatPrecio = (plan) => {
     const precio = parseFloat(plan.precio);
     if (precio === 0) return "$0";
     return `$${precio.toLocaleString("es-MX")}`;
   };
 
+/**
+ * Genera la etiqueta de periodo del plan según su precio y duración:
+ *   - Precio 0 → "(N días gratis)".
+ *   - 365+ días → "/año".
+ *   - Resto      → "/mes". */
   const formatPeriodo = (plan) => {
     const precio = parseFloat(plan.precio);
     if (precio === 0) return `(${plan.duracion_dias} días gratis)`;

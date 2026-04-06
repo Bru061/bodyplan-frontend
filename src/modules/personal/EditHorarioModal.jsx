@@ -2,6 +2,13 @@ import { useState } from "react";
 import api from "../../services/axios";
 import ModalPortal from "../../components/ui/ModalPortal";
 
+/**
+ * Modal para editar las horas de entrada y salida de un horario específico
+ * de un instructor en un gimnasio y día determinados.
+ * Inicializa el formulario con las horas actuales truncadas a "HH:MM".
+ * Valida que la hora de salida sea mayor a la entrada y que el turno
+ * sea de mínimo 3 horas.
+ */
 function EditHorarioModal({ data, onClose, onUpdated }) {
 
   const [form, setForm] = useState({
@@ -13,6 +20,10 @@ function EditHorarioModal({ data, onClose, onUpdated }) {
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState("");
 
+  /**
+ * Verifica que la hora de salida sea mayor a la entrada y que
+ * la diferencia sea de al menos 3 horas (180 minutos).
+ */
   const horaEsValida = (entrada, salida) => {
     if (!entrada || !salida) return { valida: false, msg: "" };
     const [h1, m1] = entrada.split(":").map(Number);
@@ -23,12 +34,20 @@ function EditHorarioModal({ data, onClose, onUpdated }) {
     return { valida: true, msg: "" };
   };
 
+  /**
+ * Actualiza el campo del formulario y limpia su error si existía alguno previo.
+ */
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: "" }));
   };
 
+  /**
+ * Valida que ambas horas estén presentes y que el turno sea válido.
+ * Si es correcto, envía PUT a "/personal/:id/gimnasios/:gymId/:dia"
+ * con las horas normalizadas a "HH:MM:SS". Al éxito llama a onUpdated y cierra.
+ * Muestra el error del servidor si la petición falla. */
   const handleSubmit = async () => {
     const newErrors = {};
 

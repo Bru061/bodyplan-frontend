@@ -2,6 +2,12 @@ import { useState } from "react";
 import api from "../../services/axios";
 import ModalPortal from "../../components/ui/ModalPortal";
 
+/**
+ * Modal para registrar un nuevo instructor. Aplica filtros de caracteres
+ * en nombre (letras y espacios) y apellidos (solo letras). Verifica
+ * localmente que no exista otro instructor con el mismo nombre completo
+ * antes de enviar la petición al API.
+ */
 function CreatePersonalModal({ onClose, onCreated }) {
 
   const [form, setForm] = useState({
@@ -16,6 +22,13 @@ function CreatePersonalModal({ onClose, onCreated }) {
   const onlyLetters = (v) => v.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "");
   const onlyLettersNoSpace = (v) => v.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ]/g, "");
 
+  /**
+ * Actualiza el campo del formulario aplicando filtros de caracteres
+ * y límites de longitud según el campo:
+ *   - nombre: letras y espacios, máx. 40.
+ *   - apellido_paterno / apellido_materno: solo letras, máx. 30.
+ * Limpia el error del campo si existía alguno previo.
+ */
   const handleChange = (e) => {
     const { name, value } = e.target;
     let v = value;
@@ -27,6 +40,13 @@ function CreatePersonalModal({ onClose, onCreated }) {
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: "" }));
   };
 
+  /**
+ * Valida que nombre y apellido paterno estén presentes. Consulta el listado
+ * actual de instructores y compara el nombre completo normalizado para detectar
+ * duplicados antes de crear. Si no hay duplicado, envía POST a "/personal".
+ * Al éxito llama a onCreated y cierra el modal.
+ * Muestra el error del servidor si la petición falla.
+ */
   const handleSubmit = async () => {
     const newErrors = {};
     if (!form.nombre.trim()) newErrors.nombre = "El nombre es obligatorio";

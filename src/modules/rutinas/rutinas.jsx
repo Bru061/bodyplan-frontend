@@ -6,6 +6,13 @@ import RutinaCard from "../../components/rutinas/RutinaCard";
 import CreateRutinaModal from "./CreateRutinaModal";
 import EditRutinaModal from "./EditRutinaModal";
 
+/**
+ * Página de gestión de rutinas. Lista rutinas en tres vistas (generales,
+ * personalizadas, desactivadas) con sus contadores de clientes activos.
+ * Para la vista "personalizadas" filtra rutinas que tengan al menos un
+ * cliente con asignación activa. Permite crear y editar rutinas, verificando
+ * que el proveedor tenga al menos un gimnasio antes de abrir el modal de creación.
+ */
 function Rutinas() {
 
   const [rutinas, setRutinas] = useState([]);
@@ -26,9 +33,17 @@ function Rutinas() {
 
   const [countsLoading, setCountsLoading] = useState(false);
 
+  /**
+ * Filtra un arreglo de asignaciones y retorna el total de las que tienen
+ * estado "pendiente" o "iniciada".
+ */
   const contarAsignacionesActivas = (asignaciones) =>
     asignaciones.filter(a => a.estado === "pendiente" || a.estado === "iniciada").length;
 
+  /**
+ * Para cada rutina de la lista consulta "/rutinas/:id/clientes" y cuenta
+ * las asignaciones activas. Retorna y actualiza el mapa id_rutina → conteo.
+ */
   const fetchClientesPorRutina = async (lista) => {
     try {
       const conteo = {};
@@ -45,6 +60,12 @@ function Rutinas() {
     }
   };
 
+  /**
+ * Obtiene rutinas activas y desactivadas en paralelo y calcula los contadores
+ * de generales, personalizadas con asignaciones activas y desactivadas
+ * para las tarjetas de estadísticas. Las personalizadas solo cuentan si tienen
+ * al menos un cliente con asignación activa.
+ */
   const fetchStats = async () => {
     try {
       const [resActivas, resDesactivadas] = await Promise.all([
@@ -74,6 +95,13 @@ function Rutinas() {
     }
   };
 
+  /**
+ * Obtiene el listado de rutinas según la vista activa. Intenta usar los
+ * endpoints especializados (/rutinas/generales, /rutinas/personalizadas)
+ * y si fallan hace fallback a "/rutinas" con filtrado local.
+ * En vista "personalizadas" filtra las que no tienen clientes activos.
+ * Se re-ejecuta cada vez que cambia la vista.
+ */
   const fetchRutinas = async () => {
     try {
       setLoading(true);
@@ -130,6 +158,10 @@ function Rutinas() {
     setShowEditModal(true);
   };
 
+/**
+ * Verifica que el proveedor tenga al menos un gimnasio antes de abrir
+ * el modal de creación. Muestra un mensaje de error si no tiene ninguno.
+ */
   const handleCrearRutina = async () => {
     setGymError("");
     try {

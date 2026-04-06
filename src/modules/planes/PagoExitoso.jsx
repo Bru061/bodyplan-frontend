@@ -5,12 +5,29 @@ import "../../styles/planes.css";
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
+/**
+ * Página de confirmación de pago. Verifica el estado del PaymentIntent
+ * de Stripe usando el payment_intent_client_secret recibido en los
+ * query params de la URL de retorno. Muestra tres estados posibles:
+ *   - "verificando" → spinner de espera mientras consulta a Stripe.
+ *   - "exitoso"     → confirmación de pago con botón al dashboard.
+ *   - "error"       → mensaje de error con botón para volver a planes.
+ * Si no hay client_secret en los params asume éxito directamente
+ * (caso de planes gratuitos o renovaciones sin pago).
+ */
 function PagoExitoso() {
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [estado, setEstado] = useState("verificando");
 
+  /**
+ * Lee el payment_intent_client_secret de los query params y consulta
+ * el estado del PaymentIntent a Stripe mediante stripe.retrievePaymentIntent.
+ * Si el estado es "succeeded" actualiza el estado local a "exitoso".
+ * En cualquier otro caso o si hay un error de red, actualiza a "error".
+ * Si no hay client_secret en los params, asume éxito sin consultar a Stripe.
+ */
   useEffect(() => {
     const verificarPago = async () => {
       const clientSecret = searchParams.get("payment_intent_client_secret");

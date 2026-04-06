@@ -12,6 +12,12 @@ import { Link } from "react-router-dom";
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
+/**
+ * Formulario de pago integrado con Stripe Elements. Confirma el pago
+ * usando stripe.confirmPayment y redirige al usuario a "/pago-exitoso"
+ * tras la confirmación exitosa. Muestra el error de Stripe si el pago falla.
+ * Muestra el desglose de precio del plan, comisión de Stripe y total a pagar.
+ */
 function CheckoutForm({ desglose, plan }) {
 
   const stripe = useStripe();
@@ -21,6 +27,11 @@ function CheckoutForm({ desglose, plan }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  /**
+ * Previene el submit nativo, valida que Stripe y Elements estén listos
+ * y llama a stripe.confirmPayment apuntando a "/pago-exitoso" como return_url.
+ * Muestra el mensaje de error de Stripe si el pago no se puede completar.
+ */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");

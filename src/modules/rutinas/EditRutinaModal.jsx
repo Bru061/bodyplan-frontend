@@ -3,6 +3,12 @@ import api from "../../services/axios";
 import ModalPortal from "../../components/ui/ModalPortal";
 import "../../styles/rutinas.css";
 
+/**
+ * Modal para editar una rutina existente. Inicializa el formulario con los
+ * datos actuales de la rutina al montar o al cambiar la prop rutina.
+ * Aplica los mismos filtros y validaciones que CreateRutinaModal.
+ * Envía PUT a "/rutinas/:id" con los datos actualizados.
+ */
 function EditRutinaModal({ rutina, onClose, onUpdated }) {
 
   const [loading, setLoading] = useState(false);
@@ -39,6 +45,10 @@ function EditRutinaModal({ rutina, onClose, onUpdated }) {
     }
   }, [rutina]);
 
+  /**
+ * Aplica los mismos filtros de caracteres y límites de longitud que
+ * CreateRutinaModal. Limpia el error del campo al detectar cualquier cambio.
+ */
   const handleChange = (e) => {
     let { name, value } = e.target;
 
@@ -53,6 +63,10 @@ function EditRutinaModal({ rutina, onClose, onUpdated }) {
     setErrors(prev => ({ ...prev, [name]: null }));
   };
 
+  /**
+ * Valida los mismos campos que CreateRutinaModal con idénticas reglas.
+ * Actualiza el estado de errores y retorna si el formulario es válido.
+ */
   const validate = () => {
     const e = {};
 
@@ -81,6 +95,11 @@ function EditRutinaModal({ rutina, onClose, onUpdated }) {
     return Object.keys(e).length === 0;
   };
 
+  /**
+ * Valida el formulario y envía PUT a "/rutinas/:id" con los datos normalizados.
+ * Al éxito llama a onUpdated y cierra el modal.
+ * Muestra el error del servidor si la petición falla.
+ */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setApiError("");

@@ -3,6 +3,11 @@ import api from "../../services/axios";
 import ModalPortal from "../../components/ui/ModalPortal";
 import "../../styles/rutinas.css";
 
+/**
+ * Modal para crear una nueva rutina general. Aplica filtros de caracteres
+ * y límites de longitud por campo. Valida todos los campos antes de enviar
+ * y marca la rutina como no personalizada (es_personalizada: false).
+ */
 function CreateRutinaModal({ onClose, onCreated }) {
 
   const [loading, setLoading] = useState(false);
@@ -22,6 +27,16 @@ function CreateRutinaModal({ onClose, onCreated }) {
     instrucciones: ""
   });
 
+  /**
+ * Actualiza el campo del formulario aplicando filtros y límites por campo:
+ *   - duracion_min: solo dígitos, máx. 3 chars.
+ *   - calorias_estimadas: solo dígitos, máx. 4 chars.
+ *   - objetivo: alfanumérico con acentos.
+ *   - nombre: máx. 20 chars.
+ *   - descripcion: máx. 100 chars.
+ *   - instrucciones: máx. 255 chars.
+ * Limpia el error del campo al detectar cualquier cambio.
+ */
   const handleChange = (e) => {
     let { name, value } = e.target;
 
@@ -36,6 +51,13 @@ function CreateRutinaModal({ onClose, onCreated }) {
     setErrors(prev => ({ ...prev, [name]: null }));
   };
 
+  /**
+ * Valida todos los campos requeridos verificando obligatoriedad y límites:
+ *   - duracion_min: entre 1 y 300 minutos.
+ *   - calorias_estimadas: entre 1 y 5000.
+ *   - instrucciones: máx. 255 chars.
+ * Actualiza el estado de errores y retorna si el formulario es válido.
+ */
   const validate = () => {
     const e = {};
 
@@ -66,6 +88,12 @@ function CreateRutinaModal({ onClose, onCreated }) {
     return Object.keys(e).length === 0;
   };
 
+  /*
+ * Valida el formulario y envía POST a "/rutinas" con los datos normalizados.
+ * Marca la rutina como general (es_personalizada: false, es_premium: 0).
+ * Al éxito llama a onCreated y cierra el modal.
+ * Muestra el error del servidor si la petición falla.
+ */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setApiError("");

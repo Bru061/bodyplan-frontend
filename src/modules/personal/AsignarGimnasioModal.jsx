@@ -4,6 +4,12 @@ import ModalPortal from "../../components/ui/ModalPortal";
 
 const DIAS = ["Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado", "Domingo"];
 
+/**
+ * Modal para asignar un instructor a un gimnasio en un día y turno específicos.
+ * Carga los gimnasios disponibles al montar y los días habilitados del gimnasio
+ * seleccionado de forma dinámica. Valida que el turno tenga mínimo 3 horas
+ * y que la hora de salida sea mayor a la entrada.
+ */
 function AsignarGimnasioModal({ personal, onClose, onAsignado }) {
 
   const [gimnasios, setGimnasios] = useState([]);
@@ -30,6 +36,10 @@ function AsignarGimnasioModal({ personal, onClose, onAsignado }) {
     fetchGimnasios();
   }, []);
 
+  /**
+ * Verifica que la hora de salida sea mayor a la entrada y que
+ * la diferencia sea de al menos 3 horas (180 minutos).
+ */
   const horaEsValida = (entrada, salida) => {
     if (!entrada || !salida) return { valida: false, msg: "" };
     const [h1, m1] = entrada.split(":").map(Number);
@@ -40,6 +50,11 @@ function AsignarGimnasioModal({ personal, onClose, onAsignado }) {
     return { valida: true, msg: "" };
   };
 
+  /**
+ * Actualiza el campo del formulario. Si el campo es id_gimnasio,
+ * resetea dia_semana para forzar una nueva selección acorde al gimnasio.
+ * Limpia el error del campo si existía alguno previo.
+ */
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm(prev => {
@@ -52,6 +67,11 @@ function AsignarGimnasioModal({ personal, onClose, onAsignado }) {
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: "" }));
   };
 
+  /**
+ * Obtiene el gimnasio seleccionado y extrae los días únicos de sus horarios
+ * para mostrar solo los días en que el gimnasio opera. Se ejecuta cada vez
+ * que cambia id_gimnasio en el formulario.
+ */
   useEffect(() => {
     const fetchDiasDisponibles = async () => {
       if (!form.id_gimnasio) {
@@ -73,6 +93,12 @@ function AsignarGimnasioModal({ personal, onClose, onAsignado }) {
     fetchDiasDisponibles();
   }, [form.id_gimnasio]);
 
+  /**
+ * Valida gimnasio, día (dentro de los disponibles del gimnasio), hora de entrada,
+ * hora de salida y turno mínimo de 3 horas. Si hay errores los muestra en el
+ * formulario. Si son válidos, envía POST a "/personal/:id/gimnasios" con el
+ * horario normalizado a formato "HH:MM:SS". Al éxito llama a onAsignado y cierra.
+ */
   const handleSubmit = async () => {
     const newErrors = {};
 
