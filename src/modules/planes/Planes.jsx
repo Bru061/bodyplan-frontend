@@ -51,10 +51,15 @@ function Planes() {
   const [loading, setLoading] = useState(true);
   const [procesando, setProcesando] = useState(null);
   const [error, setError] = useState("");
-  const [hasPlanHistory, setHasPlanHistory] = useState(false);
+  const [trialYaUsadaEnCuenta, setTrialYaUsadaEnCuenta] = useState(false);
+  const [mostrarBotonInicio, setMostrarBotonInicio] = useState(false);
 
   const { trialUsed, refreshPermissions } = usePermissions();
   const fromPerfil = location.state?.from === "/perfil";
+  const fromPlanExpirado = location.state?.reason === "plan-expirado";
+
+  const isTrialPlan = (plan) =>
+    parseFloat(plan?.precio) === 0 || /trial|prueba/i.test(plan?.nombre || "");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -65,13 +70,24 @@ function Planes() {
         try {
           const resPlan = await api.get("/proveedor/mi-plan");
           const historial = resPlan.data.historial || [];
-          setHasPlanHistory(historial.length > 0);
+          const planActivoRes = resPlan.data.plan_activo || null;
+          const suscripciones = [planActivoRes, ...historial].filter(Boolean);
+          const trialUsada = suscripciones.some((sub) => isTrialPlan(sub.plan || sub));
+          setTrialYaUsadaEnCuenta(trialUsada);
+
+          const estadoPlan = planActivoRes?.estado;
+          const planVencidoSinActiva =
+            (planActivoRes && estadoPlan !== "activa") ||
+            (!planActivoRes && historial.length > 0);
+          setMostrarBotonInicio(planVencidoSinActiva);
+
           if (resPlan.data.plan_activo?.estado === "activa") {
             setPlanActivo(resPlan.data.plan_activo);
             refreshPermissions();
           }
         } catch {
-          setHasPlanHistory(false);
+          setTrialYaUsadaEnCuenta(false);
+          setMostrarBotonInicio(false);
         }
 
       } catch (err) {
@@ -94,13 +110,9 @@ function Planes() {
   const handleSeleccionar = async (plan) => {
     setError("");
 
-    const esTrial = parseFloat(plan.precio) === 0 || /trial|prueba/i.test(plan.nombre || "");
-    if (esTrial && hasPlanHistory && !esPlanActual(plan)) {
-      setError("La promoción gratuita solo puede activarse una vez por cuenta.");
-      return;
-    }
+    const esTrial = isTrialPlan(plan);
 
-    if (esTrial && trialUsed && !esPlanActual(plan)) {
+    if (esTrial && (trialUsed || trialYaUsadaEnCuenta) && !esPlanActual(plan)) {
       setError("El plan de prueba solo puede activarse una vez por usuario.");
       return;
     }
@@ -185,9 +197,18 @@ function Planes() {
         </button>
       )}
 
+      {(fromPlanExpirado || mostrarBotonInicio) && !fromPerfil && (
+        <button
+          className="planes-back"
+          onClick={() => navigate("/", { state: { allowHome: true } })}
+        >
+          ← Regresar al inicio
+        </button>
+      )}
+
       <div className="planes-header">
         <h1>Elige tu plan</h1>
-        <p>Empieza gratis y escala cuando lo necesites. Sin contratos, sin sorpresas.</p>
+        <p>Empieza gratis y escala cuando lo necesites.</p>
       </div>
 
       {error && (
@@ -207,7 +228,7 @@ function Planes() {
           const popular  = index === 1;
           const cargando = procesando === plan.id_plan;
           const accesos  = ACCESOS_HARDCODED[plan.id_plan] || [];
-          const trialBloqueada = gratuito && !activo && (trialUsed || hasPlanHistory);
+          const trialBloqueada = gratuito && !activo && (trialUsed || trialYaUsadaEnCuenta);
 
           return (
             <div

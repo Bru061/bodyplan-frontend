@@ -1,4 +1,4 @@
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 /**
@@ -14,10 +14,17 @@ import { useAuth } from "../context/AuthContext";
  */
 export default function PublicRoute() {
   const { isAuthenticated, user, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) return null;
 
+  const permitirInicioAutenticado =
+    location.pathname === "/" && location.state?.allowHome === true;
+  const permitirAuthScreens =
+    location.pathname === "/login" || location.pathname === "/register";
+
   if (isAuthenticated) {
+    if (permitirInicioAutenticado || permitirAuthScreens) return <Outlet />;
     if (user?.role === "admin")     return <Navigate to="/admin/dashboard" replace />;
     if (user?.role === "proveedor") return <Navigate to="/dashboard"       replace />;
     if (user?.role === "user")      return <Navigate to="/solo-app"        replace />;

@@ -121,6 +121,20 @@ function Home() {
               </Link>
             </div>
 
+            <div className="fade-up fade-delay2" style={{ marginTop: "1rem" }}>
+              <a
+                href="https://bodyplan-api.giize.com/api/downloads/BodyPlan.apk"
+                download
+                className="hero-download-btn"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 17V3M12 17l-5-5M12 17l5-5M2 21h20" />
+                </svg>
+                Descargar App Android
+                <span className="hero-download-badge">APK</span>
+              </a>
+            </div>
+
             <div className="hero-stats fade-up fade-delay3">
               <div className="hero-stat-item">
                 <span className="hero-stat-value">100%</span>

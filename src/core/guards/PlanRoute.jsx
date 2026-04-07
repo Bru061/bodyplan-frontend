@@ -53,7 +53,7 @@ export default function PlanRoute() {
   if (loading || verificando) return null;
 
   if (!tienePlan && !RUTAS_LIBRES.includes(pathname)) {
-    return <Navigate to="/planes" replace />;
+        return <Navigate to="/planes" replace state={{ reason: "plan-expirado", from: pathname }} />;
   }
 
   return <Outlet />;

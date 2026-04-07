@@ -9,6 +9,43 @@ import LoadingScreen from "../../components/ui/LoadingScreen";
 import Toast from "../../components/ui/Toast";
 import ModalPortal from "../../components/ui/ModalPortal";
 
+const DATE_ONLY_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+
+const formatDateSafe = (value) => {
+  if (!value) return "—";
+
+  if (typeof value === "string" && DATE_ONLY_REGEX.test(value)) {
+    const [year, month, day] = value.split("-").map(Number);
+    return new Intl.DateTimeFormat("es-MX", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      timeZone: "UTC"
+    }).format(new Date(Date.UTC(year, month - 1, day)));
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return "—";
+
+  return parsed.toLocaleDateString("es-MX", {
+    day: "numeric",
+    month: "long",
+    year: "numeric"
+  });
+};
+
+const parsePlanEndDate = (value) => {
+  if (!value) return null;
+
+  if (typeof value === "string" && DATE_ONLY_REGEX.test(value)) {
+    const [year, month, day] = value.split("-").map(Number);
+    return new Date(year, month - 1, day, 23, 59, 59, 999);
+  }
+
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
 /**
  * Página de perfil del proveedor. Carga en paralelo el usuario, plan activo,
  * historial de planes, CLABE bancaria y balance de gimnasios. Permite editar
@@ -168,7 +205,8 @@ function Perfil() {
   const diasRestantes = () => {
     if (!planActivo?.fecha_fin) return 0;
     const hoy = new Date();
-    const fin  = new Date(planActivo.fecha_fin);
+    const fin = parsePlanEndDate(planActivo.fecha_fin);
+    if (!fin) return 0;
     return Math.max(0, Math.ceil((fin - hoy) / (1000 * 60 * 60 * 24)));
   };
 
@@ -179,6 +217,7 @@ function Perfil() {
  *   - ""          → más de 7 días.
  */
   const diasClass = () => {
+    if (planActivo?.estado !== "activa") return "vencido";
     const d = diasRestantes();
     if (d <= 0)  return "vencido";
     if (d <= 7)  return "venciendo";
@@ -415,14 +454,14 @@ function Perfil() {
               <div className="mi-plan-info">
                 <h3>{planActivo.plan?.nombre}</h3>
                 <p>
-                  Vence el {new Date(planActivo.fecha_fin).toLocaleDateString("es-MX", {
-                    day: "numeric", month: "long", year: "numeric"
-                  })}
+                  Vence el {formatDateSafe(planActivo.fecha_fin)}
                 </p>
               </div>
 
               <span className={`mi-plan-dias ${diasClass()}`}>
-                {dias <= 0 ? "Vencido" : `${dias} día${dias !== 1 ? "s" : ""} restante${dias !== 1 ? "s" : ""}`}
+                {planActivo.estado !== "activa"
+                  ? "Vencido"
+                  : `${dias} día${dias !== 1 ? "s" : ""} restante${dias !== 1 ? "s" : ""}`}
               </span>
 
               <div className="mi-plan-acciones">
@@ -466,8 +505,8 @@ function Perfil() {
                   historialPlanes.map((h, i) => (
                     <tr key={i}>
                       <td>{h.plan?.nombre || "—"}</td>
-                      <td>{h.fecha_inicio ? new Date(h.fecha_inicio).toLocaleDateString("es-MX") : "—"}</td>
-                      <td>{h.fecha_fin    ? new Date(h.fecha_fin).toLocaleDateString("es-MX")    : "—"}</td>
+                      <td>{formatDateSafe(h.fecha_inicio)}</td>
+                      <td>{formatDateSafe(h.fecha_fin)}</td>
                       <td>{h.plan?.precio != null ? `$${h.plan.precio.toLocaleString("es-MX")}` : "—"}</td>
                       <td>
                         <span className={`badge ${h.estado === "activa" ? "badge-success" : "badge-danger"}`}>
