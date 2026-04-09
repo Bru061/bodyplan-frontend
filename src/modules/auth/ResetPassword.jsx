@@ -96,25 +96,33 @@ function ResetPassword(){
             {error && <p style={{color:"red"}}>{error}</p>}
 
             <form onSubmit={handleSubmit} className="login-fields">
-            <div className="password-field">
+            <div className="float-field">
               <input
+                id="newPassword"
                 type={showPassword ? "text" : "password"}
-                placeholder="Nueva contraseña"
+                name="newPassword"
+                placeholder=" "
                 value={password}
                 onChange={(e)=>setPassword(e.target.value)}
+                required
               />
+              <label htmlFor="newPassword">Nueva contraseña</label>
               <button type="button" className="eye-btn" onClick={() => setShowPassword(!showPassword)}>
                 {showPassword ? <FiEyeOff /> : <FiEye />}
               </button>
             </div>
 
-            <div className="password-field">
+            <div className="float-field">
               <input
+              id="confirmPassword"
                 type={showConfirm ? "text" : "password"}
-                placeholder="Confirmar contraseña"
+                name="confirmPassword"
+                placeholder=" "
                 value={confirm}
                 onChange={(e)=>setConfirm(e.target.value)}
+                required
               />
+              <label htmlFor="confirmPassword">Confirmar contraseña</label>
               <button type="button" className="eye-btn" onClick={() => setShowConfirm(!showConfirm)}>
                 {showConfirm ? <FiEyeOff /> : <FiEye />}
               </button>

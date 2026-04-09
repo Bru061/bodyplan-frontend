@@ -27,7 +27,8 @@ function MiGimnasio() {
   const [gym, setGym]           = useState(null);
   const [imgIndex, setImgIndex] = useState(0);
   const [loading, setLoading]   = useState(true);
-  const [openEdit, setOpenEdit]           = useState(false);
+  const [openDescripcion, setOpenDescripcion] = useState(false);
+  const [openContacto, setOpenContacto]       = useState(false);
   const [openHorarios, setOpenHorarios]   = useState(false);
   const [openMembresias, setOpenMembresias] = useState(false);
   const [openFotos, setOpenFotos]         = useState(false);
@@ -205,7 +206,7 @@ function MiGimnasio() {
           <section className="gym-info-layout">
 
             <div className="info-block full">
-              <button className="icon-edit-btn" onClick={() => setOpenEdit(true)}>
+              <button className="icon-edit-btn" onClick={() => setOpenDescripcion(true)}>
                 <Pencil size={16} />
               </button>
               <h3>Descripción del gimnasio</h3>
@@ -213,6 +214,9 @@ function MiGimnasio() {
             </div>
 
             <div className="info-block full">
+              <button className="icon-edit-btn" onClick={() => setOpenContacto(true)}>
+                <Pencil size={16} />
+              </button>
               <h3>Información de contacto</h3>
               <div className="contact-list">
                 <p><strong>Dirección:</strong> {gym.Ubicacion?.direccion}</p>
@@ -272,8 +276,21 @@ function MiGimnasio() {
         </article>
       </section>
 
-      {openEdit && (
-        <EditGymModal gym={gym} onClose={() => setOpenEdit(false)} onUpdated={fetchGym} />
+      {openDescripcion && (
+        <EditGymModal
+          gym={gym}
+          section="descripcion"
+          onClose={() => setOpenDescripcion(false)}
+          onUpdated={fetchGym}
+        />
+      )}
+      {openContacto && (
+        <EditGymModal
+          gym={gym}
+          section="contacto"
+          onClose={() => setOpenContacto(false)}
+          onUpdated={fetchGym}
+        />
       )}
       {openHorarios && (
         <EditHorariosModal gym={gym} onClose={() => setOpenHorarios(false)} onUpdated={fetchGym} />

@@ -168,13 +168,18 @@ function ForgotPassword() {
 
             {step === 2 && (
               <form onSubmit={handleVerifyCode} className="login-fields">
+                <div className="float-field">
                 <input
+                  id="codigo"
                   type="text"
-                  placeholder="Código de 6 dígitos"
+                  name="codigo"
+                  placeholder=" "
                   value={codigo}
                   onChange={(e)=>setCodigo(e.target.value)}
                   required
                 />
+                <label htmlFor="codigo">Código de 6 digitos</label>
+                </div>
                 <button className="btn btn-primary" disabled={loading}>
                   {loading ? "Verificando..." : "Verificar código"}
                 </button>
@@ -183,20 +188,30 @@ function ForgotPassword() {
 
             {step === 3 && (
               <form onSubmit={handleChangePassword} className="login-fields">
+                <div className="float-field">
                 <input
+                  id="newPassword"
                   type="password"
-                  placeholder="Nueva contraseña"
+                  name="newPassword"
+                  placeholder=" "
                   value={password}
                   onChange={(e)=>setPassword(e.target.value)}
                   required
                 />
+                <label htmlFor="newPassword">Nueva Contraseña</label>
+                </div>
+                <div className="float-field">
                 <input
+                  id="confirmPassword"
                   type="password"
-                  placeholder="Confirmar contraseña"
+                  name="confirmPassword"
+                  placeholder=" "
                   value={confirm}
                   onChange={(e)=>setConfirm(e.target.value)}
                   required
                 />
+                <label htmlFor="confirmPassword">Confirmar Contraseña</label>
+                </div>
                 <button className="btn btn-primary" disabled={loading}>
                   {loading ? "Actualizando..." : "Cambiar contraseña"}
                 </button>

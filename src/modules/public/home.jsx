@@ -131,7 +131,7 @@ function Home() {
                   <path d="M12 17V3M12 17l-5-5M12 17l5-5M2 21h20" />
                 </svg>
                 Descargar App Android
-                <span className="hero-download-badge">APK</span>
+                <img src="/logo.png" alt="BodyPlan" className="hero-download-logo" />
               </a>
             </div>
 

@@ -481,14 +481,21 @@
   padding: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 12px;
+  margin-bottom: 1rem;
+}
+
+.delete-row {
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 0;
 }
 
 .field-row {
   display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr auto;
-  gap: 1rem;
-  align-items: end;
+  grid-template-columns: 1fr 1fr 1fr auto;
+  gap: 12px;
+  align-items: flex-end;
 }
 
 .field-row.membresia-row {
@@ -628,6 +635,16 @@
   .modal-grid,
   .grid-2 {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .field-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .delete-row {
+    grid-column: 1 / -1;
   }
 }
 

@@ -140,53 +140,52 @@ function EditHorariosModal({ gym, onClose, onUpdated }) {
 
           <h2 className="modal-title">Editar horarios</h2>
 
-          <div className="horario-row">
+          <div className="horarios-scroll">
             {horarios.map((h, index) => (
-              <div key={index} className="field-row">
+              <div key={index} className="horario-row">
+                <div className="field-row">
 
-                <div className="field-group">
-                  <label>Día *</label>
-                  <select
-                    name={`dia-${index}`}
-                    value={h.dia}
-                    onChange={e => handleChange(index, "dia", e.target.value)}
-                  >
-                    <option value="">Seleccionar día</option>
-                    {["Lunes","Martes","Miercoles","Jueves","Viernes","Sabado","Domingo"].map(d => (
-                      <option key={d}>{d}</option>
-                    ))}
-                  </select>
-                  {errors[`dia-${index}`] && <span className="field-error-msg">{errors[`dia-${index}`]}</span>}
+                  <div className="field-group">
+                    <label>Día *</label>
+                    <select
+                      value={h.dia}
+                      onChange={e => handleChange(index, "dia", e.target.value)}
+                    >
+                      <option value="">Seleccionar día</option>
+                      {["Lunes","Martes","Miercoles","Jueves","Viernes","Sabado","Domingo"].map(d => (
+                        <option key={d}>{d}</option>
+                      ))}
+                    </select>
+                    {errors[`dia-${index}`] && <span className="field-error-msg">{errors[`dia-${index}`]}</span>}
+                  </div>
+
+                  <div className="field-group">
+                    <label>Apertura *</label>
+                    <input
+                      type="time"
+                      value={h.apertura}
+                      onChange={e => handleChange(index, "apertura", e.target.value)}
+                    />
+                    {errors[`apertura-${index}`] && <span className="field-error-msg">{errors[`apertura-${index}`]}</span>}
+                  </div>
+
+                  <div className="field-group">
+                    <label>Cierre *</label>
+                    <input
+                      type="time"
+                      value={h.cierre}
+                      onChange={e => handleChange(index, "cierre", e.target.value)}
+                    />
+                    {errors[`cierre-${index}`] && <span className="field-error-msg">{errors[`cierre-${index}`]}</span>}
+                  </div>
+
+                  <div className="delete-row">
+                    <button className="btn btn-danger" onClick={() => deleteHorario(index)}>
+                      Eliminar
+                    </button>
+                  </div>
+
                 </div>
-
-                <div className="field-group">
-                  <label>Apertura *</label>
-                  <input
-                    name={`apertura-${index}`}
-                    type="time"
-                    value={h.apertura}
-                    onChange={e => handleChange(index, "apertura", e.target.value)}
-                  />
-                  {errors[`apertura-${index}`] && <span className="field-error-msg">{errors[`apertura-${index}`]}</span>}
-                </div>
-
-                <div className="field-group">
-                  <label>Cierre *</label>
-                  <input
-                    name={`cierre-${index}`}
-                    type="time"
-                    value={h.cierre}
-                    onChange={e => handleChange(index, "cierre", e.target.value)}
-                  />
-                  {errors[`cierre-${index}`] && <span className="field-error-msg">{errors[`cierre-${index}`]}</span>}
-                </div>
-
-                <div className="delete-row">
-                  <button className="btn btn-danger" onClick={() => deleteHorario(index)}>
-                    Eliminar
-                  </button>
-                </div>
-
               </div>
             ))}
           </div>

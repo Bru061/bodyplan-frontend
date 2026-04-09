@@ -390,16 +390,16 @@
   color: #fff;
 }
 
-.hero-download-badge {
-  font-size: 0.6rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  background: rgba(147, 197, 253, 0.15);
-  color: #93c5fd;
-  border: 1px solid rgba(147, 197, 253, 0.25);
-  padding: 2px 6px;
+.hero-download-logo {
+  width: 45px;
+  height: 45px;
+  object-fit: contain;
   border-radius: 5px;
-  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.hero-download-btn:hover .hero-download-logo {
+  opacity: 1;
 }
 
 /* ═══════════════════════════════════════════
