@@ -786,7 +786,7 @@
 
 .demo {
   background: #f1f5f9;
-  padding-bottom: 80px;
+  padding: 60px 0 80px;  /* agrega padding-top también */
 }
 
 .demo .container {
@@ -799,30 +799,26 @@
 
 .demo-video-placeholder {
   width: 100%;
-  max-width: 700px;
+  max-width: 800px;        /* un poco más ancho para mejor presencia */
   aspect-ratio: 16/9;
-  background: linear-gradient(135deg, #1e3a8a, #0f172a);
-  border-radius: 18px;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.15);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  color: rgba(255,255,255,0.5);
-  font-size: 0.95rem;
+  border-radius: 16px;
+  overflow: hidden;        /* evita que el video se salga del border-radius */
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
   margin: 0 auto;
+  background: #000;        /* fallback mientras carga */
 }
 
-.demo-play-btn {
-  width: 64px;
-  height: 64px;
-  background: rgba(255,255,255,0.1);
-  border: 2px solid rgba(255,255,255,0.2);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-  color: rgba(255,255,255,0.6);
+.demo-video-placeholder video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;       /* llena el contenedor sin deformar */
+  display: block;          /* elimina el espacio extra inferior del inline */
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .demo-video-placeholder {
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  }
 }

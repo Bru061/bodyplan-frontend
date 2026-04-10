@@ -246,8 +246,14 @@ function Home() {
         <div className="container">
           <h2 className="home-section-title">Mira cómo funciona</h2>
           <div className="demo-video-placeholder">
-            <div className="demo-play-btn">▶</div>
-            <p>Video próximamente</p>
+            <video
+              controls
+              width="100%"
+              poster="/thumbnail.png"
+            >
+              <source src="/demo.mp4" type="video/mp4" />
+              Tu navegador no soporta el video.
+            </video>
           </div>
           <Link to="/register" className="btn btn-primary" style={{ marginTop: "2rem" }}>
             Empieza Gratis
